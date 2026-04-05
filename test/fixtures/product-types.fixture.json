@@ -1,0 +1,52 @@
+[
+  {
+    "code": "ARGAN_OIL",
+    "nameFr": "Huile d'Argan",
+    "nameAr": "زيت أركان",
+    "nameZgh": "Aẓil n Argan",
+    "regionCode": "SFI",
+    "certificationTypes": ["AOP", "IGP"],
+    "labParametersKey": "argan_oil",
+    "isActive": true
+  },
+  {
+    "code": "SAFFRON",
+    "nameFr": "Safran de Taliouine",
+    "nameAr": "الزعفران",
+    "nameZgh": "Azafran",
+    "regionCode": "SFI",
+    "certificationTypes": ["AOP", "IGP"],
+    "labParametersKey": "saffron",
+    "isActive": true
+  },
+  {
+    "code": "OLIVE_OIL_PICHOLINE",
+    "nameFr": "Huile d'Olive Picholine Marocaine",
+    "nameAr": "زيت الزيتون بيكولين المغربي",
+    "nameZgh": "Aẓil n Azemmur Pikulin",
+    "regionCode": "MRR",
+    "certificationTypes": ["AOP"],
+    "labParametersKey": "olive_oil",
+    "isActive": true
+  },
+  {
+    "code": "MEDJOOL_DATES",
+    "nameFr": "Dattes Medjoul de Tafilalet",
+    "nameAr": "تمر مجهول",
+    "nameZgh": "Tamert Amawal",
+    "regionCode": "DKH",
+    "certificationTypes": ["AOP", "IGP"],
+    "labParametersKey": "dates",
+    "isActive": true
+  },
+  {
+    "code": "ROSE_DADES",
+    "nameFr": "Rose de Dades",
+    "nameAr": "ورد الدادس",
+    "nameZgh": "Tawrirt n Dads",
+    "regionCode": "DKH",
+    "certificationTypes": ["IGP"],
+    "labParametersKey": "rose",
+    "isActive": true
+  }
+]

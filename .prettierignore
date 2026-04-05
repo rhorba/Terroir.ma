@@ -1,0 +1,6 @@
+dist
+coverage
+node_modules
+.sessions
+shared/constants
+infrastructure/keycloak/realm-export.json

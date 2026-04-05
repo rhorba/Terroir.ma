@@ -1,0 +1,25 @@
+{
+  "name": "certification-body",
+  "description": "Certification authority officer (e.g., ONSSA, EACCE). Manages the full certification lifecycle: reviews applications, assigns inspectors, evaluates inspection reports, grants or denies IGP/AOP certifications, and can revoke or renew certificates.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "certification:manage",
+      "certification:grant",
+      "certification:deny",
+      "certification:revoke",
+      "certification:renew",
+      "inspection:manage",
+      "inspection:assign",
+      "inspector:read",
+      "cooperative:read",
+      "product:read",
+      "lab:read",
+      "qr:generate",
+      "export:generate"
+    ],
+    "level": ["8"]
+  }
+}

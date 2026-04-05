@@ -1,0 +1,11 @@
+{
+  "name": "super-admin",
+  "description": "Full platform access. Can manage all cooperatives, override certifications, access all modules, and perform administrative operations.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": ["*"],
+    "level": ["10"]
+  }
+}

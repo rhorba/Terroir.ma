@@ -1,0 +1,74 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerModule } from 'nestjs-pino';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { TerminusModule } from '@nestjs/terminus';
+import appConfig from './config/app.config';
+import databaseConfig from './config/database.config';
+import kafkaConfig from './config/kafka.config';
+import keycloakConfig from './config/keycloak.config';
+import redisConfig from './config/redis.config';
+import { CooperativeModule } from './modules/cooperative/cooperative.module';
+import { ProductModule } from './modules/product/product.module';
+import { CertificationModule } from './modules/certification/certification.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { HealthController } from './health/health.controller';
+
+@Module({
+  imports: [
+    // Config
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig, databaseConfig, kafkaConfig, keycloakConfig, redisConfig],
+      envFilePath: ['.env', '.env.local'],
+    }),
+
+    // Logging
+    LoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        pinoHttp: {
+          level: configService.get('app.logLevel', 'info'),
+          redact: ['req.headers.authorization', 'body.password', 'body.cin', 'body.phone'],
+          transport:
+            configService.get('NODE_ENV') !== 'production'
+              ? { target: 'pino-pretty', options: { colorize: true } }
+              : undefined,
+        },
+      }),
+      inject: [ConfigService],
+    }),
+
+    // Database
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'postgres',
+        url: configService.get<string>('database.url'),
+        autoLoadEntities: true,
+        synchronize: false,
+        logging: configService.get('NODE_ENV') === 'development',
+        migrations: ['dist/migrations/*.js'],
+        migrationsRun: false,
+      }),
+      inject: [ConfigService],
+    }),
+
+    // Rate limiting
+    ThrottlerModule.forRoot([
+      { ttl: 900000, limit: 100 }, // 100 req per 15 min
+    ]),
+
+    // Health checks
+    TerminusModule,
+
+    // Domain modules
+    CooperativeModule,
+    ProductModule,
+    CertificationModule,
+    NotificationModule,
+  ],
+  controllers: [HealthController],
+})
+export class AppModule {}

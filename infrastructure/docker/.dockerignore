@@ -1,0 +1,27 @@
+node_modules
+dist
+coverage
+.git
+.gitignore
+.sessions
+
+# Test files — not needed in image
+**/*.spec.ts
+**/*.integration.ts
+**/*.e2e.ts
+test/
+
+# Documentation
+docs/
+*.md
+
+# Environment files — injected at runtime, never baked into image
+.env
+.env.*
+!.env.docker
+
+# IDE / OS artifacts
+.DS_Store
+.idea
+.vscode
+*.log

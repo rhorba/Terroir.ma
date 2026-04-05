@@ -1,0 +1,115 @@
+---
+title: Entity Relationships (cross-module via UUID references only)
+---
+erDiagram
+    %% cooperative schema
+    Cooperative {
+        uuid id PK
+        string name
+        string registrationNumber
+        string iceNumber
+        string ifNumber
+        string regionCode
+        uuid adminUserId
+        bool isVerified
+    }
+    CooperativeMember {
+        uuid id PK
+        uuid cooperativeId FK
+        uuid userId
+        string cin
+        string role
+    }
+    Farm {
+        uuid id PK
+        uuid cooperativeId FK
+        point location
+        float areaHectares
+        string regionCode
+    }
+
+    %% product schema
+    ProductBatch {
+        uuid id PK
+        uuid cooperativeId
+        uuid productTypeId FK
+        string batchReference
+        float quantityKg
+        date harvestDate
+        string campaignYear
+    }
+    LabTest {
+        uuid id PK
+        uuid batchId FK
+        uuid labId
+        bool passed
+        jsonb testValues
+        timestamp completedAt
+    }
+
+    %% certification schema
+    Certification {
+        uuid id PK
+        uuid cooperativeId
+        uuid batchId
+        string certificationTypeCode
+        string productTypeCode
+        string regionCode
+        string status
+        string certificationNumber
+        timestamp grantedAt
+    }
+    Inspection {
+        uuid id PK
+        uuid certificationId FK
+        uuid inspectorId
+        date scheduledDate
+        string location
+    }
+    InspectionReport {
+        uuid id PK
+        uuid inspectionId FK
+        bool passed
+        string reportSummary
+    }
+    QrCode {
+        uuid id PK
+        uuid certificationId FK
+        string hmacSignature
+        timestamp generatedAt
+    }
+    ExportDocument {
+        uuid id PK
+        uuid certificationId FK
+        string destinationCountry
+        string hsCode
+        string status
+    }
+
+    %% notification schema
+    NotificationTemplate {
+        uuid id PK
+        string code
+        string channel
+        string language
+        string subjectTemplate
+        text bodyTemplate
+        bool isActive
+    }
+    Notification {
+        uuid id PK
+        uuid recipientId
+        string channel
+        string templateCode
+        string language
+        string status
+        uuid triggerEventId
+    }
+
+    Cooperative ||--o{ CooperativeMember : "has"
+    Cooperative ||--o{ Farm : "owns"
+    ProductBatch ||--o{ LabTest : "tested by"
+    Certification ||--o| Inspection : "requires"
+    Inspection ||--o| InspectionReport : "produces"
+    Certification ||--o{ QrCode : "has"
+    Certification ||--o{ ExportDocument : "has"

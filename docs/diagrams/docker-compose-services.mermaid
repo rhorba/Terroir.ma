@@ -1,0 +1,36 @@
+---
+title: Docker Compose Services & Profiles
+---
+graph LR
+    subgraph core["Profile: core"]
+        PG[(postgres:16\nPort 5432\nPostGIS 3.4)]
+        RD[(redis:7\nPort 6379)]
+        RP[redpanda\nKafka Port 9092\nAdmin Port 9644]
+        KC[keycloak:24\nPort 8443]
+        MP[mailpit\nSMTP Port 1025\nUI Port 8025]
+    end
+
+    subgraph app["Profile: app"]
+        API[nestjs-api\nPort 3000\ndepends_on: core]
+    end
+
+    subgraph monitoring["Profile: monitoring"]
+        RC[redpanda-console\nPort 8080\ndepends_on: redpanda]
+    end
+
+    API --> PG
+    API --> RD
+    API --> RP
+    API --> KC
+    API --> MP
+    RC --> RP
+
+    style core fill:#e8f5e9,stroke:#4caf50
+    style app fill:#e3f2fd,stroke:#2196f3
+    style monitoring fill:#fff3e0,stroke:#ff9800
+
+    note1["`**Profiles:**
+    core → 5 containers
+    app → core + nestjs-api
+    monitoring → core + redpanda-console
+    full → all 7 containers`"]

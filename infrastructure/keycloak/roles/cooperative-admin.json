@@ -1,0 +1,20 @@
+{
+  "name": "cooperative-admin",
+  "description": "Administrator for a specific cooperative. Can manage members, submit certification requests, view all reports for their cooperative, and update cooperative profile and farm parcels.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "cooperative:manage",
+      "cooperative:read",
+      "product:write",
+      "product:read",
+      "certification:submit",
+      "certification:read:own",
+      "farm:manage:own",
+      "notification:read:own"
+    ],
+    "level": ["7"]
+  }
+}

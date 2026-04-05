@@ -1,0 +1,239 @@
+version: "3.9"
+
+# Terroir.ma — Full infrastructure stack
+# Profiles: core (db+cache+queue+auth), monitoring (UIs), app (NestJS), full (everything)
+
+networks:
+  terroir-network:
+    driver: bridge
+    name: terroir-network
+
+volumes:
+  pgdata:
+    name: terroir_pgdata
+  keycloak_pgdata:
+    name: terroir_keycloak_pgdata
+
+services:
+
+  # ─────────────────────────────────────────────
+  # 1. NestJS Application
+  # ─────────────────────────────────────────────
+  terroir-app:
+    image: terroir-ma:latest
+    container_name: terroir-app
+    profiles: [app, full]
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    env_file:
+      - .env.docker
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+    restart: on-failure
+
+  # ─────────────────────────────────────────────
+  # 2. PostgreSQL + PostGIS
+  # ─────────────────────────────────────────────
+  postgresql:
+    image: postgis/postgis:16-3.4
+    container_name: terroir-postgresql
+    profiles: [core, full]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: terroir
+      POSTGRES_PASSWORD: terroir_pass
+      POSTGRES_DB: terroir_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infrastructure/postgresql/init:/docker-entrypoint-initdb.d
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terroir -d terroir_db"]
+      interval: 10s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 3. Redis
+  # ─────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: terroir-redis
+    profiles: [core, full]
+    ports:
+      - "6379:6379"
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 4. Redpanda (Kafka-compatible broker)
+  # ─────────────────────────────────────────────
+  redpanda:
+    image: redpandadata/redpanda:latest
+    container_name: terroir-redpanda
+    profiles: [core, full]
+    ports:
+      - "19092:19092"   # External Kafka API
+      - "8081:8081"     # Schema Registry
+      - "9644:9644"     # Admin API
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=512M
+      - --reserve-memory=0M
+      - --overprovisioned
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr=internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr=internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr=internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr=redpanda:33145
+      - --advertise-rpc-addr=redpanda:33145
+      - --set=redpanda.auto_create_topics_enabled=false
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      start_period: 30s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 5. Redpanda Console (UI)
+  # ─────────────────────────────────────────────
+  redpanda-console:
+    image: redpandadata/console:latest
+    container_name: terroir-redpanda-console
+    profiles: [monitoring, full]
+    ports:
+      - "8080:8080"
+    environment:
+      CONFIG_FILEPATH: /etc/redpanda-console/config.yml
+    volumes:
+      - type: bind
+        source: ./infrastructure/redpanda/console-config.yml
+        target: /etc/redpanda-console/config.yml
+        read_only: true
+    depends_on:
+      redpanda:
+        condition: service_healthy
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 6. Keycloak IAM
+  # ─────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: terroir-keycloak
+    profiles: [core, full]
+    ports:
+      - "8443:8080"
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak_db
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_pass
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+    volumes:
+      - ./infrastructure/keycloak:/opt/keycloak/data/import
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 20s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 7. Keycloak Database (separate PostgreSQL)
+  # ─────────────────────────────────────────────
+  keycloak-db:
+    image: postgres:16-alpine
+    container_name: terroir-keycloak-db
+    profiles: [core, full]
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_pass
+      POSTGRES_DB: keycloak_db
+    volumes:
+      - keycloak_pgdata:/var/lib/postgresql/data
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 8. Mailpit (SMTP catch-all + web UI)
+  # ─────────────────────────────────────────────
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: terroir-mailpit
+    profiles: [core, full]
+    ports:
+      - "8025:8025"   # Web UI
+      - "1025:1025"   # SMTP
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8025 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped

@@ -1,0 +1,44 @@
+---
+title: Terroir.ma — Modular Monolith Architecture
+---
+graph TD
+    subgraph NestJS["NestJS Application (Port 3000)"]
+        CM[CooperativeModule\nschema: cooperative]
+        PM[ProductModule\nschema: product]
+        CertM[CertificationModule\nschema: certification]
+        NM[NotificationModule\nschema: notification]
+    end
+
+    subgraph DB["PostgreSQL 16 + PostGIS 3.4 (Port 5432)"]
+        S1[(cooperative schema)]
+        S2[(product schema)]
+        S3[(certification schema)]
+        S4[(notification schema)]
+    end
+
+    subgraph Infra["Infrastructure"]
+        K[Redpanda\nKafka-compatible\nPort 9092]
+        R[Redis\nQR cache\nPort 6379]
+        KC[Keycloak 24\nJWT auth\nPort 8443]
+        MP[Mailpit\nDev SMTP\nPort 8025]
+    end
+
+    CM --> S1
+    PM --> S2
+    CertM --> S3
+    NM --> S4
+
+    CM <-->|events| K
+    PM <-->|events| K
+    CertM <-->|events| K
+    NM <-->|events| K
+
+    CertM --> R
+    NestJS -->|JWT validation| KC
+    NM -->|SMTP| MP
+
+    style CM fill:#e3f2fd
+    style PM fill:#e8f5e9
+    style CertM fill:#fff3e0
+    style NM fill:#fce4ec
+    style NestJS fill:#f5f5f5,stroke:#bdbdbd

@@ -1,0 +1,16 @@
+{
+  "name": "consumer",
+  "description": "End consumer, market buyer, or interested party. Can scan QR codes to view product origin, certification status, cooperative information, and harvest details. Read-only access to publicly visible data.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "qr:verify",
+      "product:read:public",
+      "cooperative:read:public",
+      "certification:read:public"
+    ],
+    "level": ["1"]
+  }
+}

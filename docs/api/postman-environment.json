@@ -1,0 +1,132 @@
+{
+  "id": "terroir-ma-local",
+  "name": "Terroir.ma — Local Development",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "keycloakUrl",
+      "value": "http://localhost:8443",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "realm",
+      "value": "terroir-ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "clientId",
+      "value": "terroir-ma-api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cooperative_admin_username",
+      "value": "coopadmin@test.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cooperative_admin_password",
+      "value": "Test@123",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "cooperative_admin_token",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Set by pre-request script: POST /token with cooperative-admin credentials"
+    },
+    {
+      "key": "cert_body_username",
+      "value": "certbody@test.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "cert_body_password",
+      "value": "Test@123",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "cert_body_token",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Set by pre-request script: POST /token with certification-body credentials"
+    },
+    {
+      "key": "inspector_username",
+      "value": "inspector@test.ma",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "inspector_password",
+      "value": "Test@123",
+      "type": "secret",
+      "enabled": true
+    },
+    {
+      "key": "inspector_token",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    },
+    {
+      "key": "cooperativeId",
+      "value": "11111111-1111-1111-1111-111111111111",
+      "type": "default",
+      "enabled": true,
+      "description": "Coopérative Féminine Tissadert (fixture)"
+    },
+    {
+      "key": "batchId",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Set after creating a test batch"
+    },
+    {
+      "key": "inspectorId",
+      "value": "",
+      "type": "any",
+      "enabled": true,
+      "description": "Set after fetching inspector user from Keycloak"
+    },
+    {
+      "key": "certificationId",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    },
+    {
+      "key": "inspectionId",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    },
+    {
+      "key": "qrUuid",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    },
+    {
+      "key": "qrSig",
+      "value": "",
+      "type": "any",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

@@ -1,0 +1,122 @@
+version: "3.9"
+
+# Terroir.ma — Test infrastructure
+# Ephemeral containers for integration and e2e tests.
+# - No named volumes (tmpfs for speed and isolation)
+# - Shifted port mappings to avoid conflicts with dev stack
+# - Does NOT include mailpit or monitoring services
+# Usage: docker compose -f infrastructure/docker/docker-compose.test.yml up -d
+
+networks:
+  terroir-test-network:
+    driver: bridge
+    name: terroir-test-network
+
+services:
+
+  # ─────────────────────────────────────────────
+  # PostgreSQL + PostGIS (test instance)
+  # ─────────────────────────────────────────────
+  postgresql-test:
+    image: postgis/postgis:16-3.4
+    container_name: terroir-postgresql-test
+    ports:
+      - "5434:5432"   # Shifted: avoid conflict with dev stack on 5432
+    environment:
+      POSTGRES_USER: terroir_test
+      POSTGRES_PASSWORD: terroir_test_pass
+      POSTGRES_DB: terroir_test_db
+    tmpfs:
+      - /var/lib/postgresql/data:rw,size=512m
+    networks:
+      - terroir-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U terroir_test -d terroir_test_db"]
+      interval: 5s
+      timeout: 3s
+      start_period: 10s
+      retries: 10
+    restart: "no"
+
+  # ─────────────────────────────────────────────
+  # Redis (test instance)
+  # ─────────────────────────────────────────────
+  redis-test:
+    image: redis:7-alpine
+    container_name: terroir-redis-test
+    ports:
+      - "6380:6379"   # Shifted: avoid conflict with dev stack on 6379
+    tmpfs:
+      - /data:rw,size=128m
+    networks:
+      - terroir-test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      start_period: 5s
+      retries: 5
+    restart: "no"
+
+  # ─────────────────────────────────────────────
+  # Redpanda (test instance — single broker)
+  # ─────────────────────────────────────────────
+  redpanda-test:
+    image: redpandadata/redpanda:latest
+    container_name: terroir-redpanda-test
+    ports:
+      - "19093:19092"   # Shifted: avoid conflict with dev stack on 19092
+      - "8082:8081"     # Schema Registry (shifted)
+      - "9645:9644"     # Admin API (shifted)
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=256M
+      - --reserve-memory=0M
+      - --overprovisioned
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr=internal://redpanda-test:9092,external://localhost:19093
+      - --schema-registry-addr=internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr=redpanda-test:33145
+      - --advertise-rpc-addr=redpanda-test:33145
+      - --set=redpanda.auto_create_topics_enabled=true
+    tmpfs:
+      - /var/lib/redpanda/data:rw,size=256m
+    networks:
+      - terroir-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health || exit 1"]
+      interval: 10s
+      timeout: 8s
+      start_period: 20s
+      retries: 8
+    restart: "no"
+
+  # ─────────────────────────────────────────────
+  # Keycloak (test instance — dev mode, no DB)
+  # ─────────────────────────────────────────────
+  keycloak-test:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: terroir-keycloak-test
+    ports:
+      - "8444:8080"   # Shifted: avoid conflict with dev stack on 8443
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: dev-mem   # In-memory H2 for tests — no external DB needed
+      KC_HEALTH_ENABLED: "true"
+    volumes:
+      - ./infrastructure/keycloak:/opt/keycloak/data/import:ro
+    networks:
+      - terroir-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 15s
+      timeout: 8s
+      start_period: 45s
+      retries: 8
+    restart: "no"

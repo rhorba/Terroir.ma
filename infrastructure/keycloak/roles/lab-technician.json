@@ -1,0 +1,18 @@
+{
+  "name": "lab-technician",
+  "description": "Accredited laboratory technician. Can receive product batch test submissions, enter analytical results (pesticides, heavy metals, organoleptic), generate lab reports, and mark tests as passed or failed.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "lab:read",
+      "lab:write",
+      "lab:report:generate",
+      "product:read",
+      "product.batch:read",
+      "certification:read:partial"
+    ],
+    "level": ["5"]
+  }
+}

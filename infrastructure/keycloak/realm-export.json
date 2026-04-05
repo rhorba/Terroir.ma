@@ -1,0 +1,329 @@
+{
+  "id": "terroir-ma",
+  "realm": "terroir-ma",
+  "displayName": "Terroir.ma",
+  "displayNameHtml": "<img src='/resources/terroir/login/img/terroir-logo.png' alt='Terroir.ma' width='120'/><div>Terroir.ma</div>",
+  "enabled": true,
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": true,
+  "rememberMe": true,
+  "verifyEmail": true,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 300,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "sslRequired": "external",
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespanEnabled": false,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "passwordPolicy": "length(8) and upperCase(1) and digits(1) and specialChars(1)",
+  "internationalizationEnabled": true,
+  "supportedLocales": ["ar", "fr", "zgh"],
+  "defaultLocale": "ar",
+  "loginTheme": "terroir",
+  "accountTheme": "terroir",
+  "adminTheme": "keycloak",
+  "emailTheme": "terroir",
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "noreply@terroir.ma",
+    "fromDisplayName": "Terroir.ma",
+    "ssl": "false",
+    "starttls": "false",
+    "auth": "false"
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "super-admin",
+        "description": "Full platform access. Can manage all cooperatives, override certifications, access all modules, and perform administrative operations.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["*"],
+          "level": ["10"]
+        }
+      },
+      {
+        "name": "cooperative-admin",
+        "description": "Administrator for a specific cooperative. Can manage members, submit certification requests, view all reports for their cooperative.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["cooperative:manage", "product:write", "certification:submit"],
+          "level": ["7"]
+        }
+      },
+      {
+        "name": "cooperative-member",
+        "description": "Member of a cooperative. Can log harvests, view their cooperative's certifications, and manage their farm parcels.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["cooperative:read", "product:write:own", "farm:manage:own"],
+          "level": ["3"]
+        }
+      },
+      {
+        "name": "lab-technician",
+        "description": "Laboratory technician. Can receive test submissions, enter results, and issue lab reports for product batches.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["lab:read", "lab:write", "product:read"],
+          "level": ["5"]
+        }
+      },
+      {
+        "name": "inspector",
+        "description": "Field inspector assigned by certification body. Can view assigned inspections, submit field reports, and upload inspection evidence.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["inspection:read:assigned", "inspection:write:assigned", "cooperative:read"],
+          "level": ["5"]
+        }
+      },
+      {
+        "name": "certification-body",
+        "description": "Certification authority officer. Can manage the full certification lifecycle: assign inspectors, review reports, grant or deny certifications.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["certification:manage", "inspection:manage", "cooperative:read", "product:read"],
+          "level": ["8"]
+        }
+      },
+      {
+        "name": "customs-agent",
+        "description": "Customs and border control agent. Can scan and verify QR codes, view export documents, and validate certification status for cross-border shipments.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["certification:verify", "export:read", "qr:verify"],
+          "level": ["4"]
+        }
+      },
+      {
+        "name": "consumer",
+        "description": "End consumer or market buyer. Can scan QR codes to view product origin, certification status, and cooperative information.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["qr:verify", "product:read:public", "cooperative:read:public"],
+          "level": ["1"]
+        }
+      },
+      {
+        "name": "service-account",
+        "description": "Machine-to-machine service account for internal microservices and automation jobs. Not for human users.",
+        "composite": false,
+        "clientRole": false,
+        "attributes": {
+          "permissions": ["internal:*"],
+          "level": ["6"]
+        }
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "web-portal",
+      "name": "Terroir.ma Web Portal",
+      "description": "Main web portal for cooperatives, labs, inspectors, and certification bodies",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4200/*##http://localhost:3000/*"
+      },
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:3000"
+      ],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "optionalClientScopes": ["address", "phone", "offline_access"]
+    },
+    {
+      "clientId": "inspector-app",
+      "name": "Terroir.ma Inspector Mobile App",
+      "description": "Mobile application for field inspectors — iOS and Android",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "terroir://callback"
+      },
+      "redirectUris": [
+        "terroir://callback",
+        "terroir://auth/callback",
+        "http://localhost:4201/*"
+      ],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "optionalClientScopes": ["offline_access"]
+    },
+    {
+      "clientId": "consumer-app",
+      "name": "Terroir.ma Consumer Verify App",
+      "description": "Consumer QR code verification application — iOS, Android, and web",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "terroir-verify://callback"
+      },
+      "redirectUris": [
+        "terroir-verify://callback",
+        "terroir-verify://auth/callback",
+        "http://localhost:4202/*"
+      ],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["openid", "profile", "email"],
+      "optionalClientScopes": ["offline_access"]
+    },
+    {
+      "clientId": "api-client",
+      "name": "Terroir.ma API Service",
+      "description": "Backend NestJS API — machine-to-machine client credentials for service-to-service calls",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": false,
+      "secret": "change-me-in-production",
+      "attributes": {},
+      "redirectUris": [],
+      "webOrigins": [],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": true,
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "optionalClientScopes": []
+    },
+    {
+      "clientId": "admin-console",
+      "name": "Terroir.ma Admin Console",
+      "description": "Internal platform administration console for super-admin and certification-body staff",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "change-me-in-production-admin",
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:4203/*"
+      },
+      "redirectUris": [
+        "http://localhost:4203/*",
+        "http://localhost:3000/admin/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4203",
+        "http://localhost:3000"
+      ],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "optionalClientScopes": ["address", "phone"]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "google",
+      "displayName": "Google",
+      "providerId": "google",
+      "enabled": false,
+      "trustEmail": true,
+      "storeToken": false,
+      "addReadTokenRoleOnCreate": false,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "GOOGLE_CLIENT_ID_PLACEHOLDER",
+        "clientSecret": "GOOGLE_CLIENT_SECRET_PLACEHOLDER",
+        "defaultScope": "openid email profile"
+      }
+    }
+  ],
+  "requiredActions": [
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": true,
+      "priority": 50,
+      "config": {}
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30,
+      "config": {}
+    },
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "Configure OTP",
+      "providerId": "CONFIGURE_TOTP",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 10,
+      "config": {}
+    },
+    {
+      "alias": "terms_and_conditions",
+      "name": "Terms and Conditions",
+      "providerId": "terms_and_conditions",
+      "enabled": false,
+      "defaultAction": false,
+      "priority": 20,
+      "config": {}
+    }
+  ],
+  "scopeMappings": [],
+  "clientScopeMappings": {},
+  "defaultDefaultClientScopes": ["role_list", "profile", "email", "roles", "web-origins"],
+  "defaultOptionalClientScopes": ["offline_access", "address", "phone", "microprofile-jwt"]
+}

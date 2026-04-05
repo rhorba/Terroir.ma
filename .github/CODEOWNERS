@@ -1,0 +1,5 @@
+* @terroir-ma/core-team
+src/modules/cooperative/ @terroir-ma/cooperative-team
+src/modules/product/ @terroir-ma/product-team
+src/modules/certification/ @terroir-ma/certification-team
+infrastructure/ @terroir-ma/infra-team

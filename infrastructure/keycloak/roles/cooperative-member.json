@@ -1,0 +1,18 @@
+{
+  "name": "cooperative-member",
+  "description": "Member of a cooperative. Can log harvests, view their cooperative's certifications, and manage their own farm parcels. Cannot manage other members or submit certification requests.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "cooperative:read",
+      "product:write:own",
+      "product:read:own",
+      "farm:manage:own",
+      "certification:read:own",
+      "notification:read:own"
+    ],
+    "level": ["3"]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "customs-agent",
+  "description": "Customs and border control agent (ADII — Administration des Douanes et Impôts Indirects). Can scan and verify QR codes, validate certification status, view export documents, and check product origin authenticity for cross-border shipments.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "certification:verify",
+      "qr:verify",
+      "export:read",
+      "product:read:public",
+      "cooperative:read:public"
+    ],
+    "level": ["4"]
+  }
+}

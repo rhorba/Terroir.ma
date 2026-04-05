@@ -1,0 +1,126 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+env:
+  LOCAL_REGISTRY: localhost:5000
+  IMAGE_NAME: terroir-ma
+
+jobs:
+  deploy:
+    name: Build, push, and deploy
+    runs-on: ubuntu-latest
+    # Only run if CI passed
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set image tag from git SHA
+        id: vars
+        run: echo "SHA_TAG=${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start local registry
+        run: |
+          docker run -d -p 5000:5000 --restart=always --name local-registry registry:2
+          # Wait for registry to be ready
+          for i in $(seq 1 10); do
+            curl -sf http://localhost:5000/v2/ && break
+            sleep 2
+          done
+
+      - name: Build and push Docker image to local registry
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.LOCAL_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.SHA_TAG }}
+            ${{ env.LOCAL_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Restart terroir-app container
+        run: |
+          # Pull the newly pushed image and restart the container
+          docker pull ${{ env.LOCAL_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.SHA_TAG }}
+
+          # Stop and remove existing container if running
+          docker stop terroir-app 2>/dev/null || true
+          docker rm terroir-app 2>/dev/null || true
+
+          # Start the new container
+          docker run -d \
+            --name terroir-app \
+            --network host \
+            --env-file .env \
+            --restart unless-stopped \
+            -p 3000:3000 \
+            ${{ env.LOCAL_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.SHA_TAG }}
+
+      - name: Wait for application to be ready
+        run: |
+          echo "Waiting for application to start..."
+          for i in $(seq 1 30); do
+            STATUS=$(curl -sf -o /dev/null -w "%{http_code}" http://localhost:3000/health || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "Application is ready (attempt $i)"
+              break
+            fi
+            echo "Attempt $i: status=$STATUS, retrying in 3s..."
+            sleep 3
+          done
+
+      - name: Smoke test — /health endpoint
+        run: |
+          RESPONSE=$(curl -sf http://localhost:3000/health)
+          echo "Health response: $RESPONSE"
+          echo "$RESPONSE" | grep -q '"status":"ok"' || \
+          (echo "Health check failed!" && exit 1)
+
+      - name: Smoke test — /ready endpoint
+        run: |
+          RESPONSE=$(curl -sf http://localhost:3000/ready)
+          echo "Ready response: $RESPONSE"
+          echo "$RESPONSE" | grep -q '"status":"ok"' || \
+          (echo "Readiness check failed — DB/Redis/Kafka not healthy!" && exit 1)
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          echo "Deployment successful!"
+          echo "  Image: ${{ env.LOCAL_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.SHA_TAG }}"
+          echo "  Git SHA: ${{ github.event.workflow_run.head_sha }}"
+          echo "  Health: OK"
+          echo "  Ready:  OK"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed — attempting rollback to previous image..."
+          PREV_IMAGE=${{ env.LOCAL_REGISTRY }}/${{ env.IMAGE_NAME }}:previous
+          if docker image inspect "$PREV_IMAGE" &>/dev/null; then
+            docker stop terroir-app 2>/dev/null || true
+            docker rm terroir-app 2>/dev/null || true
+            docker run -d \
+              --name terroir-app \
+              --network host \
+              --env-file .env \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              "$PREV_IMAGE"
+            echo "Rolled back to $PREV_IMAGE"
+          else
+            echo "No previous image found — manual intervention required."
+          fi
+          exit 1

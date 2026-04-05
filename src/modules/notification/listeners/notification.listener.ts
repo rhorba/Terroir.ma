@@ -1,0 +1,119 @@
+import { Controller, Logger } from '@nestjs/common';
+import { EventPattern, Payload, Ctx, KafkaContext } from '@nestjs/microservices';
+import type {
+  CertificationDecisionGrantedEvent,
+  LabTestCompletedEvent,
+  CertificationInspectionScheduledEvent,
+} from '../../../common/interfaces/events';
+import { NotificationService } from '../services/notification.service';
+
+/**
+ * Notification module Kafka listener.
+ * Consumer group: notification-group
+ * Consumes: certification.decision.granted, lab.test.completed, certification.inspection.scheduled
+ */
+@Controller()
+export class NotificationListener {
+  private readonly logger = new Logger(NotificationListener.name);
+
+  constructor(private readonly notificationService: NotificationService) {}
+
+  @EventPattern('certification.decision.granted')
+  async handleCertificationGranted(
+    @Payload() data: CertificationDecisionGrantedEvent,
+    @Ctx() context: KafkaContext,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        { eventId: data.eventId, certificationId: data.certificationId },
+        'Certification granted — sending notification',
+      );
+
+      // Send email in all three supported languages; language is stored on the recipient profile.
+      // For now we default to fr-MA and trust the template resolver to fall back.
+      await this.notificationService.send({
+        recipientId: data.cooperativeId,
+        channel: 'email',
+        templateCode: 'certification-granted',
+        language: 'fr-MA',
+        context: {
+          certificationNumber: data.certificationNumber,
+          productName: data.productName,
+          cooperativeName: data.cooperativeName,
+          grantedAt: data.grantedAt,
+        },
+        triggerEventId: data.eventId,
+        correlationId: data.correlationId,
+      });
+
+      context.getMessage().ack?.();
+    } catch (error) {
+      this.logger.error({ error, eventId: data.eventId }, 'Failed to process certification.decision.granted');
+    }
+  }
+
+  @EventPattern('lab.test.completed')
+  async handleLabTestCompleted(
+    @Payload() data: LabTestCompletedEvent,
+    @Ctx() context: KafkaContext,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        { eventId: data.eventId, batchId: data.batchId, passed: data.passed },
+        'Lab test completed — sending notification',
+      );
+
+      await this.notificationService.send({
+        recipientId: data.cooperativeId,
+        channel: 'email',
+        templateCode: 'lab-test-completed',
+        language: 'fr-MA',
+        context: {
+          batchReference: data.batchReference,
+          productName: data.productName,
+          passed: data.passed,
+          completedAt: data.completedAt,
+          labName: data.labName,
+        },
+        triggerEventId: data.eventId,
+        correlationId: data.correlationId,
+      });
+
+      context.getMessage().ack?.();
+    } catch (error) {
+      this.logger.error({ error, eventId: data.eventId }, 'Failed to process lab.test.completed');
+    }
+  }
+
+  @EventPattern('certification.inspection.scheduled')
+  async handleInspectionScheduled(
+    @Payload() data: CertificationInspectionScheduledEvent,
+    @Ctx() context: KafkaContext,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        { eventId: data.eventId, inspectionId: data.inspectionId },
+        'Inspection scheduled — sending notification',
+      );
+
+      await this.notificationService.send({
+        recipientId: data.cooperativeId,
+        channel: 'email',
+        templateCode: 'inspection-scheduled',
+        language: 'fr-MA',
+        context: {
+          cooperativeName: data.cooperativeName,
+          inspectorName: data.inspectorName,
+          scheduledDate: data.scheduledDate,
+          location: data.location,
+        },
+        triggerEventId: data.eventId,
+        correlationId: data.correlationId,
+      });
+
+      context.getMessage().ack?.();
+    } catch (error) {
+      this.logger.error({ error, eventId: data.eventId }, 'Failed to process certification.inspection.scheduled');
+    }
+  }
+}

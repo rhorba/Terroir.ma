@@ -1,0 +1,74 @@
+[
+  {
+    "code": "ARGAN_OIL",
+    "name_fr": "Huile d'Argan",
+    "name_ar": "زيت أركان",
+    "name_zgh": "Aẓil n Argan",
+    "region": "SFI",
+    "certificationTypes": ["AOP", "IGP"],
+    "labParametersKey": "argan_oil"
+  },
+  {
+    "code": "SAFFRON",
+    "name_fr": "Safran",
+    "name_ar": "الزعفران",
+    "name_zgh": "Azafran",
+    "region": "SFI",
+    "certificationTypes": ["AOP", "IGP"],
+    "labParametersKey": "saffron"
+  },
+  {
+    "code": "OLIVE_OIL_PICHOLINE",
+    "name_fr": "Huile d'Olive Picholine Marocaine",
+    "name_ar": "زيت الزيتون بيكولين المغربي",
+    "name_zgh": "Aẓil n Azemmur Pikulin",
+    "region": "MRR",
+    "certificationTypes": ["AOP"],
+    "labParametersKey": "olive_oil"
+  },
+  {
+    "code": "HONEY_EUPHORBIA",
+    "name_fr": "Miel d'Euphorbe",
+    "name_ar": "عسل الفرفيون",
+    "name_zgh": "Tamment n Tafufelt",
+    "region": "TNG",
+    "certificationTypes": ["IGP"],
+    "labParametersKey": "honey"
+  },
+  {
+    "code": "MEDJOOL_DATES",
+    "name_fr": "Dattes Medjoul",
+    "name_ar": "تمر مجهول",
+    "name_zgh": "Tamert Amawal",
+    "region": "DKH",
+    "certificationTypes": ["AOP", "IGP"],
+    "labParametersKey": "dates"
+  },
+  {
+    "code": "ROSE_DADES",
+    "name_fr": "Rose de Dades",
+    "name_ar": "ورد الدادس",
+    "name_zgh": "Tawrirt n Dads",
+    "region": "DKH",
+    "certificationTypes": ["IGP"],
+    "labParametersKey": "rose"
+  },
+  {
+    "code": "CLEMENTINE_BERKANE",
+    "name_fr": "Clémentine de Berkane",
+    "name_ar": "يوسفي بركان",
+    "name_zgh": "Timiṭrin n Berkane",
+    "region": "ORI",
+    "certificationTypes": ["IGP"],
+    "labParametersKey": "citrus"
+  },
+  {
+    "code": "THUYA_WOOD",
+    "name_fr": "Thuya de Berbérie",
+    "name_ar": "خشب الطوباد",
+    "name_zgh": "Adaɣ n Tiṭṭawin",
+    "region": "TNG",
+    "certificationTypes": ["IGP"],
+    "labParametersKey": "wood"
+  }
+]

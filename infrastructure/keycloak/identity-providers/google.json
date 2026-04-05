@@ -1,0 +1,17 @@
+{
+  "alias": "google",
+  "displayName": "Google",
+  "providerId": "google",
+  "enabled": false,
+  "trustEmail": true,
+  "storeToken": false,
+  "addReadTokenRoleOnCreate": false,
+  "firstBrokerLoginFlowAlias": "first broker login",
+  "postBrokerLoginFlowAlias": "",
+  "config": {
+    "clientId": "GOOGLE_CLIENT_ID_PLACEHOLDER",
+    "clientSecret": "GOOGLE_CLIENT_SECRET_PLACEHOLDER",
+    "defaultScope": "openid email profile",
+    "useJwksUrl": "true"
+  }
+}

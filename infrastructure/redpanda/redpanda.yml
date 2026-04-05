@@ -1,0 +1,43 @@
+# =============================================================================
+# Redpanda configuration for Terroir.ma v1
+# Single broker, development mode
+# =============================================================================
+
+redpanda:
+  developer_mode: true
+  auto_create_topics_enabled: false
+  default_topic_partitions: 3
+  default_topic_replication_factor: 1
+
+  # Kafka API — two listeners: internal (container-to-container) and external (host)
+  kafka_api:
+    - address: 0.0.0.0:9092
+      name: internal
+    - address: 0.0.0.0:19092
+      name: external
+
+  # Advertised addresses clients will connect to
+  advertised_kafka_api:
+    - address: localhost
+      port: 19092
+      name: external
+    - address: redpanda
+      port: 9092
+      name: internal
+
+  # Admin API
+  admin_api:
+    - address: 0.0.0.0:9644
+      name: admin
+
+  # Schema Registry
+  schema_registry:
+    - address: 0.0.0.0:8081
+
+rpk:
+  kafka_api:
+    brokers:
+      - localhost:19092
+  admin_api:
+    addresses:
+      - localhost:9644

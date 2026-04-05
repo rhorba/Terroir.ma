@@ -1,0 +1,68 @@
+{
+  "argan_oil": {
+    "required": [
+      { "key": "acidity", "label_fr": "Acidité (%)", "label_ar": "الحموضة (%)", "unit": "%", "max": 4.0 },
+      { "key": "peroxide_value", "label_fr": "Indice de peroxyde (meq O2/kg)", "label_ar": "مؤشر البيروكسيد", "unit": "meq O2/kg", "max": 20.0 },
+      { "key": "moisture", "label_fr": "Humidité (%)", "label_ar": "الرطوبة (%)", "unit": "%", "max": 0.2 },
+      { "key": "oleic_acid_pct", "label_fr": "Acide oléique (%)", "label_ar": "حمض الأوليك (%)", "unit": "%", "min": 43.0, "max": 49.9 },
+      { "key": "tocopherol_mgkg", "label_fr": "Tocophérols (mg/kg)", "label_ar": "توكوفيرول (mg/kg)", "unit": "mg/kg", "min": 600, "max": 900 }
+    ]
+  },
+  "saffron": {
+    "required": [
+      { "key": "crocin_e1pct", "label_fr": "Crocine E1% (260nm)", "label_ar": "كروسين E1%", "unit": "E1%/1cm", "min": 190 },
+      { "key": "safranal_e1pct", "label_fr": "Safranal E1% (330nm)", "label_ar": "سافرانال", "unit": "E1%/1cm", "min": 20, "max": 50 },
+      { "key": "picrocrocin_e1pct", "label_fr": "Picrocrocine E1% (257nm)", "label_ar": "بيكروكروسين", "unit": "E1%/1cm", "min": 70 },
+      { "key": "moisture_pct", "label_fr": "Humidité (%)", "label_ar": "الرطوبة (%)", "unit": "%", "max": 12.0 },
+      { "key": "ash_pct", "label_fr": "Cendres (%)", "label_ar": "الرماد (%)", "unit": "%", "max": 8.0 }
+    ]
+  },
+  "olive_oil": {
+    "required": [
+      { "key": "acidity", "label_fr": "Acidité (%)", "label_ar": "الحموضة (%)", "unit": "%", "max": 0.8 },
+      { "key": "peroxide_value", "label_fr": "Indice de peroxyde", "label_ar": "مؤشر البيروكسيد", "unit": "meq O2/kg", "max": 20.0 },
+      { "key": "polyphenols_mgkg", "label_fr": "Polyphénols (mg/kg)", "label_ar": "بوليفينول (mg/kg)", "unit": "mg/kg", "min": 100 },
+      { "key": "k232", "label_fr": "Coefficient d'extinction K232", "label_ar": "معامل الانكسار K232", "unit": "abs", "max": 2.50 },
+      { "key": "k270", "label_fr": "Coefficient d'extinction K270", "label_ar": "معامل الانكسار K270", "unit": "abs", "max": 0.22 }
+    ]
+  },
+  "honey": {
+    "required": [
+      { "key": "moisture_pct", "label_fr": "Humidité (%)", "label_ar": "الرطوبة (%)", "unit": "%", "max": 20.0 },
+      { "key": "hm_f_mgkg", "label_fr": "HMF (mg/kg)", "label_ar": "HMF (mg/kg)", "unit": "mg/kg", "max": 40 },
+      { "key": "diastase_scale", "label_fr": "Activité diastasique (échelle Schade)", "label_ar": "النشاط الإنزيمي", "unit": "Schade", "min": 8 },
+      { "key": "sucrose_pct", "label_fr": "Saccharose (%)", "label_ar": "السكروز (%)", "unit": "%", "max": 5.0 },
+      { "key": "fructose_glucose_pct", "label_fr": "Fructose + Glucose (%)", "label_ar": "فركتوز + جلوكوز (%)", "unit": "%", "min": 60.0 }
+    ]
+  },
+  "dates": {
+    "required": [
+      { "key": "moisture_pct", "label_fr": "Humidité (%)", "label_ar": "الرطوبة (%)", "unit": "%", "max": 25.0 },
+      { "key": "sugar_pct", "label_fr": "Sucres totaux (%)", "label_ar": "السكريات الكلية (%)", "unit": "%", "min": 55.0 },
+      { "key": "flesh_to_seed_ratio", "label_fr": "Ratio chair/noyau", "label_ar": "نسبة اللحم إلى النواة", "unit": "ratio", "min": 9.0 },
+      { "key": "weight_g", "label_fr": "Poids moyen du fruit (g)", "label_ar": "متوسط وزن الثمرة (g)", "unit": "g", "min": 18.0 }
+    ]
+  },
+  "rose": {
+    "required": [
+      { "key": "geraniol_pct", "label_fr": "Géraniol (%)", "label_ar": "جيرانيول (%)", "unit": "%", "min": 10.0 },
+      { "key": "citronellol_pct", "label_fr": "Citronellol (%)", "label_ar": "سيترونيلول (%)", "unit": "%", "min": 18.0 },
+      { "key": "nonadecane_pct", "label_fr": "Nonadécane (%)", "label_ar": "نوناديكان (%)", "unit": "%" },
+      { "key": "moisture_pct", "label_fr": "Humidité (%)", "label_ar": "الرطوبة (%)", "unit": "%", "max": 12.0 }
+    ]
+  },
+  "citrus": {
+    "required": [
+      { "key": "brix", "label_fr": "Degré Brix (°Bx)", "label_ar": "درجة بريكس", "unit": "°Bx", "min": 9.0 },
+      { "key": "acidity_pct", "label_fr": "Acidité titrable (%)", "label_ar": "الحموضة القابلة للمعايرة (%)", "unit": "%", "max": 1.2 },
+      { "key": "brix_acid_ratio", "label_fr": "Rapport Brix/Acidité", "label_ar": "نسبة بريكس/الحموضة", "unit": "ratio", "min": 7.0 },
+      { "key": "rind_colour_class", "label_fr": "Classe couleur écorce (1-8)", "label_ar": "صنف لون القشرة (1-8)", "unit": "class", "min": 3 }
+    ]
+  },
+  "wood": {
+    "required": [
+      { "key": "moisture_pct", "label_fr": "Humidité (%)", "label_ar": "الرطوبة (%)", "unit": "%", "max": 15.0 },
+      { "key": "density_gcm3", "label_fr": "Densité (g/cm³)", "label_ar": "الكثافة (g/cm³)", "unit": "g/cm³", "min": 0.85 }
+    ]
+  }
+}

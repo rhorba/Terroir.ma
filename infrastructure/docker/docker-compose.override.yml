@@ -1,0 +1,47 @@
+version: "3.9"
+
+# Terroir.ma — Development overrides
+# Applied automatically when using `docker compose up` without specifying a file.
+# Adds hot-reload source mounts, debug port, pretty logging, and auto-restart.
+
+services:
+
+  terroir-app:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Dockerfile
+      target: runner
+    image: terroir-ma:dev
+    volumes:
+      # Hot-reload: mount source so changes are reflected without rebuild
+      - ../../src:/app/src
+      # Allow access to shared module changes
+      - ../../shared:/app/shared
+    environment:
+      NODE_ENV: development
+      LOG_PRETTY: "true"
+      LOG_LEVEL: debug
+    ports:
+      - "9229:9229"   # Node.js debugger (VS Code / WebStorm)
+    restart: unless-stopped
+
+  postgresql:
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+
+  redpanda:
+    restart: unless-stopped
+
+  redpanda-console:
+    restart: unless-stopped
+
+  keycloak:
+    restart: unless-stopped
+
+  keycloak-db:
+    restart: unless-stopped
+
+  mailpit:
+    restart: unless-stopped

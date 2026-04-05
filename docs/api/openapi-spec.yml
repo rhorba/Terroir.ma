@@ -1,0 +1,537 @@
+openapi: 3.1.0
+info:
+  title: Terroir.ma API
+  description: |
+    Platform API for Morocco's terroir product certification chain under Law 25-06 (SDOQ).
+
+    ## Authentication
+    All endpoints require a valid Keycloak JWT in the `Authorization: Bearer <token>` header,
+    except `GET /verify/{uuid}` which is public.
+
+    ## Response Envelope
+    All responses use a standard envelope:
+    ```json
+    {
+      "success": true,
+      "data": {},
+      "error": null,
+      "meta": { "page": 1, "limit": 20, "total": 100 }
+    }
+    ```
+
+    ## Languages
+    Use `Accept-Language: fr-MA | ar-MA | zgh` to receive responses in the preferred language.
+  version: 1.0.0
+  contact:
+    name: Terroir.ma Team
+    email: dev@terroir.ma
+  license:
+    name: Proprietary
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.terroir.ma
+    description: Production (Phase 2)
+
+tags:
+  - name: Health
+    description: Health and readiness probes
+  - name: Cooperatives
+    description: Cooperative registration and management
+  - name: Products
+    description: Product specification and batch management
+  - name: Certifications
+    description: Certification request and decision workflow
+  - name: Inspections
+    description: On-site inspection scheduling and reports
+  - name: QR Codes
+    description: QR code generation and public verification
+  - name: Export Documents
+    description: Export documentation for customs clearance
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Keycloak JWT token
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        data:
+          type: 'null'
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: CERTIFICATION_NOT_FOUND
+            message:
+              type: string
+              example: Certification with id xxx not found
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 100
+
+    CertificationStatus:
+      type: string
+      enum: [pending, under-review, inspection-scheduled, granted, denied, revoked]
+
+    CertificationType:
+      type: string
+      enum: [AOP, IGP, LA]
+
+    Certification:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        cooperativeId:
+          type: string
+          format: uuid
+        batchId:
+          type: string
+          format: uuid
+        certificationTypeCode:
+          $ref: '#/components/schemas/CertificationType'
+        productTypeCode:
+          type: string
+          example: ARGAN_OIL
+        regionCode:
+          type: string
+          example: SFI
+        status:
+          $ref: '#/components/schemas/CertificationStatus'
+        certificationNumber:
+          type: string
+          nullable: true
+          example: TERROIR-AOP-SFI-2025-001
+        requestedAt:
+          type: string
+          format: date-time
+        grantedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    RequestCertificationDto:
+      type: object
+      required: [batchId, certificationTypeCode, productTypeCode, regionCode]
+      properties:
+        batchId:
+          type: string
+          format: uuid
+        certificationTypeCode:
+          $ref: '#/components/schemas/CertificationType'
+        productTypeCode:
+          type: string
+          example: ARGAN_OIL
+        regionCode:
+          type: string
+          example: SFI
+          minLength: 2
+          maxLength: 10
+
+    GrantCertificationDto:
+      type: object
+      required: [notes]
+      properties:
+        notes:
+          type: string
+          minLength: 10
+          example: All criteria met per cahier des charges
+
+    DenyCertificationDto:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 20
+          example: Lab test results below SDOQ minimum thresholds for acidity
+
+    FileInspectionReportDto:
+      type: object
+      required: [passed, reportSummary]
+      properties:
+        passed:
+          type: boolean
+        reportSummary:
+          type: string
+          minLength: 20
+          example: Cooperative facilities meet SDOQ requirements. Production area clean and documented.
+        detailedObservations:
+          type: string
+          nullable: true
+        nonConformities:
+          type: string
+          nullable: true
+
+    QrVerificationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        certificationNumber:
+          type: string
+          example: TERROIR-AOP-SFI-2025-001
+        productName:
+          type: string
+          example: Huile d'Argan
+        cooperativeName:
+          type: string
+          example: Coopérative Féminine Tissadert
+        certificationTypeCode:
+          type: string
+          example: AOP
+        grantedAt:
+          type: string
+          format: date-time
+        validUntil:
+          type: string
+          format: date-time
+          nullable: true
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      security: []
+      responses:
+        '200':
+          description: Application is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /ready:
+    get:
+      tags: [Health]
+      summary: Readiness probe (checks DB, Redis, Kafka)
+      security: []
+      responses:
+        '200':
+          description: All dependencies healthy
+        '503':
+          description: One or more dependencies unhealthy
+
+  /certifications/request:
+    post:
+      tags: [Certifications]
+      summary: Request a new certification
+      description: Requires cooperative-admin or cooperative-member role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestCertificationDto'
+      responses:
+        '201':
+          description: Certification request created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      data:
+                        $ref: '#/components/schemas/Certification'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — insufficient role
+
+  /certifications/{id}:
+    get:
+      tags: [Certifications]
+      summary: Get certification by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Certification found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/Certification'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /certifications/{id}/grant:
+    patch:
+      tags: [Certifications]
+      summary: Grant a certification
+      description: Requires certification-body role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrantCertificationDto'
+      responses:
+        '200':
+          description: Certification granted
+        '404':
+          description: Not found
+        '409':
+          description: Invalid state transition
+
+  /certifications/{id}/deny:
+    patch:
+      tags: [Certifications]
+      summary: Deny a certification request
+      description: Requires certification-body role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DenyCertificationDto'
+      responses:
+        '200':
+          description: Certification denied
+        '404':
+          description: Not found
+
+  /inspections:
+    post:
+      tags: [Inspections]
+      summary: Schedule an inspection
+      description: Requires certification-body or inspector role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [certificationId, inspectorId, scheduledDate, location]
+              properties:
+                certificationId:
+                  type: string
+                  format: uuid
+                inspectorId:
+                  type: string
+                  format: uuid
+                scheduledDate:
+                  type: string
+                  format: date
+                  example: '2025-11-15'
+                location:
+                  type: string
+                  example: Ferme Coopérative Taliouine
+      responses:
+        '201':
+          description: Inspection scheduled
+
+  /inspections/{id}/report:
+    patch:
+      tags: [Inspections]
+      summary: File an inspection report
+      description: Requires inspector role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileInspectionReportDto'
+      responses:
+        '200':
+          description: Inspection report filed
+
+  /qr-codes/{certificationId}:
+    post:
+      tags: [QR Codes]
+      summary: Generate a QR code for a granted certification
+      description: Requires certification-body or super-admin role
+      parameters:
+        - name: certificationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: QR code generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      uuid:
+                        type: string
+                        format: uuid
+                      verifyUrl:
+                        type: string
+                        example: https://terroir.ma/verify/abc-123?sig=hmac
+                      qrCodeDataUrl:
+                        type: string
+                        description: Base64 PNG data URL of the QR code image
+
+  /verify/{uuid}:
+    get:
+      tags: [QR Codes]
+      summary: Verify a QR code (public endpoint, no auth required)
+      description: |
+        Public endpoint for consumers to verify product authenticity by scanning a QR code.
+        Target response time < 200ms via Redis cache.
+      security: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sig
+          in: query
+          required: true
+          schema:
+            type: string
+          description: HMAC-SHA256 signature
+      responses:
+        '200':
+          description: QR code valid — certification details returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/QrVerificationResult'
+        '403':
+          description: Invalid or tampered QR code
+        '404':
+          description: QR code not found
+
+  /export-documents:
+    post:
+      tags: [Export Documents]
+      summary: Request an export document
+      description: Requires cooperative-admin or customs-agent role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [certificationId, destinationCountry, quantity, hsCode]
+              properties:
+                certificationId:
+                  type: string
+                  format: uuid
+                destinationCountry:
+                  type: string
+                  example: FR
+                quantity:
+                  type: number
+                  example: 500
+                unit:
+                  type: string
+                  example: kg
+                hsCode:
+                  type: string
+                  example: '1515.30'
+      responses:
+        '201':
+          description: Export document created
+
+  /export-documents/{id}/validate:
+    post:
+      tags: [Export Documents]
+      summary: Validate an export document (customs clearance)
+      description: Requires customs-agent role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Export document validated — clearance granted

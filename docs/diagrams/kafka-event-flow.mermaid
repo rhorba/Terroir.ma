@@ -1,0 +1,50 @@
+---
+title: Kafka Event Flow — Successful Certification Path
+---
+sequenceDiagram
+    actor CoopAdmin as Cooperative Admin
+    participant CM as CooperativeModule
+    participant PM as ProductModule
+    participant CertM as CertificationModule
+    participant NM as NotificationModule
+    participant K as Kafka (Redpanda)
+
+    CoopAdmin->>CM: Register cooperative (CIN/ICE/IF)
+    CM->>K: cooperative.registration.submitted
+    K->>NM: cooperative.registration.submitted
+    NM-->>CoopAdmin: Email: Registration received
+
+    Note over CM: super-admin verifies
+    CM->>K: cooperative.registration.verified
+    K->>CertM: cooperative.registration.verified (read model)
+    K->>PM: cooperative.registration.verified (read model)
+
+    CoopAdmin->>PM: Log harvest + create batch
+    PM->>K: product.batch.created
+
+    Note over PM: Lab technician submits test results
+    PM->>K: lab.test.completed (passed: true)
+    K->>CertM: lab.test.completed → update batch eligibility
+    K->>NM: lab.test.completed
+    NM-->>CoopAdmin: Email: Lab results (passed)
+
+    CoopAdmin->>CertM: POST /certifications/request
+    CertM->>K: certification.requested
+    K->>NM: certification.requested
+    NM-->>CoopAdmin: Email: Certification request received
+
+    Note over CertM: certification-body schedules inspection
+    CertM->>K: certification.inspection.scheduled
+    K->>NM: certification.inspection.scheduled
+    NM-->>CoopAdmin: Email: Inspection scheduled
+
+    Note over CertM: inspector files passing report
+    CertM->>K: certification.inspection.completed
+
+    Note over CertM: certification-body grants
+    CertM->>K: certification.decision.granted
+    K->>NM: certification.decision.granted
+    NM-->>CoopAdmin: Email: 🎉 Certification TERROIR-AOP-SFI-2025-001 granted
+
+    CoopAdmin->>CertM: POST /qr-codes/{certificationId}
+    CertM->>K: certification.qrcode.generated

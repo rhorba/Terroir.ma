@@ -1,0 +1,23 @@
+[
+  {
+    "code": "fr-MA",
+    "name": "Français (Maroc)",
+    "nativeName": "Français",
+    "direction": "ltr",
+    "isDefault": true
+  },
+  {
+    "code": "ar-MA",
+    "name": "Arabic (Morocco)",
+    "nativeName": "العربية (المغرب)",
+    "direction": "rtl",
+    "isDefault": false
+  },
+  {
+    "code": "zgh",
+    "name": "Tamazight (Standard)",
+    "nativeName": "ⵜⴰⵎⴰⵣⵉⵖⵜ",
+    "direction": "ltr",
+    "isDefault": false
+  }
+]

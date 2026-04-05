@@ -1,0 +1,73 @@
+{
+  "passing": [
+    {
+      "productTypeCode": "ARGAN_OIL",
+      "labParametersKey": "argan_oil",
+      "passed": true,
+      "testValues": {
+        "acidity": 2.1,
+        "peroxide_value": 8.5,
+        "moisture": 0.12,
+        "oleic_acid_pct": 46.3,
+        "tocopherol_mgkg": 720
+      },
+      "note": "Typical passing argan oil sample — all within SDOQ thresholds"
+    },
+    {
+      "productTypeCode": "SAFFRON",
+      "labParametersKey": "saffron",
+      "passed": true,
+      "testValues": {
+        "crocin_e1pct": 245,
+        "safranal_e1pct": 38,
+        "picrocrocin_e1pct": 85,
+        "moisture_pct": 9.5,
+        "ash_pct": 5.2
+      },
+      "note": "ISO 3632 Grade I saffron from Taliouine"
+    },
+    {
+      "productTypeCode": "OLIVE_OIL_PICHOLINE",
+      "labParametersKey": "olive_oil",
+      "passed": true,
+      "testValues": {
+        "acidity": 0.3,
+        "peroxide_value": 7.2,
+        "polyphenols_mgkg": 320,
+        "k232": 1.85,
+        "k270": 0.14
+      },
+      "note": "Extra virgin Picholine Marocaine"
+    }
+  ],
+  "failing": [
+    {
+      "productTypeCode": "ARGAN_OIL",
+      "labParametersKey": "argan_oil",
+      "passed": false,
+      "testValues": {
+        "acidity": 5.8,
+        "peroxide_value": 22.0,
+        "moisture": 0.35,
+        "oleic_acid_pct": 46.3,
+        "tocopherol_mgkg": 720
+      },
+      "failedParameters": ["acidity", "peroxide_value", "moisture"],
+      "note": "Rancid sample — acidity and peroxide both exceed maximums"
+    },
+    {
+      "productTypeCode": "SAFFRON",
+      "labParametersKey": "saffron",
+      "passed": false,
+      "testValues": {
+        "crocin_e1pct": 120,
+        "safranal_e1pct": 28,
+        "picrocrocin_e1pct": 55,
+        "moisture_pct": 14.0,
+        "ash_pct": 9.0
+      },
+      "failedParameters": ["crocin_e1pct", "picrocrocin_e1pct", "moisture_pct", "ash_pct"],
+      "note": "Low-grade or adulterated saffron — fails ISO 3632 Grade III minimum"
+    }
+  ]
+}

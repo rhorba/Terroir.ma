@@ -1,0 +1,14 @@
+[
+  { "code": "TNG", "name_fr": "Tanger-Tétouan-Al Hoceïma", "name_ar": "طنجة-تطوان-الحسيمة", "name_zgh": "Ṭanja-Tiṭṭawin-Lḥusima" },
+  { "code": "ORI", "name_fr": "Oriental", "name_ar": "الشرق", "name_zgh": "Asammar" },
+  { "code": "FES", "name_fr": "Fès-Meknès", "name_ar": "فاس-مكناس", "name_zgh": "Fas-Imknas" },
+  { "code": "RBT", "name_fr": "Rabat-Salé-Kénitra", "name_ar": "الرباط-سلا-القنيطرة", "name_zgh": "Arrbaṭ-Sla-Lqniṭra" },
+  { "code": "BNI", "name_fr": "Béni Mellal-Khénifra", "name_ar": "بني ملال-خنيفرة", "name_zgh": "Bni Mellal-Xnifra" },
+  { "code": "CSB", "name_fr": "Casablanca-Settat", "name_ar": "الدار البيضاء-سطات", "name_zgh": "Dar Lbiḍa-Sṭṭat" },
+  { "code": "MRR", "name_fr": "Marrakech-Safi", "name_ar": "مراكش-آسفي", "name_zgh": "Merrakeč-Asfi" },
+  { "code": "DKH", "name_fr": "Drâa-Tafilalet", "name_ar": "درعة-تافيلالت", "name_zgh": "Dra-Tafilalt" },
+  { "code": "SFI", "name_fr": "Souss-Massa", "name_ar": "سوس-ماسة", "name_zgh": "Suss-Massa" },
+  { "code": "GUE", "name_fr": "Guelmim-Oued Noun", "name_ar": "كلميم-واد نون", "name_zgh": "Guelmin-Wad Nun" },
+  { "code": "LAA", "name_fr": "Laâyoune-Sakia El Hamra", "name_ar": "العيون-الساقية الحمراء", "name_zgh": "Layun-Saqyat Lḥamra" },
+  { "code": "DKL", "name_fr": "Dakhla-Oued Ed-Dahab", "name_ar": "الداخلة-وادي الذهب", "name_zgh": "Daxla-Wad Ḍḍahab" }
+]

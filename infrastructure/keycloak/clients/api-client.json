@@ -1,0 +1,20 @@
+{
+  "clientId": "api-client",
+  "name": "Terroir.ma API Service",
+  "description": "Backend NestJS API service client. Used for machine-to-machine authentication via the OAuth2 Client Credentials flow. Also used by the API to validate incoming JWTs via JWKS.",
+  "enabled": true,
+  "publicClient": false,
+  "standardFlowEnabled": false,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": true,
+  "authorizationServicesEnabled": false,
+  "secret": "change-me-in-production",
+  "attributes": {},
+  "redirectUris": [],
+  "webOrigins": [],
+  "protocol": "openid-connect",
+  "fullScopeAllowed": true,
+  "defaultClientScopes": ["openid", "profile", "email", "roles"],
+  "optionalClientScopes": []
+}

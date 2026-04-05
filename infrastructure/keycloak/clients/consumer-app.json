@@ -1,0 +1,25 @@
+{
+  "clientId": "consumer-app",
+  "name": "Terroir.ma Consumer Verify App",
+  "description": "Consumer-facing QR code verification application. Available on iOS, Android, and as a Progressive Web App. Allows consumers to scan a product's QR code and view its certification status and origin.",
+  "enabled": true,
+  "publicClient": true,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": false,
+  "attributes": {
+    "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "terroir-verify://callback"
+  },
+  "redirectUris": [
+    "terroir-verify://callback",
+    "terroir-verify://auth/callback",
+    "http://localhost:4202/*"
+  ],
+  "webOrigins": [],
+  "protocol": "openid-connect",
+  "fullScopeAllowed": false,
+  "defaultClientScopes": ["openid", "profile", "email"],
+  "optionalClientScopes": ["offline_access"]
+}

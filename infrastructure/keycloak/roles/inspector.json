@@ -1,0 +1,18 @@
+{
+  "name": "inspector",
+  "description": "Field inspector assigned by a certification body. Can view their assigned inspections, submit field reports with photo evidence, complete checklists, and record GPS-tagged observations during farm visits.",
+  "composite": false,
+  "clientRole": false,
+  "containerId": "terroir-ma",
+  "attributes": {
+    "permissions": [
+      "inspection:read:assigned",
+      "inspection:write:assigned",
+      "inspection:report:submit",
+      "cooperative:read",
+      "farm:read",
+      "product:read"
+    ],
+    "level": ["5"]
+  }
+}

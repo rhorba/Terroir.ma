@@ -1,0 +1,27 @@
+{
+  "clientId": "web-portal",
+  "name": "Terroir.ma Web Portal",
+  "description": "Main web portal for cooperatives, labs, inspectors, and certification bodies. Angular SPA using Authorization Code + PKCE flow.",
+  "enabled": true,
+  "publicClient": true,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": false,
+  "attributes": {
+    "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "http://localhost:4200/*##http://localhost:3000/*"
+  },
+  "redirectUris": [
+    "http://localhost:4200/*",
+    "http://localhost:3000/*"
+  ],
+  "webOrigins": [
+    "http://localhost:4200",
+    "http://localhost:3000"
+  ],
+  "protocol": "openid-connect",
+  "fullScopeAllowed": false,
+  "defaultClientScopes": ["openid", "profile", "email", "roles"],
+  "optionalClientScopes": ["address", "phone", "offline_access"]
+}

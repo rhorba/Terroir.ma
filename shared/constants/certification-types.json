@@ -1,0 +1,26 @@
+[
+  {
+    "code": "AOP",
+    "name_fr": "Appellation d'Origine Protégée",
+    "name_ar": "تسمية المنشأ المحمية",
+    "name_zgh": "Asemmad n Aẓar Iḥerzen",
+    "description_fr": "Produit dont toutes les étapes de production, transformation et élaboration ont lieu dans une aire géographique déterminée.",
+    "certificationNumberPrefix": "AOP"
+  },
+  {
+    "code": "IGP",
+    "name_fr": "Indication Géographique Protégée",
+    "name_ar": "الإشارة الجغرافية المحمية",
+    "name_zgh": "Taɣect Taẓedɣant Iḥerzen",
+    "description_fr": "Produit dont au moins une étape de production, transformation ou élaboration a lieu dans l'aire géographique.",
+    "certificationNumberPrefix": "IGP"
+  },
+  {
+    "code": "LA",
+    "name_fr": "Label Agricole",
+    "name_ar": "الملصق الفلاحي",
+    "name_zgh": "Alal n Tfellaḥt",
+    "description_fr": "Certification attestant la qualité supérieure d'un produit agricole ou alimentaire.",
+    "certificationNumberPrefix": "LA"
+  }
+]

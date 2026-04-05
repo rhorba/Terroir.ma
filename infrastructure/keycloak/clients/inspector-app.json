@@ -1,0 +1,25 @@
+{
+  "clientId": "inspector-app",
+  "name": "Terroir.ma Inspector Mobile App",
+  "description": "React Native mobile application for field inspectors. Used on iOS and Android during farm visits. Authorization Code + PKCE flow with deep-link callback URI.",
+  "enabled": true,
+  "publicClient": true,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": false,
+  "serviceAccountsEnabled": false,
+  "attributes": {
+    "pkce.code.challenge.method": "S256",
+    "post.logout.redirect.uris": "terroir://callback"
+  },
+  "redirectUris": [
+    "terroir://callback",
+    "terroir://auth/callback",
+    "http://localhost:4201/*"
+  ],
+  "webOrigins": [],
+  "protocol": "openid-connect",
+  "fullScopeAllowed": false,
+  "defaultClientScopes": ["openid", "profile", "email", "roles"],
+  "optionalClientScopes": ["offline_access"]
+}

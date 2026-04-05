@@ -1,0 +1,38 @@
+---
+title: QR Verification Flow (target < 200ms p99)
+---
+sequenceDiagram
+    actor Consumer as Consumer (Mobile)
+    participant API as NestJS API\n/verify/:uuid
+    participant Redis as Redis Cache\n(TTL: 5min)
+    participant DB as PostgreSQL\ncertification schema
+
+    Consumer->>API: GET /verify/{uuid}?sig={hmac}
+    Note over API: No authentication required (public endpoint)
+
+    API->>Redis: GET qr:{uuid}
+    alt Cache HIT (~10-50ms)
+        Redis-->>API: Cached certification data
+        API-->>Consumer: 200 OK { valid: true, certificationNumber, ... }
+    else Cache MISS
+        Redis-->>API: null
+
+        Note over API: Validate HMAC-SHA256 signature
+        Note over API: crypto.timingSafeEqual(expected, received)
+
+        alt Invalid signature
+            API-->>Consumer: 403 Forbidden { valid: false, error: "INVALID_SIGNATURE" }
+        else Valid signature
+            API->>DB: SELECT certification WHERE qr_code.uuid = ?
+            DB-->>API: Certification + product + cooperative data
+
+            alt QR not found
+                API-->>Consumer: 404 Not Found
+            else QR found (status = granted)
+                API->>Redis: SET qr:{uuid} data EX 300
+                API-->>Consumer: 200 OK { valid: true, certificationNumber, productName, cooperativeName, grantedAt }
+            else QR found (status = revoked)
+                API-->>Consumer: 200 OK { valid: false, revoked: true }
+            end
+        end
+    end

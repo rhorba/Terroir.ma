@@ -1,0 +1,35 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "NestJS API (dev)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:dev"],
+      "port": 3000
+    },
+    {
+      "name": "NestJS API (debug)",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "start:debug"],
+      "port": 3000
+    },
+    {
+      "name": "Docker — core infrastructure",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "infrastructure/docker/docker-compose.yml", "--profile", "core", "up"],
+      "port": 8025
+    },
+    {
+      "name": "Redpanda Console (Kafka UI)",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "infrastructure/docker/docker-compose.yml", "--profile", "monitoring", "up"],
+      "port": 8080
+    },
+    {
+      "name": "Keycloak Admin UI",
+      "runtimeExecutable": "docker",
+      "runtimeArgs": ["compose", "-f", "infrastructure/docker/docker-compose.yml", "up", "keycloak", "keycloak-db"],
+      "port": 8443
+    }
+  ]
+}

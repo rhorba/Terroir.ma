@@ -1,0 +1,16 @@
+{
+  "project": "terroir-ma",
+  "language": "typescript",
+  "framework": "nestjs",
+  "architecture": "modular-monolith",
+  "permissions": {
+    "allow": [
+      "bash(docker *)", "bash(docker-compose *)", "bash(npm *)", "bash(npx *)",
+      "bash(node *)", "bash(make *)", "bash(git *)", "bash(curl *)", "bash(cat *)",
+      "bash(ls *)", "bash(mkdir *)", "bash(cp *)", "bash(mv *)", "bash(rm *)",
+      "bash(find *)", "bash(grep *)", "bash(sed *)", "bash(awk *)", "bash(sh *)",
+      "bash(chmod *)", "bash(psql *)", "bash(redis-cli *)", "bash(rpk *)"
+    ],
+    "deny": ["bash(rm -rf /)", "bash(sudo rm -rf *)", "bash(:(){ :|:& };:)"]
+  }
+}

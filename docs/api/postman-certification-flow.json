@@ -1,0 +1,186 @@
+{
+  "info": {
+    "name": "Terroir.ma — Certification Flow",
+    "description": "Complete certification workflow: request → inspection → grant → QR code generation → verification",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "token", "value": "{{cooperative_admin_token}}" },
+    { "key": "certBodyToken", "value": "{{cert_body_token}}" },
+    { "key": "inspectorToken", "value": "{{inspector_token}}" },
+    { "key": "certificationId", "value": "" },
+    { "key": "inspectionId", "value": "" },
+    { "key": "qrUuid", "value": "" },
+    { "key": "qrSig", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "0. Health Check",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health",
+        "description": "Verify the API is running"
+      }
+    },
+    {
+      "name": "1. Request Certification",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/certifications/request",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"batchId\": \"{{batchId}}\",\n  \"certificationTypeCode\": \"AOP\",\n  \"productTypeCode\": \"ARGAN_OIL\",\n  \"regionCode\": \"SFI\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.environment.set('certificationId', body.data.id);",
+              "pm.test('Status is pending', () => pm.expect(body.data.status).to.eql('pending'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Schedule Inspection",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/inspections",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{certBodyToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"certificationId\": \"{{certificationId}}\",\n  \"inspectorId\": \"{{inspectorId}}\",\n  \"scheduledDate\": \"2025-11-15\",\n  \"location\": \"Ferme Coopérative Taliouine, Souss-Massa\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.environment.set('inspectionId', body.data.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. File Inspection Report (passed)",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/inspections/{{inspectionId}}/report",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{inspectorToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"passed\": true,\n  \"reportSummary\": \"All production facilities comply with SDOQ requirements. Traceability records complete.\",\n  \"detailedObservations\": \"Production area is clean and well-organized. Workers wear appropriate PPE. Argan nut storage meets humidity requirements.\",\n  \"nonConformities\": null\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Grant Certification",
+      "request": {
+        "method": "PATCH",
+        "url": "{{baseUrl}}/certifications/{{certificationId}}/grant",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{certBodyToken}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"notes\": \"All criteria met per cahier des charges AOP Arganeraie. Lab results and inspection both passed.\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Status is granted', () => pm.expect(body.data.status).to.eql('granted'));",
+              "pm.test('Certification number assigned', () => pm.expect(body.data.certificationNumber).to.match(/^TERROIR-(AOP|IGP|LA)-\\w+-\\d{4}-\\d{3}$/));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Generate QR Code",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/qr-codes/{{certificationId}}",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{certBodyToken}}" }
+        ]
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "const url = new URL(body.data.verifyUrl);",
+              "pm.environment.set('qrUuid', url.pathname.split('/').pop());",
+              "pm.environment.set('qrSig', url.searchParams.get('sig'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Verify QR Code (public)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/verify/{{qrUuid}}?sig={{qrSig}}",
+          "query": [
+            { "key": "sig", "value": "{{qrSig}}" }
+          ]
+        },
+        "description": "No authentication required — public endpoint for consumers"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('QR is valid', () => pm.expect(body.data.valid).to.be.true);",
+              "pm.test('Has certification number', () => pm.expect(body.data.certificationNumber).to.be.a('string'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

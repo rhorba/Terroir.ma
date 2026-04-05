@@ -1,0 +1,169 @@
+topics:
+  # ── Cooperative Events ────────────────────────────────────────────────────
+  - name: cooperative.registration.submitted
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "604800000"    # 7 days
+  - name: cooperative.registration.submitted.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: cooperative.registration.verified
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "604800000"    # 7 days
+  - name: cooperative.registration.verified.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: cooperative.farm.mapped
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "604800000"    # 7 days
+  - name: cooperative.farm.mapped.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  # ── Product Events ────────────────────────────────────────────────────────
+  - name: product.harvest.logged
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "2592000000"   # 30 days
+  - name: product.harvest.logged.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: product.batch.created
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "2592000000"   # 30 days
+  - name: product.batch.created.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  # ── Lab Testing Events ────────────────────────────────────────────────────
+  - name: lab.test.submitted
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "2592000000"   # 30 days
+  - name: lab.test.submitted.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: lab.test.completed
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "2592000000"   # 30 days
+  - name: lab.test.completed.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  # ── Certification Events (1-year retention — immutable audit chain) ────────
+  - name: certification.request.submitted
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+      cleanup.policy: "delete"
+  - name: certification.request.submitted.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: certification.inspection.scheduled
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: certification.inspection.scheduled.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: certification.inspection.completed
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: certification.inspection.completed.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: certification.decision.granted
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: certification.decision.granted.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: certification.decision.denied
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: certification.decision.denied.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: certification.decision.revoked
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: certification.decision.revoked.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: certification.decision.renewed
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: certification.decision.renewed.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  # ── Verification Events ───────────────────────────────────────────────────
+  - name: verification.qr.generated
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: verification.qr.generated.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: verification.qr.scanned
+    partitions: 6                  # Higher partitions — high scan volume
+    replicationFactor: 1
+    config:
+      retention.ms: "2592000000"   # 30 days
+  - name: verification.qr.scanned.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  - name: export.document.generated
+    partitions: 3
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: export.document.generated.dlq
+    partitions: 1
+    replicationFactor: 1
+
+  # ── Audit Events ──────────────────────────────────────────────────────────
+  - name: audit.event.logged
+    partitions: 6                  # Higher partitions — all platform events
+    replicationFactor: 1
+    config:
+      retention.ms: "31536000000"  # 1 year
+  - name: audit.event.logged.dlq
+    partitions: 1
+    replicationFactor: 1

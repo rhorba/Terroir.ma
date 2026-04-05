@@ -1,0 +1,32 @@
+---
+title: Certification State Machine (Law 25-06 SDOQ)
+---
+stateDiagram-v2
+    [*] --> pending : cooperative requests certification
+
+    pending --> under_review : certification-body reviews\n(emits: certification.requested)
+
+    under_review --> inspection_scheduled : inspection scheduled\n(emits: certification.inspection.scheduled)
+
+    inspection_scheduled --> under_review : inspector files report\n(emits: certification.inspection.completed)
+
+    under_review --> granted : certification body approves\n(emits: certification.decision.granted)
+
+    under_review --> denied : certification body rejects\n(emits: certification.decision.denied)
+
+    granted --> revoked : certification-body or super-admin revokes\n(emits: certification.revoked)
+
+    denied --> [*]
+    revoked --> [*]
+
+    note right of granted
+        Certification number assigned:
+        TERROIR-{AOP|IGP|LA}-{REGION}-{YEAR}-{SEQ}
+        QR code generation enabled
+    end note
+
+    note right of pending
+        Agricultural campaign year:
+        October → September
+        (not calendar year)
+    end note
