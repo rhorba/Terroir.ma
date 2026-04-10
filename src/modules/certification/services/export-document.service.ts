@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { PagedResult } from '../../../common/dto/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 import { ExportDocument } from '../entities/export-document.entity';
-import { Certification } from '../entities/certification.entity';
+import { Certification, CertificationStatus } from '../entities/certification.entity';
 import { RequestExportDocumentDto } from '../dto/request-export-document.dto';
 import { CertificationProducer } from '../events/certification.producer';
 
@@ -25,10 +25,10 @@ export class ExportDocumentService {
   async requestExportDocument(
     dto: RequestExportDocumentDto,
     requestedBy: string,
-    correlationId: string,
+    _correlationId: string,
   ): Promise<ExportDocument> {
     const certification = await this.certRepo.findOne({ where: { id: dto.certificationId } });
-    if (!certification || certification.status !== 'granted') {
+    if (!certification || certification.currentStatus !== CertificationStatus.GRANTED) {
       throw new NotFoundException({
         code: 'CERTIFICATION_NOT_FOUND_OR_NOT_GRANTED',
         message: 'Valid granted certification required for export document',
@@ -78,8 +78,46 @@ export class ExportDocumentService {
     });
   }
 
+  /**
+   * Returns paginated export documents for a cooperative.
+   * Used by cooperative-admin to view export logistics status (US-066).
+   */
+  async findByCooperativePaginated(
+    cooperativeId: string,
+    page: number,
+    limit: number,
+  ): Promise<PagedResult<ExportDocument>> {
+    const [data, total] = await this.exportDocRepo.findAndCount({
+      where: { cooperativeId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, meta: { page, limit, total } };
+  }
+
   async updateOnssaReference(id: string, onssaReference: string): Promise<ExportDocument> {
     await this.exportDocRepo.update({ id }, { onssaReference, status: 'approved' });
     return this.findById(id);
+  }
+
+  /** Alias used by ExportDocumentController */
+  async generateDocument(
+    dto: RequestExportDocumentDto,
+    requestedBy: string,
+  ): Promise<ExportDocument> {
+    return this.requestExportDocument(dto, requestedBy, requestedBy);
+  }
+
+  /** Customs clearance — approve the export document */
+  async validateDocument(id: string, validatedBy: string): Promise<ExportDocument> {
+    const doc = await this.findById(id);
+    const validUntilDate = new Date();
+    validUntilDate.setMonth(validUntilDate.getMonth() + 6);
+    const validUntil = validUntilDate.toISOString().split('T')[0] as string;
+    await this.exportDocRepo.update({ id }, { status: 'approved', validUntil });
+
+    this.logger.log({ exportDocId: id, validatedBy }, 'Export document validated');
+    return this.findById(doc.id);
   }
 }

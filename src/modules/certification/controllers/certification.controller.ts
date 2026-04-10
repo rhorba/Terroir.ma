@@ -1,15 +1,34 @@
 import {
-  Controller, Get, Post, Patch, Param, Body, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Headers,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { CertificationService } from '../services/certification.service';
 import { RequestCertificationDto } from '../dto/request-certification.dto';
 import { GrantCertificationDto } from '../dto/grant-certification.dto';
+import { DenyCertificationDto } from '../dto/deny-certification.dto';
+import { SubmitCertificationDto } from '../dto/submit-certification.dto';
+import { StartReviewDto } from '../dto/start-review.dto';
+import { ScheduleInspectionDto } from '../dto/schedule-inspection.dto';
+import { StartInspectionDto } from '../dto/start-inspection.dto';
+import { CompleteInspectionDto } from '../dto/complete-inspection.dto';
+import { RequestLabDto } from '../dto/request-lab.dto';
+import { StartFinalReviewDto } from '../dto/start-final-review.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
 import { Certification } from '../entities/certification.entity';
+import { PaginationDto, PagedResult } from '../../../common/dto/pagination.dto';
 
 /**
  * Certification module HTTP controller.
@@ -22,6 +41,42 @@ import { Certification } from '../entities/certification.entity';
 export class CertificationController {
   constructor(private readonly certificationService: CertificationService) {}
 
+  /**
+   * US-042 — Certification body officer views all pending certification requests.
+   * Returns certifications in actionable statuses: SUBMITTED, DOCUMENT_REVIEW, LAB_RESULTS_RECEIVED, UNDER_REVIEW.
+   */
+  @Get('pending')
+  @UseGuards(RolesGuard)
+  @Roles('certification-body', 'super-admin')
+  @ApiOperation({ summary: 'US-042: List pending certification requests (cert-body view)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findPending(@Query() query: PaginationDto): Promise<PagedResult<Certification>> {
+    return this.certificationService.findPending(query.page, query.limit);
+  }
+
+  /**
+   * US-049 — Cooperative admin views all certifications for their cooperative.
+   * Scoped to the cooperative from the JWT claim.
+   */
+  @Get('my')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin')
+  @ApiOperation({ summary: 'US-049: List certifications for the calling cooperative' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findMyCertifications(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query() query: PaginationDto,
+  ): Promise<PagedResult<Certification>> {
+    const cooperativeId = user.cooperative_id ?? user.sub;
+    return this.certificationService.findByCooperativePaginated(
+      cooperativeId,
+      query.page,
+      query.limit,
+    );
+  }
+
   /** Request a new certification for a production batch */
   @Post('request')
   @UseGuards(RolesGuard)
@@ -31,8 +86,9 @@ export class CertificationController {
   async requestCertification(
     @Body() dto: RequestCertificationDto,
     @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
   ): Promise<Certification> {
-    return this.certificationService.requestCertification(dto, user.sub);
+    return this.certificationService.requestCertification(dto, user.sub, correlationId);
   }
 
   /** Get a certification by ID */
@@ -52,8 +108,10 @@ export class CertificationController {
     @Param('id') id: string,
     @Body() dto: GrantCertificationDto,
     @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
   ): Promise<Certification> {
-    return this.certificationService.grantCertification(id, dto, user.sub);
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.grantCertification(id, dto, user.sub, role, correlationId);
   }
 
   /** Deny a certification */
@@ -63,10 +121,174 @@ export class CertificationController {
   @ApiOperation({ summary: 'Deny certification decision' })
   async denyCertification(
     @Param('id') id: string,
-    @Body('reason') reason: string,
+    @Body() dto: DenyCertificationDto,
     @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
   ): Promise<Certification> {
-    return this.certificationService.denyCertification(id, reason, user.sub);
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.denyCertification(id, dto, user.sub, role, correlationId);
+  }
+
+  // ─── State Machine Endpoints ──────────────────────────────────────────────
+
+  /** Step 1: Submit a DRAFT certification request (cooperative-admin) */
+  @Post(':id/submit')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin', 'cooperative-member')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 1: Submit a draft certification request' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async submitRequest(
+    @Param('id') id: string,
+    @Body() _dto: SubmitCertificationDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'cooperative-admin';
+    return this.certificationService.submitRequest(id, user.sub, role, correlationId);
+  }
+
+  /** Step 2: Certification body starts document review */
+  @Post(':id/start-review')
+  @UseGuards(RolesGuard)
+  @Roles('certification-body')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 2: Start document review' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async startReview(
+    @Param('id') id: string,
+    @Body() dto: StartReviewDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.startReview(
+      id,
+      dto.remarks ?? null,
+      user.sub,
+      role,
+      correlationId,
+    );
+  }
+
+  /** Step 3: Certification body schedules a field inspection */
+  @Post(':id/schedule-inspection')
+  @UseGuards(RolesGuard)
+  @Roles('certification-body')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 3: Schedule a field inspection' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async scheduleInspectionChain(
+    @Param('id') id: string,
+    @Body() dto: ScheduleInspectionDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.scheduleInspectionChain(
+      id,
+      dto,
+      user.sub,
+      role,
+      correlationId,
+    );
+  }
+
+  /** Step 4: Inspector starts the field visit */
+  @Post(':id/start-inspection')
+  @UseGuards(RolesGuard)
+  @Roles('inspector')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 4: Inspector starts the field visit' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async startInspection(
+    @Param('id') id: string,
+    @Body() _dto: StartInspectionDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'inspector';
+    return this.certificationService.startInspection(id, user.sub, role, correlationId);
+  }
+
+  /** Step 5: Inspector files the completed inspection report */
+  @Post(':id/complete-inspection')
+  @UseGuards(RolesGuard)
+  @Roles('inspector')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 5: Inspector files the inspection report' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async completeInspectionChain(
+    @Param('id') id: string,
+    @Body() dto: CompleteInspectionDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'inspector';
+    return this.certificationService.completeInspectionChain(
+      id,
+      dto,
+      user.sub,
+      role,
+      correlationId,
+    );
+  }
+
+  /** Step 6: Certification body requests lab testing */
+  @Post(':id/request-lab')
+  @UseGuards(RolesGuard)
+  @Roles('certification-body')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 6: Send batch to lab testing' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async requestLab(
+    @Param('id') id: string,
+    @Body() dto: RequestLabDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.requestLab(
+      id,
+      dto.labId ?? null,
+      dto.remarks ?? null,
+      user.sub,
+      role,
+      correlationId,
+    );
+  }
+
+  /** Step 8: Certification body starts final review after lab results received */
+  @Post(':id/start-final-review')
+  @UseGuards(RolesGuard)
+  @Roles('certification-body')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 8: Start final review of lab results' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async startFinalReview(
+    @Param('id') id: string,
+    @Body() _dto: StartFinalReviewDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.startFinalReview(id, user.sub, role, correlationId);
+  }
+
+  /** Step 12: Cooperative admin renews a granted certification */
+  @Post(':id/renew')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Step 12: Renew a granted certification' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async renewCertification(
+    @Param('id') id: string,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Certification> {
+    const role = user.realm_access?.roles?.[0] ?? 'cooperative-admin';
+    return this.certificationService.renewCertification(id, user.sub, role, correlationId);
   }
 
   /** Revoke a granted certification */
@@ -78,7 +300,9 @@ export class CertificationController {
     @Param('id') id: string,
     @Body('reason') reason: string,
     @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
   ): Promise<Certification> {
-    return this.certificationService.revokeCertification(id, reason, user.sub);
+    const role = user.realm_access?.roles?.[0] ?? 'certification-body';
+    return this.certificationService.revokeCertification(id, reason, user.sub, role, correlationId);
   }
 }

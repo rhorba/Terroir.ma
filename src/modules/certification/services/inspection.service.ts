@@ -1,11 +1,13 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { PagedResult } from '../../../common/dto/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Inspection } from '../entities/inspection.entity';
 import { InspectionReport } from '../entities/inspection-report.entity';
-import { Certification } from '../entities/certification.entity';
+import { Certification, CertificationStatus } from '../entities/certification.entity';
 import { ScheduleInspectionDto } from '../dto/schedule-inspection.dto';
 import { CompleteInspectionDto } from '../dto/complete-inspection.dto';
+import { FileInspectionReportDto } from '../dto/file-inspection-report.dto';
 import { CertificationProducer } from '../events/certification.producer';
 
 /**
@@ -51,7 +53,10 @@ export class InspectionService {
 
     const saved = await this.inspectionRepo.save(inspection);
 
-    await this.certRepo.update({ id: dto.certificationId }, { status: 'inspection_scheduled' });
+    await this.certRepo.update(
+      { id: dto.certificationId },
+      { currentStatus: CertificationStatus.INSPECTION_SCHEDULED },
+    );
     await this.producer.publishInspectionScheduled(saved, correlationId);
 
     this.logger.log(
@@ -66,7 +71,7 @@ export class InspectionService {
     id: string,
     dto: CompleteInspectionDto,
     inspectorId: string,
-    correlationId: string,
+    _correlationId: string,
   ): Promise<InspectionReport> {
     const inspection = await this.inspectionRepo.findOne({ where: { id } });
     if (!inspection) {
@@ -106,13 +111,10 @@ export class InspectionService {
 
     await this.certRepo.update(
       { id: inspection.certificationId },
-      { status: 'inspection_completed' },
+      { currentStatus: CertificationStatus.INSPECTION_COMPLETE },
     );
 
-    this.logger.log(
-      { inspectionId: id, passed: dto.passed },
-      'Inspection completed',
-    );
+    this.logger.log({ inspectionId: id, passed: dto.passed }, 'Inspection completed');
 
     return savedReport;
   }
@@ -133,5 +135,41 @@ export class InspectionService {
       where: { certificationId },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  /**
+   * Returns paginated inspections assigned to a specific inspector.
+   * Used by the inspector /my endpoint to show their scheduled workload (US-043).
+   */
+  async findByInspectorId(
+    inspectorId: string,
+    page: number,
+    limit: number,
+  ): Promise<PagedResult<Inspection>> {
+    const [data, total] = await this.inspectionRepo.findAndCount({
+      where: { inspectorId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, meta: { page, limit, total } };
+  }
+
+  async fileReport(
+    id: string,
+    dto: FileInspectionReportDto,
+    inspectorId: string,
+    correlationId: string,
+  ): Promise<Inspection> {
+    const completeDto: CompleteInspectionDto = {
+      passed: dto.passed,
+      summary: dto.reportSummary,
+      farmFindings: [],
+      nonConformities: dto.nonConformities
+        ? [{ code: 'NC-001', description: dto.nonConformities, severity: 'minor' }]
+        : [],
+    };
+    await this.completeInspection(id, completeDto, inspectorId, correlationId);
+    return this.findById(id);
   }
 }

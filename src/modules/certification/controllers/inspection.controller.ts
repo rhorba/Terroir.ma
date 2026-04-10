@@ -1,7 +1,17 @@
 import {
-  Controller, Get, Post, Patch, Param, Body, UseGuards, HttpCode, HttpStatus,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  Headers,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { InspectionService } from '../services/inspection.service';
 import { ScheduleInspectionDto } from '../dto/schedule-inspection.dto';
 import { FileInspectionReportDto } from '../dto/file-inspection-report.dto';
@@ -10,6 +20,7 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
 import { Inspection } from '../entities/inspection.entity';
+import { PaginationDto, PagedResult } from '../../../common/dto/pagination.dto';
 
 /**
  * Inspection controller — manages scheduling and reporting of field inspections.
@@ -21,6 +32,23 @@ import { Inspection } from '../entities/inspection.entity';
 export class InspectionController {
   constructor(private readonly inspectionService: InspectionService) {}
 
+  /**
+   * US-043 — Inspector views their scheduled inspections.
+   * Scoped to the inspector's Keycloak sub (user ID stored as inspectorId on the entity).
+   */
+  @Get('my')
+  @UseGuards(RolesGuard)
+  @Roles('inspector')
+  @ApiOperation({ summary: 'US-043: List inspections assigned to the calling inspector' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findMyInspections(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query() query: PaginationDto,
+  ): Promise<PagedResult<Inspection>> {
+    return this.inspectionService.findByInspectorId(user.sub, query.page, query.limit);
+  }
+
   /** Schedule a field inspection */
   @Post()
   @UseGuards(RolesGuard)
@@ -30,8 +58,9 @@ export class InspectionController {
   async scheduleInspection(
     @Body() dto: ScheduleInspectionDto,
     @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
   ): Promise<Inspection> {
-    return this.inspectionService.scheduleInspection(dto, user.sub);
+    return this.inspectionService.scheduleInspection(dto, user.sub, correlationId);
   }
 
   /** Get inspection by ID */
@@ -50,7 +79,8 @@ export class InspectionController {
     @Param('id') id: string,
     @Body() dto: FileInspectionReportDto,
     @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
   ): Promise<Inspection> {
-    return this.inspectionService.fileReport(id, dto, user.sub);
+    return this.inspectionService.fileReport(id, dto, user.sub, correlationId);
   }
 }

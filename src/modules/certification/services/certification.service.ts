@@ -1,15 +1,18 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
-import { Certification, CertificationStatus } from '../entities/certification.entity';
+import { Repository, DataSource, In } from 'typeorm';
+import { PagedResult } from '../../../common/dto/pagination.dto';
+import {
+  Certification,
+  CertificationStatus,
+  CertificationEventType,
+} from '../entities/certification.entity';
+import { CertificationEvent } from '../entities/certification-event.entity';
 import { RequestCertificationDto } from '../dto/request-certification.dto';
 import { GrantCertificationDto } from '../dto/grant-certification.dto';
 import { DenyCertificationDto } from '../dto/deny-certification.dto';
+import { ScheduleInspectionDto } from '../dto/schedule-inspection.dto';
+import { CompleteInspectionDto } from '../dto/complete-inspection.dto';
 import { CertificationProducer } from '../events/certification.producer';
 import { QrCodeService } from './qr-code.service';
 
@@ -25,10 +28,21 @@ export class CertificationService {
   constructor(
     @InjectRepository(Certification)
     private readonly certRepo: Repository<Certification>,
+    @InjectRepository(CertificationEvent)
+    private readonly eventRepo: Repository<CertificationEvent>,
     private readonly producer: CertificationProducer,
     private readonly qrCodeService: QrCodeService,
     private readonly dataSource: DataSource,
   ) {}
+
+  /**
+   * Idempotency guard — returns true if an event with this correlationId has already
+   * been recorded in the certification_events ledger, preventing duplicate processing.
+   */
+  async isEventProcessed(correlationId: string): Promise<boolean> {
+    const count = await this.eventRepo.count({ where: { correlationId } });
+    return count > 0;
+  }
 
   async requestCertification(
     dto: RequestCertificationDto,
@@ -44,7 +58,7 @@ export class CertificationService {
       regionCode: dto.regionCode,
       requestedBy,
       requestedAt: new Date(),
-      status: 'pending',
+      currentStatus: CertificationStatus.DRAFT,
       createdBy: requestedBy,
     });
 
@@ -71,47 +85,77 @@ export class CertificationService {
     });
   }
 
+  /**
+   * Returns paginated certifications with actionable statuses for certification-body officers.
+   * "Pending" = any status where the cert body has an outstanding action to take.
+   */
+  async findPending(page: number, limit: number): Promise<PagedResult<Certification>> {
+    const pendingStatuses = [
+      CertificationStatus.SUBMITTED,
+      CertificationStatus.DOCUMENT_REVIEW,
+      CertificationStatus.LAB_RESULTS_RECEIVED,
+      CertificationStatus.UNDER_REVIEW,
+    ];
+    const [data, total] = await this.certRepo.findAndCount({
+      where: { currentStatus: In(pendingStatuses) },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, meta: { page, limit, total } };
+  }
+
+  /**
+   * Returns all certifications for a cooperative with pagination.
+   * Used by cooperative-admin to view their full certification portfolio (US-049).
+   */
+  async findByCooperativePaginated(
+    cooperativeId: string,
+    page: number,
+    limit: number,
+  ): Promise<PagedResult<Certification>> {
+    const [data, total] = await this.certRepo.findAndCount({
+      where: { cooperativeId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, meta: { page, limit, total } };
+  }
+
   async grantCertification(
     id: string,
     dto: GrantCertificationDto,
     grantedBy: string,
+    actorRole: string,
     correlationId: string,
   ): Promise<Certification> {
-    const certification = await this.findById(id);
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.UNDER_REVIEW);
 
-    if (!['pending', 'inspection_completed'].includes(certification.status)) {
-      throw new BadRequestException({
-        code: 'INVALID_CERTIFICATION_STATUS',
-        message: `Cannot grant certification in status: ${certification.status}`,
-      });
-    }
+    const certificationNumber = await this.generateCertificationNumber(cert);
 
-    const certificationNumber = await this.generateCertificationNumber(certification);
+    // Set audit fields on entity before applyTransition saves atomically
+    cert.certificationNumber = certificationNumber;
+    cert.grantedBy = grantedBy;
+    cert.grantedAt = new Date();
+    cert.validFrom = dto.validFrom;
+    cert.validUntil = dto.validUntil;
 
-    await this.certRepo.update(
-      { id },
-      {
-        status: 'granted',
-        certificationNumber,
-        grantedBy,
-        grantedAt: new Date(),
-        validFrom: dto.validFrom,
-        validUntil: dto.validUntil,
-      },
+    const updated = await this.applyTransition(
+      cert,
+      CertificationEventType.DECISION_GRANTED,
+      CertificationStatus.GRANTED,
+      grantedBy,
+      actorRole,
+      { certificationNumber, validFrom: dto.validFrom, validUntil: dto.validUntil },
+      correlationId,
     );
 
-    const updated = await this.findById(id);
-
-    // Generate QR code for the granted certification
-    const qrCode = await this.qrCodeService.generateQrCode(id, correlationId);
-
+    const qrCode = await this.qrCodeService.generateQrCode(updated.id, correlationId);
     await this.producer.publishCertificationGranted(updated, qrCode.id, grantedBy, correlationId);
 
-    this.logger.log(
-      { certificationId: id, certificationNumber },
-      'Certification granted',
-    );
-
+    this.logger.log({ certificationId: id, certificationNumber }, 'Certification granted');
     return updated;
   }
 
@@ -119,28 +163,26 @@ export class CertificationService {
     id: string,
     dto: DenyCertificationDto,
     deniedBy: string,
+    actorRole: string,
     correlationId: string,
   ): Promise<Certification> {
-    const certification = await this.findById(id);
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.UNDER_REVIEW);
 
-    if (certification.status !== 'pending' && certification.status !== 'inspection_completed') {
-      throw new BadRequestException({
-        code: 'INVALID_CERTIFICATION_STATUS',
-        message: `Cannot deny certification in status: ${certification.status}`,
-      });
-    }
+    cert.deniedBy = deniedBy;
+    cert.deniedAt = new Date();
+    cert.denialReason = dto.reason;
 
-    await this.certRepo.update(
-      { id },
-      {
-        status: 'denied',
-        deniedBy,
-        deniedAt: new Date(),
-        denialReason: dto.reason,
-      },
+    const updated = await this.applyTransition(
+      cert,
+      CertificationEventType.DECISION_DENIED,
+      CertificationStatus.DENIED,
+      deniedBy,
+      actorRole,
+      { reason: dto.reason },
+      correlationId,
     );
 
-    const updated = await this.findById(id);
     await this.producer.publishCertificationDenied(updated, deniedBy, dto.reason, correlationId);
     return updated;
   }
@@ -149,33 +191,331 @@ export class CertificationService {
     id: string,
     reason: string,
     revokedBy: string,
+    actorRole: string,
     correlationId: string,
   ): Promise<Certification> {
-    const certification = await this.findById(id);
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.GRANTED);
 
-    if (certification.status !== 'granted') {
-      throw new BadRequestException({
-        code: 'INVALID_CERTIFICATION_STATUS',
-        message: 'Only granted certifications can be revoked',
-      });
-    }
+    cert.revokedBy = revokedBy;
+    cert.revokedAt = new Date();
+    cert.revocationReason = reason;
 
-    await this.certRepo.update(
-      { id },
-      {
-        status: 'revoked',
-        revokedBy,
-        revokedAt: new Date(),
-        revocationReason: reason,
-      },
+    const updated = await this.applyTransition(
+      cert,
+      CertificationEventType.CERTIFICATE_REVOKED,
+      CertificationStatus.REVOKED,
+      revokedBy,
+      actorRole,
+      { reason },
+      correlationId,
     );
 
     // Deactivate the associated QR code so consumers scanning it get a revoked response
-    await this.qrCodeService.deactivateByCertificationId(id);
-
-    const updated = await this.findById(id);
+    await this.qrCodeService.deactivateByCertificationId(updated.id);
     await this.producer.publishCertificationRevoked(updated, revokedBy, reason, correlationId);
     return updated;
+  }
+
+  // ─── State Machine: Steps 1–7 ─────────────────────────────────────────────
+
+  /**
+   * Step 1: cooperative-admin submits a DRAFT certification request.
+   * DRAFT → SUBMITTED
+   */
+  async submitRequest(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.DRAFT);
+    const updated = await this.applyTransition(
+      cert,
+      CertificationEventType.REQUEST_SUBMITTED,
+      CertificationStatus.SUBMITTED,
+      actorId,
+      actorRole,
+      null,
+      correlationId,
+    );
+    await this.producer.publishCertificationRequested(updated, correlationId);
+    return updated;
+  }
+
+  /**
+   * Step 2: certification-body starts document review.
+   * SUBMITTED → DOCUMENT_REVIEW
+   */
+  async startReview(
+    id: string,
+    remarks: string | null,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.SUBMITTED);
+    return this.applyTransition(
+      cert,
+      CertificationEventType.REVIEW_STARTED,
+      CertificationStatus.DOCUMENT_REVIEW,
+      actorId,
+      actorRole,
+      { remarks },
+      correlationId,
+    );
+  }
+
+  /**
+   * Step 3: certification-body schedules a field inspection.
+   * DOCUMENT_REVIEW → INSPECTION_SCHEDULED
+   */
+  async scheduleInspectionChain(
+    id: string,
+    dto: ScheduleInspectionDto,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.DOCUMENT_REVIEW);
+    return this.applyTransition(
+      cert,
+      CertificationEventType.INSPECTION_SCHEDULED,
+      CertificationStatus.INSPECTION_SCHEDULED,
+      actorId,
+      actorRole,
+      { inspectorId: dto.inspectorId, scheduledDate: dto.scheduledDate, farmIds: dto.farmIds },
+      correlationId,
+    );
+  }
+
+  /**
+   * Step 4: inspector starts the field visit.
+   * INSPECTION_SCHEDULED → INSPECTION_IN_PROGRESS
+   */
+  async startInspection(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.INSPECTION_SCHEDULED);
+    return this.applyTransition(
+      cert,
+      CertificationEventType.INSPECTION_STARTED,
+      CertificationStatus.INSPECTION_IN_PROGRESS,
+      actorId,
+      actorRole,
+      { startedAt: new Date().toISOString() },
+      correlationId,
+    );
+  }
+
+  /**
+   * Step 5: inspector files the completed inspection report.
+   * INSPECTION_IN_PROGRESS → INSPECTION_COMPLETE
+   */
+  async completeInspectionChain(
+    id: string,
+    dto: CompleteInspectionDto,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.INSPECTION_IN_PROGRESS);
+    return this.applyTransition(
+      cert,
+      CertificationEventType.INSPECTION_COMPLETED,
+      CertificationStatus.INSPECTION_COMPLETE,
+      actorId,
+      actorRole,
+      { passed: dto.passed, summary: dto.summary },
+      correlationId,
+    );
+  }
+
+  /**
+   * Step 6: certification-body requests lab testing.
+   * INSPECTION_COMPLETE → LAB_TESTING
+   */
+  async requestLab(
+    id: string,
+    labId: string | null,
+    remarks: string | null,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.INSPECTION_COMPLETE);
+    return this.applyTransition(
+      cert,
+      CertificationEventType.LAB_REQUESTED,
+      CertificationStatus.LAB_TESTING,
+      actorId,
+      actorRole,
+      { labId, remarks },
+      correlationId,
+    );
+  }
+
+  /**
+   * Step 7 (internal — called from Kafka listener, not REST).
+   * LAB_TESTING → LAB_RESULTS_RECEIVED
+   * Triggered by product.lab.test.completed event.
+   */
+  async receiveLabResults(
+    batchId: string,
+    labTestId: string,
+    passed: boolean,
+    correlationId: string,
+  ): Promise<void> {
+    const cert = await this.certRepo.findOne({
+      where: { batchId, currentStatus: CertificationStatus.LAB_TESTING },
+    });
+    if (!cert) {
+      this.logger.warn({ batchId }, 'No LAB_TESTING certification found for this batch — skipping');
+      return;
+    }
+    await this.applyTransition(
+      cert,
+      CertificationEventType.LAB_RESULTS_RECEIVED,
+      CertificationStatus.LAB_RESULTS_RECEIVED,
+      'system',
+      'service-account',
+      { labTestId, passed, receivedAt: new Date().toISOString() },
+      correlationId,
+    );
+  }
+
+  /**
+   * Step 12: cooperative-admin renews a granted certification.
+   * Old cert: GRANTED → RENEWED (QR stays active — returns "superseded" to consumers).
+   * New cert: created in DRAFT with renewedFromId pointing to old cert.
+   * Returns the new DRAFT certification.
+   */
+  async renewCertification(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const oldCert = await this.findById(id);
+    this.assertStatus(oldCert, CertificationStatus.GRANTED);
+
+    // Move old cert to RENEWED — QR stays active, returns "superseded" response
+    await this.applyTransition(
+      oldCert,
+      CertificationEventType.CERTIFICATE_RENEWED,
+      CertificationStatus.RENEWED,
+      actorId,
+      actorRole,
+      null,
+      correlationId,
+    );
+
+    // Evict cached QR result — old cert is now RENEWED, cache must not serve valid: true
+    await this.qrCodeService.evictQrCache(oldCert.id);
+
+    // Create new DRAFT cert linked to old cert
+    const newCert = this.certRepo.create({
+      cooperativeId: oldCert.cooperativeId,
+      cooperativeName: oldCert.cooperativeName,
+      batchId: oldCert.batchId,
+      productTypeCode: oldCert.productTypeCode,
+      certificationType: oldCert.certificationType,
+      regionCode: oldCert.regionCode,
+      requestedBy: actorId,
+      requestedAt: new Date(),
+      currentStatus: CertificationStatus.DRAFT,
+      createdBy: actorId,
+      renewedFromId: oldCert.id,
+    });
+    const saved = await this.certRepo.save(newCert);
+
+    await this.producer.publishCertificationRenewed(oldCert, saved.id, actorId, correlationId);
+
+    this.logger.log(
+      { oldCertId: oldCert.id, newCertId: saved.id },
+      'Certification renewal initiated',
+    );
+    return saved;
+  }
+
+  /**
+   * Step 8: certification-body moves to final review.
+   * LAB_RESULTS_RECEIVED → UNDER_REVIEW
+   */
+  async startFinalReview(
+    id: string,
+    actorId: string,
+    actorRole: string,
+    correlationId: string,
+  ): Promise<Certification> {
+    const cert = await this.findById(id);
+    this.assertStatus(cert, CertificationStatus.LAB_RESULTS_RECEIVED);
+    const updated = await this.applyTransition(
+      cert,
+      CertificationEventType.FINAL_REVIEW_STARTED,
+      CertificationStatus.UNDER_REVIEW,
+      actorId,
+      actorRole,
+      null,
+      correlationId,
+    );
+    await this.producer.publishFinalReviewStarted(updated, actorId, correlationId);
+    return updated;
+  }
+
+  // ─── Private Helpers ──────────────────────────────────────────────────────
+
+  /**
+   * Guards a state transition — throws BadRequestException if the certification
+   * is not in the expected status. Call at the top of every transition method.
+   */
+  private assertStatus(cert: Certification, expected: CertificationStatus): void {
+    if (cert.currentStatus !== expected) {
+      throw new BadRequestException(
+        `Invalid transition: certification ${cert.id} is in status ` +
+          `${cert.currentStatus}, expected ${expected}`,
+      );
+    }
+  }
+
+  /**
+   * Atomically: inserts a CertificationEvent row, updates currentStatus on Certification,
+   * then returns the updated entity — all within a single DB transaction.
+   * Kafka publishing happens AFTER the transaction succeeds.
+   */
+  private async applyTransition(
+    cert: Certification,
+    eventType: CertificationEventType,
+    toStatus: CertificationStatus,
+    actorId: string,
+    actorRole: string,
+    payload: Record<string, unknown> | null,
+    correlationId: string,
+  ): Promise<Certification> {
+    return this.dataSource.transaction(async (em) => {
+      const event = em.create(CertificationEvent, {
+        certificationId: cert.id,
+        eventType,
+        fromStatus: cert.currentStatus,
+        toStatus,
+        actorId,
+        actorRole,
+        payload: payload,
+        correlationId,
+      });
+      await em.save(CertificationEvent, event);
+      cert.currentStatus = toStatus;
+      return em.save(Certification, cert);
+    });
   }
 
   /**
@@ -186,9 +526,7 @@ export class CertificationService {
    */
   private async generateCertificationNumber(certification: Certification): Promise<string> {
     const typeAbbr =
-      certification.certificationType === 'LABEL_AGRICOLE'
-        ? 'LA'
-        : certification.certificationType;
+      certification.certificationType === 'LABEL_AGRICOLE' ? 'LA' : certification.certificationType;
     const year = new Date().getFullYear();
 
     const seq = await this.dataSource.transaction(async (manager) => {

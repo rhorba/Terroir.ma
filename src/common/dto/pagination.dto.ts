@@ -18,3 +18,9 @@ export class PaginationDto {
   @Max(100)
   limit: number = 20;
 }
+
+/** Standard paginated response envelope used by all /my and /pending list endpoints. */
+export interface PagedResult<T> {
+  data: T[];
+  meta: { page: number; limit: number; total: number };
+}

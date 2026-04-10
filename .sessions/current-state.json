@@ -1,53 +1,156 @@
 {
-  "timestamp": "2026-03-30T17:00:00Z",
-  "session_id": "session-2026-03-30-001",
-  "project_phase": "scaffolding",
+  "timestamp": "2026-04-10T18:00:00Z",
+  "session_id": "session-2026-04-10-sprint5-close",
+  "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": 1,
-    "sprint_name": "Infrastructure Scaffold Sprint",
-    "start_date": "2026-03-28",
-    "end_date": "2026-04-11",
-    "goal": "Complete full project scaffold: infrastructure, .claude/, src/ skeleton, docs, tests, shared constants"
+    "sprint_number": 5,
+    "sprint_name": "List Endpoints, QR Download & Trilingual Verification",
+    "start_date": "2026-04-10",
+    "end_date": "2026-04-10",
+    "goal": "Role-scoped list endpoints (US-042/049/043/066), QR PNG+SVG download (US-057), trilingual QR verification (US-059), test:unit:cov script (TM-1)",
+    "status": "CLOSED",
+    "story_points_planned": 23,
+    "story_points_completed": 22,
+    "velocity_pct": 96,
+    "note": "TM-3 (migration chain verification) deferred — requires live PostgreSQL. All user-facing stories delivered."
   },
-  "active_feature": {
-    "name": "infrastructure-scaffold",
-    "design_doc": null,
-    "plan_doc": null,
-    "progress_doc": null,
-    "current_batch": 0,
-    "current_task": 0,
-    "total_tasks": 0
-  },
+  "active_feature": null,
   "modules_status": {
-    "cooperative": { "entities": true, "controllers": true, "tests_passing": null },
-    "product": { "entities": true, "controllers": true, "tests_passing": null },
-    "certification": { "entities": true, "controllers": true, "tests_passing": null },
-    "notification": { "entities": true, "controllers": false, "tests_passing": null }
+    "cooperative": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "coverage_statements": "100%",
+      "coverage_branches": "86.66%"
+    },
+    "product": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "coverage_statements": "97.91%",
+      "coverage_branches": "94.11%"
+    },
+    "certification": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "coverage_statements": "98.23%",
+      "coverage_branches": "89.28%",
+      "redis_qr_cache": true,
+      "cache_key_pattern": "qr:verify:{hmacSignature}",
+      "cache_ttl_ms": 300000,
+      "new_endpoints_sprint5": [
+        "GET /certifications/pending (certification-body)",
+        "GET /certifications/my (cooperative-admin)",
+        "GET /inspections/my (inspector)",
+        "GET /export-documents/my (cooperative-admin)",
+        "GET /qr-codes/:id/download?format=png|svg (cooperative-admin)",
+        "GET /verify/:uuid?lang=ar|fr|zgh (public)"
+      ]
+    },
+    "notification": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "coverage_statements": "96.66%",
+      "coverage_branches": "62.06%",
+      "known_gap": "notification.service.ts lines 92-93 — error path covered by test but branch instrumentation shows 57.69% (Handlebars path combination)"
+    }
   },
   "certification_chain_status": {
-    "kafka_events_defined": 18,
-    "chain_steps_implemented": 0,
+    "kafka_events_defined": 24,
+    "chain_steps_implemented": 12,
     "chain_steps_total": 12,
-    "qr_verification_working": false
+    "qr_verification_working": true,
+    "qr_redis_cache_wired": true,
+    "qr_download_png_svg": true,
+    "qr_trilingual_verification": true,
+    "event_ledger": true
   },
   "test_status": {
-    "unit": { "total": 0, "passing": 0, "coverage": "0%" },
-    "integration": { "total": 0, "passing": 0 },
-    "e2e": { "total": 0, "passing": 0 }
+    "unit": {
+      "suites": 23,
+      "total": 245,
+      "passing": 245,
+      "coverage_statements": "98.41%",
+      "coverage_branches": "85.79%",
+      "coverage_functions": "96.96%",
+      "coverage_lines": "98.31%"
+    },
+    "integration": {
+      "status": "requires_postgres",
+      "note": "Testcontainers-based; run with docker compose up"
+    },
+    "e2e": {
+      "status": "requires_postgres",
+      "note": "Self-initializing DB via createTestApp(); run with docker compose up"
+    }
   },
   "blockers": [],
   "next_actions": [
-    "Run npm install to verify package.json",
-    "Run make docker-core to start infrastructure",
-    "Run npm run typecheck to verify TypeScript compiles",
-    "Begin Sprint 1 Story TM-002: NestJS skeleton with 4 empty modules"
+    "Sprint 5 CLOSED — 22/23 SP, 245 unit tests, 98.41% statements / 85.79% branches",
+    "TM-3 deferred: run migration chain verification when PostgreSQL is available",
+    "  Steps: docker compose --profile core up -d postgres && npm run migration:run && npm run migration:generate -- --check",
+    "Sprint 6 planning — recommended scope: 21–25 SP",
+    "Sprint 6 candidates:",
+    "  US-043: Inspector views scheduled inspections — endpoint done, backlog entry needs Done status update",
+    "  US-047: Generate PDF certificate — 5 SP (PDFKit/Puppeteer)",
+    "  US-048: Certification statistics by region/product (super-admin) — 5 SP",
+    "  US-053: Offline QR verification for customs agent — 13 SP (Phase 2, flag as deferred)",
+    "  US-058: Track QR scan events — 5 SP (append-only scan log)",
+    "  US-067: Super-admin views all export clearances — 3 SP",
+    "  US-075: Manage notification templates (super-admin) — 8 SP",
+    "  TM-3: Migration chain verification with live DB — 1 SP (carry over from Sprint 5)"
   ],
   "decisions_made": [
+    "i18n is a controller-level transform — verifyQrCode() service signature unchanged; cache stays language-neutral",
+    "PagedResult<T> added to existing pagination.dto.ts (avoids naming collision with PaginatedResult<T> in pagination.interface.ts)",
+    "cooperative_id JWT claim already in CurrentUserPayload (snake_case) — no interface change needed",
+    "user.cooperative_id ?? user.sub fallback used in /my endpoints for development safety",
+    "TM-2 (notification error path) was pre-existing in notification.service.spec.ts line 131",
+    "QR download uses StreamableFile + @Res({passthrough:true}) pattern — avoids raw res.send() in controller",
+    "qrcode.toBuffer() for PNG, qrcode.toString({type:'svg'}) for SVG — both converted to Buffer for StreamableFile",
+    "resolveMessageKey() pure function in constants file — expired takes priority over status check",
+    "collectCoverageFrom scoped to service + listener files only (controllers/DTOs/modules at 0% by design in unit tests)",
+    "Redis QR cache eviction in-service (not Kafka-event-driven) — same-process, no round-trip",
+    "TTL 300s for GRANTED and RENEWED only — REVOKED/DENIED/EXPIRED must be real-time",
+    "makeMockEm() factory pattern for dataSource.transaction tests — create/save/query stubs",
+    "useValue (not useFactory) for all test mocks that need external control",
+    "em.create() + em.save() pattern for TypeORM JSONB strict typing",
     "Modular monolith architecture chosen over microservices for v1",
     "Redpanda over Apache Kafka (lighter, Kafka-compatible)",
     "PostgreSQL schemas per module (not separate databases)",
-    "JSON events over Avro for v1 simplicity",
-    "HMAC-SHA256 for QR code signing"
+    "HMAC-SHA256 for QR code signing",
+    "CertificationEvent ledger: append-only, currentStatus materialized column",
+    "applyTransition() uses dataSource.transaction() for atomic event + status update"
   ],
-  "files_modified_this_session": []
+  "velocity_history": {
+    "sprint_1": { "planned": 89, "completed": 89, "pct": 100, "note": "scaffold — atypical" },
+    "sprint_2": { "planned": 30, "completed": 30, "pct": 100 },
+    "sprint_3": { "planned": 21, "completed": 21, "pct": 100 },
+    "sprint_4": { "planned": 21, "completed": 21, "pct": 100 },
+    "sprint_5": { "planned": 23, "completed": 22, "pct": 96, "note": "TM-3 deferred (requires live DB)" },
+    "rolling_avg_sp2_sp5": 23
+  },
+  "files_modified_this_session": [
+    "src/common/dto/pagination.dto.ts",
+    "src/common/constants/i18n-verification.constants.ts",
+    "src/modules/certification/services/certification.service.ts",
+    "src/modules/certification/services/inspection.service.ts",
+    "src/modules/certification/services/export-document.service.ts",
+    "src/modules/certification/services/qr-code.service.ts",
+    "src/modules/certification/controllers/certification.controller.ts",
+    "src/modules/certification/controllers/inspection.controller.ts",
+    "src/modules/certification/controllers/export-document.controller.ts",
+    "src/modules/certification/controllers/qr-code.controller.ts",
+    "test/unit/certification/certification.service.spec.ts",
+    "test/unit/certification/inspection.service.spec.ts",
+    "test/unit/certification/export-document.service.spec.ts",
+    "test/unit/certification/qr-code.service.spec.ts",
+    "test/unit/common/i18n-verification.spec.ts",
+    "docs/plans/2026-04-10-sprint-5-list-endpoints-qr-i18n/design.md",
+    "docs/plans/2026-04-10-sprint-5-list-endpoints-qr-i18n/plan.md",
+    "docs/plans/2026-04-10-sprint-5-list-endpoints-qr-i18n/progress.md",
+    "package.json"
+  ]
 }
