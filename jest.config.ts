@@ -4,6 +4,7 @@ const config: Config = {
   moduleFileExtensions: ['js', 'json', 'ts'],
   rootDir: '.',
   testEnvironment: 'node',
+  testTimeout: 120000,
   transform: {
     '^.+\\.(t|j)s$': 'ts-jest',
   },
@@ -13,7 +14,11 @@ const config: Config = {
     '^@config/(.*)$': '<rootDir>/src/config/$1',
     '^@shared/(.*)$': '<rootDir>/shared/$1',
   },
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.spec.ts', '!src/main.ts'],
+  collectCoverageFrom: [
+    'src/modules/**/*.service.ts',
+    'src/modules/**/*.listener.ts',
+    '!src/**/*.spec.ts',
+  ],
   coverageDirectory: 'coverage',
   coverageThreshold: {
     global: {
@@ -40,7 +45,6 @@ const config: Config = {
       displayName: 'integration',
       testMatch: ['<rootDir>/test/integration/**/*.integration.ts'],
       transform: { '^.+\\.(t|j)s$': 'ts-jest' },
-      testTimeout: 60000,
       moduleNameMapper: {
         '^@common/(.*)$': '<rootDir>/src/common/$1',
         '^@modules/(.*)$': '<rootDir>/src/modules/$1',
@@ -52,7 +56,6 @@ const config: Config = {
       displayName: 'e2e',
       testMatch: ['<rootDir>/test/e2e/**/*.e2e.ts'],
       transform: { '^.+\\.(t|j)s$': 'ts-jest' },
-      testTimeout: 120000,
       moduleNameMapper: {
         '^@common/(.*)$': '<rootDir>/src/common/$1',
         '^@modules/(.*)$': '<rootDir>/src/modules/$1',

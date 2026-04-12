@@ -2,7 +2,11 @@ import { Controller, Get, Param, Query, UseGuards, NotFoundException } from '@ne
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NotificationService } from '../services/notification.service';
 import { NotificationHistoryQueryDto } from '../dto/notification-history-query.dto';
+import { NotificationStatsQueryDto } from '../dto/notification-stats-query.dto';
+import { NotificationStats } from '../interfaces/notification-stats.interface';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
+import { RolesGuard } from '../../../common/guards/roles.guard';
+import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
 import { Notification } from '../entities/notification.entity';
 
@@ -16,6 +20,17 @@ import { Notification } from '../entities/notification.entity';
 @Controller('notifications')
 export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
+
+  /** US-076 — Notification delivery stats (super-admin) */
+  @Get('stats')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin')
+  @ApiOperation({ summary: 'US-076: Notification delivery counts by status (super-admin)' })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
+  async getStats(@Query() query: NotificationStatsQueryDto): Promise<NotificationStats> {
+    return this.notificationService.getStats(query.from, query.to);
+  }
 
   /** List notifications for the current user */
   @Get()

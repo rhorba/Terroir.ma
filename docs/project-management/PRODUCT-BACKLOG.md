@@ -9,6 +9,8 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 **Status values:** Done | In Progress | Todo
 **Priority values:** High | Medium | Low
 
+> **Process note (added Sprint 7 retro):** When `/brainstorm` narrows a story's scope (e.g., read-only instead of full CRUD), update the SP estimate in this backlog at the end of the brainstorm session — before sprint commitment. This keeps velocity calculations accurate.
+
 ---
 
 ## Epic 1: Cooperative Onboarding
@@ -26,7 +28,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-007   | As a cooperative administrator, I want to receive a rejection notification with the reason so that I can address the issues                    | Medium   | Done   | 2      |
 | US-008   | As a cooperative member, I want to update my profile (phone, address, farming plot) so that my information stays current                       | Medium   | Done   | 3      |
 | US-009   | As a cooperative administrator, I want to view all my cooperative members so that I can manage membership                                      | Medium   | Done   | 2      |
-| US-010   | As a super-admin, I want to deactivate a cooperative so that non-compliant cooperatives lose platform access                                   | Low      | Todo   | 3      |
+| US-010   | As a super-admin, I want to deactivate a cooperative so that non-compliant cooperatives lose platform access                                   | Low      | Done   | 3      |
 
 **Epic 1 Total Points:** 36
 
@@ -43,7 +45,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-013   | As a cooperative administrator, I want to create a batch from one or more harvests so that products can be tracked through processing                         | High     | Done   | 5      |
 | US-014   | As a cooperative administrator, I want to view the complete history of a batch so that I can trace its origin and processing steps                            | High     | Done   | 3      |
 | US-015   | As a cooperative administrator, I want to search products by SDOQ type and region so that I can find relevant records quickly                                 | Medium   | Done   | 3      |
-| US-016   | As a super-admin, I want to manage the list of recognized SDOQ product types so that only valid designations are registered                                   | Medium   | Todo   | 5      |
+| US-016   | As a super-admin, I want to manage the list of recognized SDOQ product types so that only valid designations are registered                                   | Medium   | Done   | 5      |
 | US-017   | As a cooperative administrator, I want to upload supporting documents for a product registration so that SDOQ compliance can be verified                      | Medium   | Todo   | 3      |
 | US-018   | As an inspector, I want to view a product's SDOQ specification so that I can verify compliance during inspection                                              | High     | Todo   | 2      |
 | US-019   | As a cooperative administrator, I want to record post-harvest processing steps for a batch so that the full chain of custody is documented                    | Medium   | Todo   | 5      |
@@ -93,7 +95,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-041   | As a super-admin, I want to view a complete audit trail for each certification so that I can satisfy regulatory inquiries                       | High     | Done   | 5      |
 | US-042   | As a certification body officer, I want to view all pending certification requests so that I can manage my workload                             | Medium   | Done   | 3      |
 | US-043   | As an inspector, I want to view my scheduled inspections so that I can plan field visits                                                        | Medium   | Done   | 3      |
-| US-044   | As a super-admin, I want to assign inspectors to inspections so that the right expert covers the right product                                  | Medium   | Todo   | 3      |
+| US-044   | As a super-admin, I want to assign inspectors to inspections so that the right expert covers the right product                                  | Medium   | Done   | 3      |
 | US-045   | As a super-admin, I want to configure certification validity periods by product type so that certificates expire appropriately                  | Medium   | Todo   | 3      |
 | US-046   | As a cooperative administrator, I want to renew an expiring certificate so that my products remain certified                                    | Medium   | Done   | 5      |
 | US-047   | As a certification body officer, I want to generate a PDF certificate so that the cooperative has a printable document                          | Medium   | Done   | 5      |
@@ -158,7 +160,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-073   | As a cooperative administrator, I want to receive an SMS for critical events (certification granted, revoked, export cleared) so that I am alerted immediately | High     | Done   | 5      |
 | US-074   | As a platform user, I want to view my notification history so that I can review past alerts                                                                    | Medium   | Done   | 3      |
 | US-075   | As a super-admin, I want to manage notification templates so that messages can be updated without code changes                                                 | Medium   | Done   | 8      |
-| US-076   | As a super-admin, I want to view failed notification counts so that I can identify delivery problems                                                           | Medium   | Todo   | 3      |
+| US-076   | As a super-admin, I want to view failed notification counts so that I can identify delivery problems                                                           | Medium   | Done   | 3      |
 | US-077   | As a platform user, I want to set my notification preferences (email, SMS, or both) so that I receive alerts on my preferred channel                           | Low      | Todo   | 3      |
 | US-078   | As a super-admin, I want notifications to be retried on failure so that transient errors do not cause missed alerts                                            | High     | Done   | 5      |
 | US-079   | As a super-admin, I want notification events to be published to Kafka so that notification delivery is decoupled from business logic                           | High     | Done   | 3      |
@@ -179,7 +181,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-083   | As a super-admin, I want a cooperative compliance report so that I can identify cooperatives with outstanding obligations                        | Medium   | Todo   | 5      |
 | US-084   | As a MAPMDREF representative, I want to export periodic certification reports so that regulatory obligations are met                             | High     | Todo   | 5      |
 | US-085   | As a super-admin, I want to view user activity logs so that platform usage is auditable                                                          | Medium   | Todo   | 5      |
-| US-086   | As a super-admin, I want to manage user roles and permissions so that access control is maintained                                               | High     | Todo   | 5      |
+| US-086   | As a super-admin, I want to manage user roles and permissions so that access control is maintained                                               | High     | Done   | 5      |
 | US-087   | As a super-admin, I want to view Kafka DLQ message counts so that I can detect processing failures                                               | Medium   | Todo   | 3      |
 | US-088   | As a super-admin, I want to view notification delivery rates so that communication effectiveness is monitored                                    | Medium   | Todo   | 3      |
 | US-089   | As a super-admin, I want to generate a report of active certifications so that ONSSA can verify compliance                                       | Medium   | Todo   | 3      |
@@ -193,12 +195,12 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 | Epic                           | Stories | Total Points | Done   | In Progress | Todo   |
 | ------------------------------ | ------- | ------------ | ------ | ----------- | ------ |
-| Epic 1: Cooperative Onboarding | 10      | 36           | 9      | 0           | 1      |
-| Epic 2: Product Registry       | 10      | 42           | 5      | 0           | 5      |
+| Epic 1: Cooperative Onboarding | 10      | 36           | 10     | 0           | 0      |
+| Epic 2: Product Registry       | 10      | 42           | 6      | 0           | 4      |
 | Epic 3: Lab Testing            | 10      | 47           | 4      | 0           | 6      |
-| Epic 4: Certification Workflow | 20      | 80           | 17     | 0           | 3      |
+| Epic 4: Certification Workflow | 20      | 80           | 18     | 0           | 2      |
 | Epic 5: QR Code & Verification | 10      | 51           | 8      | 0           | 2      |
 | Epic 6: Export Documentation   | 10      | 34           | 7      | 0           | 3      |
-| Epic 7: Notifications          | 10      | 46           | 8      | 0           | 2      |
-| Epic 8: Admin & Reporting      | 10      | 53           | 0      | 0           | 10     |
-| **Total**                      | **90**  | **389**      | **58** | **0**       | **32** |
+| Epic 7: Notifications          | 10      | 46           | 9      | 0           | 1      |
+| Epic 8: Admin & Reporting      | 10      | 53           | 1      | 0           | 9      |
+| **Total**                      | **90**  | **389**      | **63** | **0**       | **27** |

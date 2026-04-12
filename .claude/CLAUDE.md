@@ -1,9 +1,11 @@
 # Terroir.ma — Claude Code Master Instructions
 
 ## Project Identity
+
 Terroir.ma — a modular monolith that digitizes Morocco's terroir product certification chain under Law 25-06 (SDOQ). v1 on localhost, designed to extract to microservices in Phase 3.
 
 ## Architecture: Modular Monolith
+
 - ONE NestJS application with 4 domain modules (cooperative, product, certification, notification)
 - ONE PostgreSQL database with 4 schemas (cooperative, product, certification, notification)
 - Redpanda (Kafka-compatible) for event streaming between modules
@@ -14,6 +16,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - This IS NOT a traditional monolith — it's designed to split into microservices when needed
 
 ## Tech Stack (exact versions)
+
 - Runtime: Node.js 20 LTS
 - Framework: NestJS 10.x (TypeScript 5.4+ strict mode)
 - Database: PostgreSQL 16 with PostGIS 3.4
@@ -30,6 +33,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - Container: Docker 25+, Docker Compose v2
 
 ## What is NOT in v1
+
 - Kubernetes orchestration (Phase 3)
 - Microservice extraction (Phase 3)
 - Prometheus + Grafana monitoring (Phase 2)
@@ -41,6 +45,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - Chaos engineering (Phase 3)
 
 ## Modular Monolith Rules
+
 - Modules MUST NOT import each other's services, repositories, or entities
 - Inter-module communication is ONLY via Kafka events
 - Each module has its own PostgreSQL schema — no cross-schema foreign keys
@@ -52,6 +57,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - This ensures clean extraction to microservices later
 
 ## Domain-Specific Rules
+
 - Certification chain events are IMMUTABLE — append-only, never update/delete
 - QR codes signed with HMAC-SHA256, verification must be < 200ms (use Redis cache)
 - Lab test parameters vary by product type — always JSONB, never separate tables
@@ -60,6 +66,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - Agricultural campaign year: October → September (not calendar year)
 
 ## Coding Standards
+
 - TypeScript strict: no `any`, strictNullChecks, noImplicitReturns
 - Hexagonal architecture within each module: controller → service → repository
 - JSDoc on every public method
@@ -70,6 +77,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - File naming: kebab-case for files, PascalCase for classes, camelCase for variables
 
 ## Morocco Rules
+
 - Languages: ar-MA (Arabic, RTL), fr-MA (French, LTR), zgh (Amazigh/Tifinagh, LTR)
 - RTL layout support mandatory for Arabic
 - Phone: +212 XXXXXXXXX (9 digits after country code)
@@ -85,6 +93,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - HS codes for export documentation
 
 ## Kafka Event Conventions
+
 - Topic naming: <module>.<entity>.<action> (e.g., certification.decision.granted)
 - All events: JSON with correlationId, eventId (UUID), timestamp (ISO 8601), version
 - Consumer groups: <module>-group (e.g., notification-group)
@@ -92,6 +101,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - Idempotent processing: check eventId before processing
 
 ## Keycloak Roles
+
 - super-admin: full platform access, manage all cooperatives, override certifications
 - cooperative-admin: manage own cooperative, members, farms, products, view certifications
 - cooperative-member: log harvests, create batches, view own cooperative's data
@@ -103,13 +113,15 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - service-account: machine-to-machine authentication
 
 ## Testing (3 levels)
-- Unit: Jest, 80% coverage, mock all externals, test/unit/, naming: *.spec.ts
-- Integration: Testcontainers (PostgreSQL + Redpanda), test/integration/, naming: *.integration.ts
-- E2E: docker-compose.test.yml + Supertest, test/e2e/, naming: *.e2e.ts
+
+- Unit: Jest, 80% coverage, mock all externals, test/unit/, naming: \*.spec.ts
+- Integration: Testcontainers (PostgreSQL + Redpanda), test/integration/, naming: \*.integration.ts
+- E2E: docker-compose.test.yml + Supertest, test/e2e/, naming: \*.e2e.ts
 - Test data: factories (@faker-js/faker) in test/factories/, fixtures in test/fixtures/
 - No test may depend on external network access
 
 ## Git Conventions
+
 - Conventional Commits: feat:, fix:, docs:, chore:, test:, refactor:
 - Scopes: cooperative, product, certification, notification, common, config, kafka, keycloak, docker, ci, docs, testing, session, infra, domain
 - Branch naming: feature/, bugfix/, hotfix/, chore/
@@ -117,12 +129,14 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - All PRs require tests for changed code
 
 ## Development Workflow
+
 - /brainstorm → design.md → /plan → plan.md → /execute → code + progress.md
 - Feature ideas start with /brainstorm (collaborative design)
 - Validated designs become plans via /plan (bite-sized implementation tasks)
 - Plans are executed via /execute (batches of 3, with verification checkpoints)
 
 ## Project Management
+
 - Product Backlog in docs/project-management/PRODUCT-BACKLOG.md
 - 2-week sprints tracked in .sessions/sprint-logs/
 - Every feature traces to a backlog item
@@ -130,11 +144,13 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - /daily-standup, /sprint-status, /retro for Scrum ceremonies
 
 ## Session Persistence
+
 - EVERY session ends with /save-session
 - EVERY session starts with /resume
 - Progress tracked in .sessions/current-state.json, daily-logs/, sprint-logs/
 
 ## Available Slash Commands
+
 - /scaffold-module — Create a new NestJS domain module with all boilerplate
 - /health-check — Check health of all running services
 - /db-migrate — Run, generate, or revert TypeORM migrations
@@ -157,6 +173,7 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - /retro — Generate sprint retrospective from session logs
 
 ## Available Skills
+
 - modular-monolith-patterns — Module isolation, hexagonal architecture, extraction path
 - kafka-integration — Producers, consumers, DLQ, idempotency, event interfaces
 - keycloak-auth — JWT validation, role guards, OIDC flows, token testing
@@ -172,3 +189,42 @@ Terroir.ma — a modular monolith that digitizes Morocco's terroir product certi
 - scrum-agile — Sprint ceremonies, DoD, DoR, velocity tracking via files
 - session-persistence — Save/resume state, daily logs, sprint logs, crash recovery
 - terroir-domain — Law 25-06, certification types, 12-step workflow, product lab parameters
+
+## Known Patterns and Pitfalls
+
+### Local Event Barrel Pattern (Certification module)
+
+New Kafka event types for the certification module must be added in TWO places:
+
+1. `src/common/interfaces/events/certification.events.ts` — the shared interface definition
+2. `src/modules/certification/events/certification-events.ts` — the local re-export barrel used by `certification.producer.ts`
+
+Forgetting step 2 causes import errors in the producer at runtime. This is a known two-file ceremony for the certification module.
+
+### TypeORM JSONB: use `em.create()` + `em.save()`, not `em.insert()`
+
+TypeORM's `em.insert()` enforces strict JSONB typing and rejects `Record<string, unknown> | null`.
+Always use the `em.create()` + `em.save()` pattern for entities with JSONB columns:
+
+```ts
+// ✅ Correct
+const event = em.create(CertificationEvent, { payload: jsonbData });
+await em.save(CertificationEvent, event);
+
+// ❌ Avoid — will reject Record<string, unknown> | null
+await em.insert(CertificationEvent, { payload: jsonbData });
+```
+
+### Test mock pattern: use `useValue` for mocks that need external control
+
+Use `useValue` (not `useFactory`) when the test body needs to configure mock return values:
+
+```ts
+// ✅ Correct — repo is accessible in test body
+const repo = makeRepo();
+{ provide: getRepositoryToken(MyEntity), useValue: repo }
+// ... in test: repo.findOne.mockResolvedValue(...)
+
+// ❌ Avoid — creates isolated instance, impossible to control from test body
+{ provide: getRepositoryToken(MyEntity), useFactory: makeRepo }
+```

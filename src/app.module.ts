@@ -16,6 +16,7 @@ import { CertificationModule } from './modules/certification/certification.modul
 import { NotificationModule } from './modules/notification/notification.module';
 /* eslint-enable no-restricted-imports */
 import { HealthController } from './health/health.controller';
+import { UserController } from './common/controllers/user.controller';
 import { KafkaClientModule } from './kafka/kafka-client.module';
 
 @Module({
@@ -75,6 +76,6 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     CertificationModule,
     NotificationModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, UserController],
 })
 export class AppModule {}

@@ -150,3 +150,14 @@ export interface CertificationRenewedEvent extends BaseEvent {
   cooperativeId: string;
   renewedBy: string;
 }
+
+/** Published when a super-admin assigns an inspector to an inspection (US-044) */
+export interface InspectionInspectorAssignedEvent extends BaseEvent {
+  inspectionId: string;
+  certificationId: string;
+  cooperativeId: string;
+  inspectorId: string;
+  inspectorName: string;
+  scheduledDate: string;
+  assignedBy: string;
+}

@@ -27,6 +27,8 @@
     "migration:revert": "ts-node -r tsconfig-paths/register node_modules/.bin/typeorm migration:revert -d src/database/data-source.ts",
     "migration:generate": "ts-node -r tsconfig-paths/register node_modules/.bin/typeorm migration:generate -d src/database/data-source.ts",
     "migration:show": "ts-node -r tsconfig-paths/register node_modules/.bin/typeorm migration:show -d src/database/data-source.ts",
+    "migration:check": "ts-node -r tsconfig-paths/register node_modules/.bin/typeorm migration:generate src/database/migrations/SchemaDriftCheck -d src/database/data-source.ts --check",
+    "fonts:download": "node scripts/download-fonts.js",
     "prepare": "husky"
   },
   "dependencies": {

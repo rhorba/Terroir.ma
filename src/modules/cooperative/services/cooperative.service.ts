@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -22,6 +23,8 @@ import { CooperativeProducer } from '../events/cooperative.producer';
  */
 @Injectable()
 export class CooperativeService {
+  private readonly logger = new Logger(CooperativeService.name);
+
   constructor(
     @InjectRepository(Cooperative)
     private readonly cooperativeRepo: Repository<Cooperative>,
@@ -183,6 +186,43 @@ export class CooperativeService {
     if (dto.phone !== undefined) member.phone = dto.phone;
     if (dto.email !== undefined) member.email = dto.email ?? null;
     return this.memberRepo.save(member);
+  }
+
+  /**
+   * US-010 — Deactivates a cooperative (super-admin action).
+   * Sets status to 'suspended' and publishes cooperative.cooperative.deactivated Kafka event.
+   * @throws NotFoundException if not found
+   * @throws ConflictException if already suspended
+   */
+  async deactivate(
+    id: string,
+    deactivatedBy: string,
+    reason: string | null,
+    correlationId: string,
+  ): Promise<Cooperative> {
+    const cooperative = await this.cooperativeRepo.findOne({ where: { id } });
+    if (!cooperative) {
+      throw new NotFoundException({
+        code: 'COOPERATIVE_NOT_FOUND',
+        message: `Cooperative ${id} not found`,
+      });
+    }
+    if (cooperative.status === 'suspended') {
+      throw new ConflictException({
+        code: 'COOPERATIVE_ALREADY_SUSPENDED',
+        message: 'Cooperative is already suspended',
+      });
+    }
+    await this.cooperativeRepo.update({ id }, { status: 'suspended' });
+    const updated = { ...cooperative, status: 'suspended' as const };
+    await this.producer.publishCooperativeDeactivated(
+      updated,
+      deactivatedBy,
+      reason,
+      correlationId,
+    );
+    this.logger.log({ cooperativeId: id, deactivatedBy }, 'Cooperative deactivated');
+    return updated;
   }
 
   /**

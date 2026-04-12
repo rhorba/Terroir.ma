@@ -5,12 +5,30 @@
   "architecture": "modular-monolith",
   "permissions": {
     "allow": [
-      "bash(docker *)", "bash(docker-compose *)", "bash(npm *)", "bash(npx *)",
-      "bash(node *)", "bash(make *)", "bash(git *)", "bash(curl *)", "bash(cat *)",
-      "bash(ls *)", "bash(mkdir *)", "bash(cp *)", "bash(mv *)", "bash(rm *)",
-      "bash(find *)", "bash(grep *)", "bash(sed *)", "bash(awk *)", "bash(sh *)",
-      "bash(chmod *)", "bash(psql *)", "bash(redis-cli *)", "bash(rpk *)"
+      "Bash(docker *)",
+      "Bash(docker-compose *)",
+      "Bash(npm *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(make *)",
+      "Bash(git *)",
+      "Bash(curl *)",
+      "Bash(cat *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(rm *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(sh *)",
+      "Bash(chmod *)",
+      "Bash(psql *)",
+      "Bash(redis-cli *)",
+      "Bash(rpk *)"
     ],
-    "deny": ["bash(rm -rf /)", "bash(sudo rm -rf *)", "bash(:(){ :|:& };:)"]
+    "deny": ["Bash(rm -rf /)", "Bash(sudo rm -rf *)"]
   }
 }

@@ -7,6 +7,7 @@ import type {
   CooperativeRegistrationSubmittedEvent,
   CooperativeRegistrationVerifiedEvent,
   CooperativeFarmMappedEvent,
+  CooperativeDeactivatedEvent,
 } from './cooperative-events';
 
 /**
@@ -85,6 +86,40 @@ export class CooperativeProducer {
       this.logger.error(
         { error, cooperativeId: cooperative.id },
         'Failed to publish registration verified event',
+      );
+    }
+  }
+
+  /** US-010 — Publish cooperative deactivated event */
+  async publishCooperativeDeactivated(
+    cooperative: Cooperative,
+    deactivatedBy: string,
+    reason: string | null,
+    correlationId: string,
+  ): Promise<void> {
+    const event: CooperativeDeactivatedEvent = {
+      eventId: uuidv4(),
+      correlationId,
+      timestamp: new Date().toISOString(),
+      version: 1,
+      source: 'cooperative',
+      cooperativeId: cooperative.id,
+      cooperativeName: cooperative.name,
+      ice: cooperative.ice,
+      regionCode: cooperative.regionCode,
+      deactivatedBy,
+      reason,
+    };
+    try {
+      await this.kafkaClient.emit('cooperative.cooperative.deactivated', event).toPromise();
+      this.logger.log(
+        { eventId: event.eventId, cooperativeId: cooperative.id },
+        'Cooperative deactivated event published',
+      );
+    } catch (error) {
+      this.logger.error(
+        { error, cooperativeId: cooperative.id },
+        'Failed to publish cooperative deactivated event',
       );
     }
   }

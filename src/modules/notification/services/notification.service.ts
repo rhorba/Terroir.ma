@@ -8,6 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Notification, NotificationChannel } from '../entities/notification.entity';
 import { NotificationTemplate } from '../entities/notification-template.entity';
+import { NotificationStats } from '../interfaces/notification-stats.interface';
 import { EmailService } from './email.service';
 import { SmsService } from './sms.service';
 
@@ -54,6 +55,48 @@ export class NotificationService {
 
   async findById(id: string, recipientId: string): Promise<Notification | null> {
     return this.notificationRepo.findOne({ where: { id, recipientId } });
+  }
+
+  /**
+   * US-076 — Returns notification delivery counts grouped by status.
+   * Redis-cached for 300s. Key: stats:notifications:{from|all}:{to|all}
+   */
+  async getStats(from?: string, to?: string): Promise<NotificationStats> {
+    const cacheKey = `stats:notifications:${from ?? 'all'}:${to ?? 'all'}`;
+    const cached = await this.cacheManager.get<NotificationStats>(cacheKey);
+    if (cached) return cached;
+
+    const qb = this.notificationRepo
+      .createQueryBuilder('n')
+      .select('n.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('n.status');
+
+    if (from) qb.andWhere('n.created_at >= :from', { from });
+    if (to) qb.andWhere('n.created_at <= :to', { to });
+
+    const rows: Array<{ status: string; count: string }> = await qb.getRawMany();
+
+    const byStatus = { sent: 0, failed: 0, pending: 0 };
+    let total = 0;
+    for (const row of rows) {
+      const count = Number(row.count);
+      total += count;
+      if (row.status === 'sent') byStatus.sent = count;
+      else if (row.status === 'failed') byStatus.failed = count;
+      else if (row.status === 'pending') byStatus.pending = count;
+    }
+
+    const result: NotificationStats = {
+      total,
+      byStatus,
+      from: from ?? null,
+      to: to ?? null,
+      generatedAt: new Date().toISOString(),
+    };
+
+    await this.cacheManager.set(cacheKey, result, 300_000);
+    return result;
   }
 
   async send(opts: SendNotificationOptions): Promise<void> {

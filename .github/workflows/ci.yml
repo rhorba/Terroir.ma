@@ -106,6 +106,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download font assets (required for PDF in Docker image)
+        run: npm run fonts:download
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -184,6 +196,16 @@ jobs:
 
       - name: Run database migrations
         run: npm run migration:run
+        env:
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DATABASE_USER: terroir
+          DATABASE_PASSWORD: terroir_pass
+          DATABASE_NAME: terroir_db
+
+      - name: Check for schema drift (entities vs migrations)
+        run: npm run migration:check
         env:
           DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
           DATABASE_HOST: localhost

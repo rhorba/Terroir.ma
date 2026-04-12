@@ -3,4 +3,5 @@ export type {
   CooperativeRegistrationSubmittedEvent,
   CooperativeRegistrationVerifiedEvent,
   CooperativeFarmMappedEvent,
+  CooperativeDeactivatedEvent,
 } from '../../../common/interfaces/events/cooperative.events';

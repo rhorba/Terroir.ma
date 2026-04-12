@@ -62,3 +62,6 @@ infrastructure/keycloak/themes/terroir/login/resources/
 # Migrations (track only committed ones)
 migrations/*.js
 migrations/*.js.map
+
+# Font assets (binary — download via npm run fonts:download)
+assets/fonts/*.ttf

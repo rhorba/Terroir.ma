@@ -48,6 +48,10 @@ export class ProductType {
   @Column({ name: 'onssa_category', type: 'varchar', length: 50, nullable: true })
   onssaCategory: string | null;
 
+  /** US-016 — soft deactivation flag. Inactive types are hidden from product creation. */
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive: boolean;
+
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 

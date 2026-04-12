@@ -4,13 +4,17 @@ import type {
   CertificationDecisionGrantedEvent,
   LabTestCompletedEvent,
   CertificationInspectionScheduledEvent,
+  CooperativeDeactivatedEvent,
+  InspectionInspectorAssignedEvent,
 } from '../../../common/interfaces/events';
 import { NotificationService } from '../services/notification.service';
 
 /**
  * Notification module Kafka listener.
  * Consumer group: notification-group
- * Consumes: certification.decision.granted, lab.test.completed, certification.inspection.scheduled
+ * Consumes: certification.decision.granted, lab.test.completed,
+ *           certification.inspection.scheduled, cooperative.cooperative.deactivated,
+ *           certification.inspection.inspector-assigned
  */
 @Controller()
 export class NotificationListener {
@@ -85,6 +89,70 @@ export class NotificationListener {
       // ack handled automatically by NestJS Kafka transport
     } catch (error) {
       this.logger.error({ error, eventId: data.eventId }, 'Failed to process lab.test.completed');
+    }
+  }
+
+  /** US-010 — Notify cooperative-admin when cooperative is deactivated */
+  @EventPattern('cooperative.cooperative.deactivated')
+  async handleCooperativeDeactivated(
+    @Payload() data: CooperativeDeactivatedEvent,
+    @Ctx() _context: KafkaContext,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        { eventId: data.eventId, cooperativeId: data.cooperativeId },
+        'Cooperative deactivated — sending notification',
+      );
+      await this.notificationService.send({
+        recipientId: data.cooperativeId,
+        channel: 'email',
+        templateCode: 'cooperative-deactivated',
+        language: 'fr-MA',
+        context: {
+          cooperativeName: data.cooperativeName,
+          reason: data.reason ?? 'Non spécifié',
+          deactivatedBy: data.deactivatedBy,
+        },
+        triggerEventId: data.eventId,
+        correlationId: data.correlationId,
+      });
+    } catch (error) {
+      this.logger.error(
+        { error, eventId: data.eventId },
+        'Failed to process cooperative.cooperative.deactivated',
+      );
+    }
+  }
+
+  /** US-044 — Notify inspector when assigned to an inspection */
+  @EventPattern('certification.inspection.inspector-assigned')
+  async handleInspectorAssigned(
+    @Payload() data: InspectionInspectorAssignedEvent,
+    @Ctx() _context: KafkaContext,
+  ): Promise<void> {
+    try {
+      this.logger.log(
+        { eventId: data.eventId, inspectionId: data.inspectionId, inspectorId: data.inspectorId },
+        'Inspector assigned — sending notification',
+      );
+      await this.notificationService.send({
+        recipientId: data.inspectorId,
+        channel: 'email',
+        templateCode: 'inspection-assigned',
+        language: 'fr-MA',
+        context: {
+          inspectorName: data.inspectorName,
+          scheduledDate: data.scheduledDate,
+          certificationId: data.certificationId,
+        },
+        triggerEventId: data.eventId,
+        correlationId: data.correlationId,
+      });
+    } catch (error) {
+      this.logger.error(
+        { error, eventId: data.eventId },
+        'Failed to process certification.inspection.inspector-assigned',
+      );
     }
   }
 

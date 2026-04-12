@@ -19,6 +19,7 @@ import { UpdateCooperativeDto } from '../dto/update-cooperative.dto';
 import { AddMemberDto } from '../dto/add-member.dto';
 import { UpdateMemberDto } from '../dto/update-member.dto';
 import { MapFarmDto } from '../dto/map-farm.dto';
+import { DeactivateCooperativeDto } from '../dto/deactivate-cooperative.dto';
 import { Member } from '../entities/member.entity';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -82,6 +83,20 @@ export class CooperativeController {
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<void> {
     await this.cooperativeService.addMember(id, dto, user.sub);
+  }
+
+  /** US-010 — Deactivate a cooperative (super-admin only) */
+  @Put(':id/deactivate')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin')
+  @ApiOperation({ summary: 'US-010: Deactivate a cooperative (super-admin)' })
+  async deactivate(
+    @Param('id') id: string,
+    @Body() dto: DeactivateCooperativeDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Cooperative> {
+    return this.cooperativeService.deactivate(id, user.sub, dto.reason ?? null, correlationId);
   }
 
   /** Verify a cooperative (super-admin only) */

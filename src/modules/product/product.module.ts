@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProductController } from './controllers/product.controller';
+import { ProductTypeController } from './controllers/product-type.controller';
 import { HarvestController } from './controllers/harvest.controller';
 import { BatchController } from './controllers/batch.controller';
 import { LabTestController } from './controllers/lab-test.controller';
 import { ProductService } from './services/product.service';
+import { ProductTypeService } from './services/product-type.service';
 import { HarvestService } from './services/harvest.service';
 import { BatchService } from './services/batch.service';
 import { LabTestService } from './services/lab-test.service';
@@ -36,6 +38,7 @@ import { ProductListener } from './listeners/product.listener';
   ],
   controllers: [
     ProductController,
+    ProductTypeController,
     HarvestController,
     BatchController,
     LabTestController,
@@ -43,6 +46,7 @@ import { ProductListener } from './listeners/product.listener';
   ],
   providers: [
     ProductService,
+    ProductTypeService,
     HarvestService,
     BatchService,
     LabTestService,

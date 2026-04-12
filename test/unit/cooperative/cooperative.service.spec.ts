@@ -21,6 +21,7 @@ const makeProducer = () => ({
   publishRegistrationSubmitted: jest.fn().mockResolvedValue(undefined),
   publishRegistrationVerified: jest.fn().mockResolvedValue(undefined),
   publishFarmMapped: jest.fn().mockResolvedValue(undefined),
+  publishCooperativeDeactivated: jest.fn().mockResolvedValue(undefined),
 });
 
 function buildCooperative(overrides: Partial<Cooperative> = {}): Cooperative {
@@ -333,6 +334,41 @@ describe('CooperativeService', () => {
       await expect(
         service.addMember('coop-uuid', { cin: 'AB12345' } as never, 'admin'),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('deactivate() — US-010', () => {
+    it('should set status to suspended and publish Kafka event', async () => {
+      const active = buildCooperative({ status: 'active' });
+      coopRepo.findOne.mockResolvedValue(active);
+      coopRepo.update.mockResolvedValue({ affected: 1 });
+
+      const result = await service.deactivate('coop-uuid', 'admin-uuid', 'Raison test', 'corr-id');
+
+      expect(coopRepo.update).toHaveBeenCalledWith({ id: 'coop-uuid' }, { status: 'suspended' });
+      expect(producer.publishCooperativeDeactivated).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'coop-uuid', status: 'suspended' }),
+        'admin-uuid',
+        'Raison test',
+        'corr-id',
+      );
+      expect(result.status).toBe('suspended');
+    });
+
+    it('should throw ConflictException if cooperative is already suspended', async () => {
+      coopRepo.findOne.mockResolvedValue(buildCooperative({ status: 'suspended' }));
+
+      await expect(service.deactivate('coop-uuid', 'admin-uuid', null, 'corr-id')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('should throw NotFoundException if cooperative does not exist', async () => {
+      coopRepo.findOne.mockResolvedValue(null);
+
+      await expect(service.deactivate('bad-uuid', 'admin-uuid', null, 'corr-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

@@ -10,6 +10,7 @@ export type {
   CertificationFinalReviewStartedEvent,
   CertificationRenewedEvent,
   LabTestCompletedEvent,
+  InspectionInspectorAssignedEvent,
 } from '../../../common/interfaces/events/certification.events';
 
 export type {

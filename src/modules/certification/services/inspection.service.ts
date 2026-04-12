@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+  Logger,
+} from '@nestjs/common';
 import { PagedResult } from '../../../common/dto/pagination.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -153,6 +159,39 @@ export class InspectionService {
       take: limit,
     });
     return { data, meta: { page, limit, total } };
+  }
+
+  /**
+   * US-044 — Assigns an inspector to a scheduled inspection.
+   * Publishes certification.inspection.inspector-assigned Kafka event.
+   * @throws NotFoundException if inspection not found
+   * @throws ConflictException if inspection is completed or cancelled
+   */
+  async assignInspector(
+    id: string,
+    inspectorId: string,
+    inspectorName: string,
+    assignedBy: string,
+    correlationId: string,
+  ): Promise<Inspection> {
+    const inspection = await this.inspectionRepo.findOne({ where: { id } });
+    if (!inspection) {
+      throw new NotFoundException({
+        code: 'INSPECTION_NOT_FOUND',
+        message: `Inspection ${id} not found`,
+      });
+    }
+    if (inspection.status === 'completed' || inspection.status === 'cancelled') {
+      throw new ConflictException({
+        code: 'INSPECTION_ALREADY_CLOSED',
+        message: `Cannot assign inspector to ${inspection.status} inspection`,
+      });
+    }
+    await this.inspectionRepo.update({ id }, { inspectorId, inspectorName });
+    const updated = await this.findById(id);
+    await this.producer.publishInspectorAssigned(updated, assignedBy, correlationId);
+    this.logger.log({ inspectionId: id, inspectorId, assignedBy }, 'Inspector assigned');
+    return updated;
   }
 
   async fileReport(

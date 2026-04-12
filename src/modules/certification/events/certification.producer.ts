@@ -13,6 +13,7 @@ import type {
   CertificationFinalReviewStartedEvent,
   CertificationRenewedEvent,
   QrCodeGeneratedEvent,
+  InspectionInspectorAssignedEvent,
 } from './certification-events';
 import { CertificationType } from '../../../common/interfaces/morocco.interface';
 
@@ -292,6 +293,40 @@ export class CertificationProducer {
       this.logger.error(
         { error, oldCertificationId: oldCertification.id },
         'Failed to publish certification renewed event',
+      );
+    }
+  }
+
+  /** US-044 — Publish inspector assigned event */
+  async publishInspectorAssigned(
+    inspection: Inspection,
+    assignedBy: string,
+    correlationId: string,
+  ): Promise<void> {
+    const event: InspectionInspectorAssignedEvent = {
+      eventId: uuidv4(),
+      correlationId,
+      timestamp: new Date().toISOString(),
+      version: 1,
+      source: 'certification',
+      inspectionId: inspection.id,
+      certificationId: inspection.certificationId,
+      cooperativeId: inspection.cooperativeId,
+      inspectorId: inspection.inspectorId,
+      inspectorName: inspection.inspectorName ?? '',
+      scheduledDate: inspection.scheduledDate,
+      assignedBy,
+    };
+    try {
+      await this.kafkaClient.emit('certification.inspection.inspector-assigned', event).toPromise();
+      this.logger.log(
+        { eventId: event.eventId, inspectionId: inspection.id },
+        'Inspector assigned event published',
+      );
+    } catch (error) {
+      this.logger.error(
+        { error, inspectionId: inspection.id },
+        'Failed to publish inspector assigned event',
       );
     }
   }

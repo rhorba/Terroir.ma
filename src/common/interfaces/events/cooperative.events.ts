@@ -27,3 +27,13 @@ export interface CooperativeFarmMappedEvent extends BaseEvent {
   areaHectares: number;
   cropTypes: string[];
 }
+
+/** Published when a super-admin deactivates a cooperative (US-010) */
+export interface CooperativeDeactivatedEvent extends BaseEvent {
+  cooperativeId: string;
+  cooperativeName: string;
+  ice: string;
+  regionCode: string;
+  deactivatedBy: string;
+  reason: string | null;
+}

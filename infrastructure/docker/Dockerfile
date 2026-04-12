@@ -42,6 +42,10 @@ COPY --from=builder /app/dist ./dist
 # Copy shared module (runtime schemas, enums, types)
 COPY --from=builder /app/shared ./shared
 
+# Copy font assets for PDF certificate generation
+# (TTF files are gitignored — downloaded at build time via fonts:download)
+COPY --from=builder /app/assets ./assets
+
 # Drop to non-root user
 USER appuser
 

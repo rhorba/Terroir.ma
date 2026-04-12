@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Patch,
   Param,
   Body,
@@ -15,6 +16,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger'
 import { InspectionService } from '../services/inspection.service';
 import { ScheduleInspectionDto } from '../dto/schedule-inspection.dto';
 import { FileInspectionReportDto } from '../dto/file-inspection-report.dto';
+import { AssignInspectorDto } from '../dto/assign-inspector.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -61,6 +63,26 @@ export class InspectionController {
     @Headers('x-correlation-id') correlationId = '',
   ): Promise<Inspection> {
     return this.inspectionService.scheduleInspection(dto, user.sub, correlationId);
+  }
+
+  /** US-044 — Assign inspector to an inspection (super-admin) */
+  @Put(':id/assign-inspector')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin')
+  @ApiOperation({ summary: 'US-044: Assign inspector to inspection (super-admin)' })
+  async assignInspector(
+    @Param('id') id: string,
+    @Body() dto: AssignInspectorDto,
+    @CurrentUser() user: CurrentUserPayload,
+    @Headers('x-correlation-id') correlationId = '',
+  ): Promise<Inspection> {
+    return this.inspectionService.assignInspector(
+      id,
+      dto.inspectorId,
+      dto.inspectorName,
+      user.sub,
+      correlationId,
+    );
   }
 
   /** Get inspection by ID */

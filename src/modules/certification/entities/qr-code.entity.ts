@@ -19,8 +19,8 @@ export class QrCode {
   @Column({ name: 'certification_id', type: 'uuid' })
   certificationId: string;
 
-  /** HMAC-SHA256 signature of certificationId + issuedAt */
-  @Column({ name: 'hmac_signature', length: 64 })
+  /** HMAC-SHA256 signature of certificationId + issuedAt — unique per certificate */
+  @Column({ name: 'hmac_signature', length: 64, unique: true })
   hmacSignature: string;
 
   /** Public URL consumers scan to verify authenticity */

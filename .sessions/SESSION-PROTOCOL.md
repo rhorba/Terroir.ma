@@ -19,6 +19,14 @@ Claude Code has no persistent memory between conversations. This `.sessions/` sy
     └── sprint-N.md
 ```
 
+## Infra-First Rule
+If a sprint contains a DB/Docker task (migrations, Testcontainers, live service):
+1. **Run it in the first 15 minutes** of the session, before any feature code
+2. If it fails or requires manual setup → **defer the task immediately** and note the blocker in `current-state.json`
+3. Do not let infra tasks carry over more than once — schedule a dedicated infra session instead
+
+This prevents a repeat of the TM-3 pattern (migration verification deferred across 3 sprints because it always came after feature work).
+
 ## Crash Recovery
 If `current-state.json` is lost:
 1. `git log --oneline -20` — find recent `chore(session): save state` commits

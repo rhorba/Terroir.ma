@@ -13,6 +13,7 @@ const mockRepo = () => ({
   save: jest.fn(),
   create: jest.fn().mockImplementation((dto) => ({ id: 'notif-uuid', ...dto })),
   update: jest.fn(),
+  createQueryBuilder: jest.fn(),
 });
 
 const mockEmailService = () => ({ send: jest.fn() });
@@ -224,6 +225,74 @@ describe('NotificationService', () => {
       await service.send(sendOpts);
 
       expect(notificationRepo.save).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getStats() — US-076', () => {
+    const mockQb = {
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      groupBy: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn(),
+    };
+
+    beforeEach(() => {
+      notificationRepo.createQueryBuilder = jest.fn().mockReturnValue(mockQb);
+      jest.clearAllMocks();
+      mockQb.select.mockReturnThis();
+      mockQb.addSelect.mockReturnThis();
+      mockQb.groupBy.mockReturnThis();
+      mockQb.andWhere.mockReturnThis();
+    });
+
+    it('returns cached result on cache hit', async () => {
+      const cached = {
+        total: 10,
+        byStatus: { sent: 8, failed: 2, pending: 0 },
+        from: null,
+        to: null,
+        generatedAt: '2026-01-01T00:00:00.000Z',
+      };
+      cacheManager.get = jest.fn().mockResolvedValue(cached);
+
+      const result = await service.getStats();
+
+      expect(cacheManager.get).toHaveBeenCalledWith('stats:notifications:all:all');
+      expect(notificationRepo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(result).toEqual(cached);
+    });
+
+    it('queries DB, caches result, and returns stats on cache miss', async () => {
+      cacheManager.get = jest.fn().mockResolvedValue(null);
+      cacheManager.set = jest.fn();
+      mockQb.getRawMany.mockResolvedValue([
+        { status: 'sent', count: '5' },
+        { status: 'failed', count: '3' },
+        { status: 'pending', count: '2' },
+      ]);
+
+      const result = await service.getStats();
+
+      expect(result.total).toBe(10);
+      expect(result.byStatus).toEqual({ sent: 5, failed: 3, pending: 2 });
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'stats:notifications:all:all',
+        expect.objectContaining({ total: 10 }),
+        300_000,
+      );
+    });
+
+    it('applies from/to date filter to query builder', async () => {
+      cacheManager.get = jest.fn().mockResolvedValue(null);
+      cacheManager.set = jest.fn();
+      mockQb.getRawMany.mockResolvedValue([]);
+
+      await service.getStats('2026-01-01', '2026-03-31');
+
+      expect(mockQb.andWhere).toHaveBeenCalledWith('n.created_at >= :from', { from: '2026-01-01' });
+      expect(mockQb.andWhere).toHaveBeenCalledWith('n.created_at <= :to', { to: '2026-03-31' });
+      expect(cacheManager.get).toHaveBeenCalledWith('stats:notifications:2026-01-01:2026-03-31');
     });
   });
 });

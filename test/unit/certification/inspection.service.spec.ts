@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InspectionService } from '../../../src/modules/certification/services/inspection.service';
 import { Inspection } from '../../../src/modules/certification/entities/inspection.entity';
 import { InspectionReport } from '../../../src/modules/certification/entities/inspection-report.entity';
@@ -21,6 +21,7 @@ const makeRepo = () => ({
 
 const mockProducer = {
   publishInspectionScheduled: jest.fn().mockResolvedValue(undefined),
+  publishInspectorAssigned: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('InspectionService', () => {
@@ -193,6 +194,73 @@ describe('InspectionService', () => {
 
       expect(result.data).toHaveLength(0);
       expect(result.meta.total).toBe(0);
+    });
+  });
+
+  describe('assignInspector() — US-044', () => {
+    const scheduledInspection = {
+      id: 'insp-001',
+      certificationId: 'cert-001',
+      cooperativeId: 'coop-001',
+      inspectorId: 'old-inspector',
+      inspectorName: 'Old Name',
+      scheduledDate: '2026-05-01',
+      status: 'scheduled',
+    };
+
+    it('should update inspectorId/Name and publish Kafka event', async () => {
+      const updated = {
+        ...scheduledInspection,
+        inspectorId: 'new-inspector',
+        inspectorName: 'New Name',
+      };
+      inspectionRepo.findOne
+        .mockResolvedValueOnce(scheduledInspection) // guard check
+        .mockResolvedValueOnce(updated); // findById after update
+      inspectionRepo.update.mockResolvedValue({ affected: 1 });
+
+      const result = await service.assignInspector(
+        'insp-001',
+        'new-inspector',
+        'New Name',
+        'admin-uuid',
+        'corr-id',
+      );
+
+      expect(inspectionRepo.update).toHaveBeenCalledWith(
+        { id: 'insp-001' },
+        { inspectorId: 'new-inspector', inspectorName: 'New Name' },
+      );
+      expect(mockProducer.publishInspectorAssigned).toHaveBeenCalledWith(
+        updated,
+        'admin-uuid',
+        'corr-id',
+      );
+      expect(result.inspectorId).toBe('new-inspector');
+    });
+
+    it('should throw ConflictException for completed inspection', async () => {
+      inspectionRepo.findOne.mockResolvedValue({ ...scheduledInspection, status: 'completed' });
+
+      await expect(
+        service.assignInspector('insp-001', 'new', 'New', 'admin', 'corr'),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException for cancelled inspection', async () => {
+      inspectionRepo.findOne.mockResolvedValue({ ...scheduledInspection, status: 'cancelled' });
+
+      await expect(
+        service.assignInspector('insp-001', 'new', 'New', 'admin', 'corr'),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw NotFoundException for unknown inspection id', async () => {
+      inspectionRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.assignInspector('bad-id', 'new', 'New', 'admin', 'corr'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

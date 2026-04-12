@@ -1,18 +1,18 @@
 {
-  "timestamp": "2026-04-12T20:00:00Z",
-  "session_id": "session-2026-04-12-sprint6-close",
+  "timestamp": "2026-04-12T23:59:00Z",
+  "session_id": "session-2026-04-12-sprint7-close",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": 6,
-    "sprint_name": "PDF Certificate, Stats, Export View & Notification Templates",
+    "sprint_number": 7,
+    "sprint_name": "Migration Fix, Cooperative Deactivation, Product Types, Inspector Assignment, Notification Stats, User Roles",
     "start_date": "2026-04-12",
     "end_date": "2026-04-12",
-    "goal": "PDF certificate (US-047), certification stats (US-048), super-admin export clearances view (US-067), notification template management (US-075), migration verification (TM-3)",
+    "goal": "TM-3 migration verification (carry-over), US-010 deactivate cooperative, US-016 SDOQ product type CRUD, US-044 assign inspector, US-076 notification stats, US-086 user roles read-only",
     "status": "CLOSED",
-    "story_points_planned": 22,
-    "story_points_completed": 21,
-    "velocity_pct": 95,
-    "note": "TM-3 deferred again — requires live PostgreSQL. All user-facing stories delivered."
+    "story_points_planned": 20,
+    "story_points_completed": 20,
+    "velocity_pct": 100,
+    "note": "TM-3 finally DONE — major schema drift discovered and fixed with migrations 007+008. All 6 stories delivered."
   },
   "active_feature": null,
   "modules_status": {
@@ -20,31 +20,33 @@
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "coverage_statements": "100%",
-      "coverage_branches": "86.66%"
+      "new_endpoints_sprint7": [
+        "PUT /cooperatives/:id/deactivate (super-admin)"
+      ]
     },
     "product": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "coverage_statements": "97.91%",
-      "coverage_branches": "94.11%"
+      "new_endpoints_sprint7": [
+        "GET /product-types?page=&limit= (authenticated)",
+        "GET /product-types/:id (authenticated)",
+        "POST /product-types (super-admin)",
+        "PUT /product-types/:id (super-admin)",
+        "DELETE /product-types/:id (super-admin, soft deactivate)"
+      ]
     },
     "certification": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "coverage_statements": "~98%",
-      "coverage_branches": "~88%",
       "redis_qr_cache": true,
       "cache_key_pattern": "qr:verify:{hmacSignature}",
       "cache_ttl_ms": 300000,
       "stats_cache_key_pattern": "stats:certifications:{from|all}:{to|all}",
       "stats_cache_ttl_ms": 300000,
-      "new_endpoints_sprint6": [
-        "GET /certifications/stats?from=&to= (super-admin)",
-        "GET /certifications/:id/certificate.pdf (cooperative-admin, certification-body, super-admin)",
-        "GET /export-documents?page=&limit= (super-admin)"
+      "new_endpoints_sprint7": [
+        "PUT /inspections/:id/assign-inspector (certification-body, super-admin)"
       ],
       "pdf_font_assets_needed": [
         "assets/fonts/Amiri-Regular.ttf (Arabic — https://github.com/alif-type/amiri/releases)",
@@ -55,25 +57,26 @@
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "coverage_statements": "83.58%",
-      "coverage_branches": "67.44%",
+      "stats_cache_key_pattern": "stats:notifications:{from|all}:{to|all}",
+      "stats_cache_ttl_ms": 300000,
       "known_gaps": [
         "notification-template.service.ts lines 45-59 (seedFromFiles loop body — requires live filesystem fixtures)",
         "notification.service.ts lines 78-79, 128-129 (fs.existsSync/readFileSync file fallback — requires .hbs file on disk)"
       ],
-      "new_endpoints_sprint6": [
-        "GET /notification-templates (super-admin)",
-        "GET /notification-templates/:id (super-admin)",
-        "POST /notification-templates (super-admin)",
-        "PUT /notification-templates/:id (super-admin)",
-        "DELETE /notification-templates/:id (super-admin)",
-        "POST /notification-templates/seed (super-admin)"
-      ],
-      "template_lookup_order": "Redis cache (600s) → DB record → .hbs file in assets/templates/"
+      "new_endpoints_sprint7": [
+        "GET /notifications/stats?from=&to= (super-admin)"
+      ]
+    },
+    "common": {
+      "user_controller": true,
+      "new_endpoints_sprint7": [
+        "GET /users/me (authenticated)",
+        "GET /users/me/roles (authenticated)"
+      ]
     }
   },
   "certification_chain_status": {
-    "kafka_events_defined": 24,
+    "kafka_events_defined": 26,
     "chain_steps_implemented": 12,
     "chain_steps_total": 12,
     "qr_verification_working": true,
@@ -82,18 +85,26 @@
     "qr_trilingual_verification": true,
     "event_ledger": true,
     "pdf_certificate": true,
-    "certification_stats": true
+    "certification_stats": true,
+    "inspector_assignment_event": true
+  },
+  "migration_status": {
+    "migration_count": 8,
+    "last_migration": "1700000000008-AddProductTypeIsActive",
+    "schema_drift": "RESOLVED",
+    "tm3_status": "DONE",
+    "tm3_note": "Schema drift found and fixed with migration 007 (FixSchemaDrift) + migration 008 (AddProductTypeIsActive). Migrations run cleanly on fresh schema. npm run migration:generate -- --check produces no drift after migration 008.",
+    "font_assets_needed": [
+      "assets/fonts/Amiri-Regular.ttf",
+      "assets/fonts/DejaVuSans.ttf"
+    ]
   },
   "test_status": {
     "unit": {
-      "suites": 25,
-      "total": 271,
-      "passing": 271,
-      "coverage_statements": "96.1%",
-      "coverage_branches": "86.44%",
-      "coverage_functions": "96.72%",
-      "coverage_lines": "96.24%",
-      "coverage_note": "Drop from 98.41% due to filesystem-dependent paths in seedFromFiles() and file fallback in send() — not exercisable without live .hbs fixtures"
+      "suites": 27,
+      "total": 293,
+      "passing": 293,
+      "coverage_note": "Known gap: seedFromFiles() + fs.existsSync/readFileSync paths require live .hbs fixtures — not exercisable in unit tests"
     },
     "integration": {
       "status": "requires_postgres",
@@ -106,24 +117,28 @@
   },
   "blockers": [],
   "next_actions": [
-    "Sprint 6 CLOSED — 21/22 SP, 271 unit tests, 96.1% statements / 86.44% branches",
-    "TM-3 deferred (2nd sprint): run migration chain verification when PostgreSQL is available",
-    "  Steps: docker compose --profile core up -d postgres && npm run migration:run && npm run migration:generate -- --check",
+    "Sprint 7 CLOSED — 20/20 SP (100%), 293 unit tests, TM-3 DONE",
     "Font files required before GET /certifications/:id/certificate.pdf works at runtime:",
     "  assets/fonts/Amiri-Regular.ttf — https://github.com/alif-type/amiri/releases (OFL)",
     "  assets/fonts/DejaVuSans.ttf    — https://dejavu-fonts.github.io (free)",
-    "Backlog update: mark US-047, US-048, US-067, US-075 as Done in PRODUCT-BACKLOG.md",
-    "Sprint 7 planning — recommended scope: 21–25 SP",
-    "Sprint 7 candidates:",
-    "  TM-3: Migration chain verification (carry-over) — 1 SP",
-    "  US-058: Track QR scan events (append-only log) — 5 SP (deferred from Sprint 6)",
-    "  US-010: Super-admin deactivates cooperative — 3 SP",
-    "  US-016: Manage SDOQ product types (super-admin) — 5 SP",
-    "  US-044: Assign inspectors to inspections — 3 SP",
-    "  US-076: View failed notification counts — 3 SP",
-    "  US-086: Manage user roles and permissions — 5 SP"
+    "Sprint 8 planning — recommended scope: 21-25 SP",
+    "Sprint 8 top candidates:",
+    "  US-034: Cooperative member submits harvest log — 8 SP (High)",
+    "  US-037: Lab technician submits test results — 8 SP (High)",
+    "  US-040: Certification body reviews and decides — 5 SP (High)",
+    "  US-020: Manage cooperative members (add/remove/list) — 5 SP (Medium)",
+    "  US-025: Register and manage farm plots (GPS/PostGIS) — 5 SP (Medium)"
   ],
   "decisions_made": [
+    "US-086 scoped to read-only (YAGNI): GET /users/me + GET /users/me/roles from JWT claims only — no Keycloak Admin API",
+    "US-010 soft deactivation: status = 'suspended' on Cooperative entity, Kafka event published",
+    "US-016 soft deactivation: isActive = false on ProductType, ConflictException if already inactive",
+    "US-044 guard: assignInspector() throws ConflictException for completed AND cancelled — only scheduled allows reassignment",
+    "US-076 cache key: stats:notifications:{from|all}:{to|all} TTL 300s — consistent with certification stats pattern",
+    "Route ordering rule confirmed: GET /notifications/stats before GET /notifications/:id (NestJS literal-before-param)",
+    "Two-file ceremony: InspectionInspectorAssignedEvent added to common interface + certification-events.ts barrel",
+    "TM-3 approach: drop all 4 schemas + migration table, re-run fresh — necessary due to pre-existing schema state",
+    "QrCode.hmacSignature: added unique:true to entity column decorator to match DB constraint (prevents drift generation)",
     "PDF library: PDFKit (zero Docker changes, pure Node.js, supports RTL text alignment)",
     "PDF layout: single multilingual page (FR primary + AR RTL block + ZGH block) — official Moroccan documents carry all designations",
     "Arabic shaping: Amiri-Regular.ttf with align:right — full ligature shaping via pdfkit-arabic is Phase 2",
@@ -131,24 +146,9 @@
     "Stats cache: Redis 300s, cache key stats:certifications:{from|all}:{to|all} — staleness acceptable for reporting",
     "Template storage: DB-override + file fallback (existsSync → readFileSync) — safe default, rollback = DELETE record",
     "Template cache: Redis 600s per code:channel:language key, DEL on PUT/DELETE",
-    "NotificationTemplateService.onModuleInit() seeds DB from .hbs files on startup",
-    "jest.mock('fs') blanket mock conflicts with TypeORM path-scurry — use real fs (existsSync returns false in test env)",
+    "jest.mock('fs') anti-pattern: blanket fs mock conflicts with TypeORM path-scurry — use real fs (existsSync returns false in test env)",
     "CACHE_MANAGER must be provided in all test modules that use CertificationService or NotificationService",
     "GET /certifications/stats registered before GET /certifications/:id to prevent NestJS UUID param collision",
-    "FindOptionsWhere<NotificationTemplate> required instead of Partial<> for TypeORM strict find() typing",
-    "US-058 (QR scan events) deferred from Sprint 6 — touches public hot path, better with monitoring in place (Phase 2)",
-    "i18n is a controller-level transform — verifyQrCode() service signature unchanged; cache stays language-neutral",
-    "PagedResult<T> added to existing pagination.dto.ts (avoids naming collision with PaginatedResult<T> in pagination.interface.ts)",
-    "cooperative_id JWT claim already in CurrentUserPayload (snake_case) — no interface change needed",
-    "user.cooperative_id ?? user.sub fallback used in /my endpoints for development safety",
-    "TM-2 (notification error path) was pre-existing in notification.service.spec.ts line 131",
-    "QR download uses StreamableFile + @Res({passthrough:true}) pattern — avoids raw res.send() in controller",
-    "qrcode.toBuffer() for PNG, qrcode.toString({type:'svg'}) for SVG — both converted to Buffer for StreamableFile",
-    "resolveMessageKey() pure function in constants file — expired takes priority over status check",
-    "collectCoverageFrom scoped to service + listener files only (controllers/DTOs/modules at 0% by design in unit tests)",
-    "Redis QR cache eviction in-service (not Kafka-event-driven) — same-process, no round-trip",
-    "TTL 300s for GRANTED and RENEWED only — REVOKED/DENIED/EXPIRED must be real-time",
-    "makeMockEm() factory pattern for dataSource.transaction tests — create/save/query stubs",
     "useValue (not useFactory) for all test mocks that need external control",
     "em.create() + em.save() pattern for TypeORM JSONB strict typing",
     "Modular monolith architecture chosen over microservices for v1",
@@ -165,45 +165,59 @@
     "sprint_4": { "planned": 21, "completed": 21, "pct": 100 },
     "sprint_5": { "planned": 23, "completed": 22, "pct": 96, "note": "TM-3 deferred (requires live DB)" },
     "sprint_6": { "planned": 22, "completed": 21, "pct": 95, "note": "TM-3 deferred again (requires live DB)" },
-    "rolling_avg_sp2_sp6": 23
+    "sprint_7": { "planned": 20, "completed": 20, "pct": 100, "note": "TM-3 finally done — schema drift fixed" },
+    "rolling_avg_sp2_sp7": 22.5
   },
   "backlog_status": {
     "total_stories": 90,
-    "done_stories": 58,
-    "todo_stories": 32,
+    "done_stories": 63,
+    "todo_stories": 27,
     "total_sp": 389,
-    "done_sp_approx": 241,
-    "remaining_sp_approx": 148,
-    "sprints_to_completion_at_23sp": 6.4,
-    "note": "Pending backlog update: mark US-047, US-048, US-067, US-075 as Done"
+    "done_sp_approx": 259,
+    "remaining_sp_approx": 130,
+    "sprints_to_completion_at_23sp": 5.7,
+    "note": "US-010, US-016, US-044, US-076, US-086 marked Done this sprint"
   },
-  "files_modified_this_session": [
-    "docs/project-management/PRODUCT-BACKLOG.md",
-    "src/modules/certification/services/export-document.service.ts",
-    "src/modules/certification/controllers/export-document.controller.ts",
-    "src/modules/certification/services/certification.service.ts",
-    "src/modules/certification/controllers/certification.controller.ts",
-    "src/modules/certification/certification.module.ts",
-    "src/modules/notification/services/notification.service.ts",
-    "src/modules/notification/notification.module.ts",
-    "test/unit/certification/certification.service.spec.ts",
-    "test/unit/certification/certification-state-machine.spec.ts",
-    "test/unit/certification/export-document.service.spec.ts",
-    "test/unit/notification/notification.service.spec.ts"
-  ],
   "files_created_this_session": [
-    "docs/plans/2026-04-12-sprint-6/design.md",
-    "docs/plans/2026-04-12-sprint-6/plan.md",
-    "docs/plans/2026-04-12-sprint-6/progress.md",
-    "src/modules/certification/interfaces/certification-stats.interface.ts",
-    "src/modules/certification/dto/stats-query.dto.ts",
-    "src/modules/certification/services/certification-pdf.service.ts",
-    "src/modules/notification/dto/create-notification-template.dto.ts",
-    "src/modules/notification/dto/update-notification-template.dto.ts",
-    "src/modules/notification/services/notification-template.service.ts",
-    "src/modules/notification/controllers/notification-template.controller.ts",
-    "assets/fonts/README.md",
-    "test/unit/certification/certification-pdf.service.spec.ts",
-    "test/unit/notification/notification-template.service.spec.ts"
+    "docs/plans/2026-04-12-sprint-7/design.md",
+    "docs/plans/2026-04-12-sprint-7/plan.md",
+    "docs/plans/2026-04-12-sprint-7/progress.md",
+    "src/database/migrations/1700000000007-FixSchemaDrift.ts",
+    "src/database/migrations/1700000000008-AddProductTypeIsActive.ts",
+    "src/common/interfaces/events/cooperative.events.ts",
+    "src/modules/cooperative/dto/deactivate-cooperative.dto.ts",
+    "src/modules/product/dto/create-product-type.dto.ts",
+    "src/modules/product/dto/update-product-type.dto.ts",
+    "src/modules/product/services/product-type.service.ts",
+    "src/modules/product/controllers/product-type.controller.ts",
+    "src/modules/certification/dto/assign-inspector.dto.ts",
+    "src/modules/notification/interfaces/notification-stats.interface.ts",
+    "src/modules/notification/dto/notification-stats-query.dto.ts",
+    "src/common/controllers/user.controller.ts",
+    "test/unit/product/product-type.service.spec.ts",
+    "test/unit/common/user.controller.spec.ts",
+    ".sessions/sprint-logs/sprint-7.md"
+  ],
+  "files_modified_this_session": [
+    "src/modules/certification/entities/qr-code.entity.ts",
+    "src/modules/product/entities/product-type.entity.ts",
+    "src/common/interfaces/events/certification.events.ts",
+    "src/modules/cooperative/events/cooperative-events.ts",
+    "src/modules/certification/events/certification-events.ts",
+    "src/modules/cooperative/services/cooperative.service.ts",
+    "src/modules/cooperative/events/cooperative.producer.ts",
+    "src/modules/cooperative/controllers/cooperative.controller.ts",
+    "src/modules/certification/services/inspection.service.ts",
+    "src/modules/certification/events/certification.producer.ts",
+    "src/modules/certification/controllers/inspection.controller.ts",
+    "src/modules/notification/services/notification.service.ts",
+    "src/modules/notification/controllers/notification.controller.ts",
+    "src/modules/notification/listeners/notification.listener.ts",
+    "src/modules/product/product.module.ts",
+    "src/app.module.ts",
+    "docs/project-management/PRODUCT-BACKLOG.md",
+    "test/unit/cooperative/cooperative.service.spec.ts",
+    "test/unit/certification/inspection.service.spec.ts",
+    "test/unit/notification/notification.service.spec.ts"
   ]
 }
