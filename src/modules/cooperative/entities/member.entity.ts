@@ -27,7 +27,7 @@ export class Member {
   @Column({ name: 'full_name', length: 200 })
   fullName: string;
 
-  @Column({ name: 'full_name_ar', length: 200, nullable: true })
+  @Column({ name: 'full_name_ar', type: 'varchar', length: 200, nullable: true })
   fullNameAr: string | null;
 
   @Column({ name: 'cin', length: 10, unique: true })
@@ -36,7 +36,7 @@ export class Member {
   @Column({ name: 'phone', length: 20 })
   phone: string;
 
-  @Column({ name: 'email', length: 100, nullable: true })
+  @Column({ name: 'email', type: 'varchar', length: 100, nullable: true })
   email: string | null;
 
   @Column({ name: 'role', type: 'varchar', length: 20, default: 'member' })

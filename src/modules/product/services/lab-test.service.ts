@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LabTest } from '../entities/lab-test.entity';
@@ -147,7 +147,10 @@ export class LabTestService {
 
     if (!productType) {
       // If product type not found, allow all values (no parameters to validate against)
-      this.logger.warn({ productTypeCode }, 'Product type not found, skipping parameter validation');
+      this.logger.warn(
+        { productTypeCode },
+        'Product type not found, skipping parameter validation',
+      );
       return { passed: true, failedParameters: [] };
     }
 

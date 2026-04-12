@@ -1,7 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import Handlebars from 'handlebars';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Notification, NotificationChannel } from '../entities/notification.entity';
 import { NotificationTemplate } from '../entities/notification-template.entity';
 import { EmailService } from './email.service';
@@ -23,6 +27,8 @@ export interface SendNotificationOptions {
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
+  private readonly templatesDir = path.join(process.cwd(), 'assets', 'templates');
+
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
@@ -30,14 +36,61 @@ export class NotificationService {
     private readonly templateRepo: Repository<NotificationTemplate>,
     private readonly emailService: EmailService,
     private readonly smsService: SmsService,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
+
+  async findByRecipient(
+    recipientId: string,
+    limit = 20,
+    offset = 0,
+  ): Promise<[Notification[], number]> {
+    return this.notificationRepo.findAndCount({
+      where: { recipientId },
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: offset,
+    });
+  }
+
+  async findById(id: string, recipientId: string): Promise<Notification | null> {
+    return this.notificationRepo.findOne({ where: { id, recipientId } });
+  }
 
   async send(opts: SendNotificationOptions): Promise<void> {
     const language = opts.language ?? 'fr-MA';
+    const cacheKey = `template:${opts.templateCode}:${opts.channel}:${language}`;
 
-    const template = await this.templateRepo.findOne({
-      where: { code: opts.templateCode, channel: opts.channel, language, isActive: true },
-    });
+    // 1. Redis cache check
+    let template = await this.cacheManager.get<NotificationTemplate>(cacheKey);
+
+    if (!template) {
+      // 2. DB lookup
+      const dbTemplate = await this.templateRepo.findOne({
+        where: { code: opts.templateCode, channel: opts.channel, language, isActive: true },
+      });
+
+      if (dbTemplate) {
+        await this.cacheManager.set(cacheKey, dbTemplate, 600_000);
+        template = dbTemplate;
+      } else {
+        // 3. File fallback
+        const filePath = path.join(
+          this.templatesDir,
+          `${opts.templateCode}.${opts.channel}.${language}.hbs`,
+        );
+        if (fs.existsSync(filePath)) {
+          const bodyTemplate = fs.readFileSync(filePath, 'utf8');
+          template = {
+            code: opts.templateCode,
+            channel: opts.channel,
+            language,
+            bodyTemplate,
+            subjectTemplate: null,
+            isActive: true,
+          } as NotificationTemplate;
+        }
+      }
+    }
 
     if (!template) {
       this.logger.warn(
@@ -86,7 +139,10 @@ export class NotificationService {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error({ notificationId: notification.id, error: message }, 'Notification delivery failed');
+      this.logger.error(
+        { notificationId: notification.id, error: message },
+        'Notification delivery failed',
+      );
       await this.notificationRepo.update(notification.id, {
         status: 'failed',
         errorMessage: message,

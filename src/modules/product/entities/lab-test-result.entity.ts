@@ -31,7 +31,7 @@ export class LabTestResult {
   @Column({ name: 'technician_id', type: 'uuid' })
   technicianId: string;
 
-  @Column({ name: 'laboratory_name', length: 200, nullable: true })
+  @Column({ name: 'laboratory_name', type: 'varchar', length: 200, nullable: true })
   laboratoryName: string | null;
 
   @Column({ name: 'completed_at', type: 'timestamptz' })

@@ -3,14 +3,17 @@
  * Verifies the traceability link from harvest → production batch → lab test.
  */
 
-import { DataSource } from 'typeorm';
 import { Harvest } from '../../../src/modules/product/entities/harvest.entity';
 import { ProductionBatch } from '../../../src/modules/product/entities/production-batch.entity';
 import { LabTest } from '../../../src/modules/product/entities/lab-test.entity';
 import { LabTestResult } from '../../../src/modules/product/entities/lab-test-result.entity';
 import { Product } from '../../../src/modules/product/entities/product.entity';
 import { ProductType } from '../../../src/modules/product/entities/product-type.entity';
-import { startTestDatabase, stopTestDatabase, TestDatabase } from '../helpers/test-containers.setup';
+import {
+  startTestDatabase,
+  stopTestDatabase,
+  TestDatabase,
+} from '../helpers/test-containers.setup';
 import { truncateTables } from '../../helpers/database.helper';
 import { buildHarvest } from '../../factories/harvest.factory';
 import { buildProductBatch } from '../../factories/product.factory';
@@ -20,7 +23,12 @@ describe('Harvest → Batch traceability (integration)', () => {
 
   beforeAll(async () => {
     db = await startTestDatabase([
-      Product, ProductType, Harvest, ProductionBatch, LabTest, LabTestResult,
+      Product,
+      ProductType,
+      Harvest,
+      ProductionBatch,
+      LabTest,
+      LabTestResult,
     ]);
   });
 
@@ -39,11 +47,11 @@ describe('Harvest → Batch traceability (integration)', () => {
     const harvestData = buildHarvest();
     const savedHarvest = await harvestRepo.save(harvestRepo.create(harvestData));
 
-    const batchData = buildProductBatch({ overrides: { harvestId: savedHarvest.id } });
+    const batchData = buildProductBatch({ overrides: { harvestIds: [savedHarvest.id] } });
     const savedBatch = await batchRepo.save(batchRepo.create(batchData));
 
     const foundBatch = await batchRepo.findOneBy({ id: savedBatch.id });
-    expect(foundBatch!.harvestId).toBe(savedHarvest.id);
+    expect(foundBatch!.harvestIds).toContain(savedHarvest.id);
   });
 
   it('should cascade delete batch when harvest is deleted', async () => {
@@ -51,17 +59,17 @@ describe('Harvest → Batch traceability (integration)', () => {
     // or that orphan batches are handled gracefully.
     // For now, verify a batch without a harvest is not persisted if FK is strict.
     const batchRepo = db.dataSource.getRepository(ProductionBatch);
-    const orphanBatch = buildProductBatch({ overrides: { harvestId: 'non-existent-uuid' } });
+    const orphanBatch = buildProductBatch({ overrides: { harvestIds: ['non-existent-uuid'] } });
 
-    // Expect either a FK violation or a null harvestId depending on schema
-    // The exact behavior depends on whether harvestId is nullable in the entity
+    // Expect either a FK violation or a null harvestIds depending on schema
+    // The exact behavior depends on whether harvestIds is nullable in the entity
     try {
       await batchRepo.save(batchRepo.create(orphanBatch));
-      // If no error, harvestId must be nullable in the schema
+      // If no error, harvestIds must be nullable in the schema
       const found = await batchRepo.findOneBy({ id: orphanBatch.id });
       expect(found).toBeDefined();
     } catch {
-      // FK violation is acceptable if harvestId is non-nullable
+      // FK violation is acceptable if harvestIds is non-nullable
       expect(true).toBe(true);
     }
   });

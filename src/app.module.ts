@@ -9,11 +9,14 @@ import databaseConfig from './config/database.config';
 import kafkaConfig from './config/kafka.config';
 import keycloakConfig from './config/keycloak.config';
 import redisConfig from './config/redis.config';
+/* eslint-disable no-restricted-imports */
 import { CooperativeModule } from './modules/cooperative/cooperative.module';
 import { ProductModule } from './modules/product/product.module';
 import { CertificationModule } from './modules/certification/certification.module';
 import { NotificationModule } from './modules/notification/notification.module';
+/* eslint-enable no-restricted-imports */
 import { HealthController } from './health/health.controller';
+import { KafkaClientModule } from './kafka/kafka-client.module';
 
 @Module({
   imports: [
@@ -62,6 +65,9 @@ import { HealthController } from './health/health.controller';
 
     // Health checks
     TerminusModule,
+
+    // Kafka client (global — available to all domain modules)
+    KafkaClientModule,
 
     // Domain modules
     CooperativeModule,

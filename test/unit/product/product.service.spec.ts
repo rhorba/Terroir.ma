@@ -4,6 +4,15 @@ import { ProductService } from '../../../src/modules/product/services/product.se
 import { Product } from '../../../src/modules/product/entities/product.entity';
 import { ProductType } from '../../../src/modules/product/entities/product-type.entity';
 
+const mockQb = {
+  where: jest.fn().mockReturnThis(),
+  andWhere: jest.fn().mockReturnThis(),
+  orderBy: jest.fn().mockReturnThis(),
+  take: jest.fn().mockReturnThis(),
+  skip: jest.fn().mockReturnThis(),
+  getManyAndCount: jest.fn().mockResolvedValue([[], 0]),
+};
+
 const mockRepo = () => ({
   findOne: jest.fn(),
   find: jest.fn(),
@@ -12,6 +21,7 @@ const mockRepo = () => ({
   create: jest.fn().mockImplementation((dto) => dto),
   update: jest.fn(),
   delete: jest.fn(),
+  createQueryBuilder: jest.fn().mockReturnValue(mockQb),
 });
 
 describe('ProductService', () => {
@@ -37,22 +47,66 @@ describe('ProductService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('findOne()', () => {
+  describe('findById()', () => {
     it('should return product when found', async () => {
-      const mockProduct = { id: 'uuid-1', name: 'Huile d\'Argan', productTypeCode: 'ARGAN_OIL' };
+      const mockProduct = { id: 'uuid-1', name: "Huile d'Argan", productTypeCode: 'ARGAN_OIL' };
       productRepo.findOne.mockResolvedValue(mockProduct);
 
-      const result = await service.findOne('uuid-1');
+      const result = await service.findById('uuid-1');
       expect(result).toEqual(mockProduct);
       expect(productRepo.findOne).toHaveBeenCalledWith(
         expect.objectContaining({ where: { id: 'uuid-1' } }),
       );
     });
 
-    it('should return null when product not found', async () => {
+    it('should throw NotFoundException when product not found', async () => {
       productRepo.findOne.mockResolvedValue(null);
-      const result = await service.findOne('non-existent');
-      expect(result).toBeNull();
+      await expect(service.findById('non-existent')).rejects.toThrow();
+    });
+  });
+
+  describe('searchProducts() — US-015', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      // Reset the query builder mock after clearAllMocks
+      mockQb.where.mockReturnValue(mockQb);
+      mockQb.andWhere.mockReturnValue(mockQb);
+      mockQb.orderBy.mockReturnValue(mockQb);
+      mockQb.take.mockReturnValue(mockQb);
+      mockQb.skip.mockReturnValue(mockQb);
+      mockQb.getManyAndCount.mockResolvedValue([[], 0]);
+    });
+
+    it('applies productTypeCode filter when provided', async () => {
+      await service.searchProducts({ productTypeCode: 'ARGAN_OIL' });
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('product_type_code'),
+        expect.objectContaining({ code: 'ARGAN_OIL' }),
+      );
+    });
+
+    it('applies regionCode subquery filter when provided', async () => {
+      await service.searchProducts({ regionCode: 'SOUSS-MASSA' });
+      expect(mockQb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('region_code'),
+        expect.objectContaining({ regionCode: 'SOUSS-MASSA' }),
+      );
+    });
+
+    it('applies no andWhere when no filters provided', async () => {
+      await service.searchProducts({});
+      expect(mockQb.andWhere).not.toHaveBeenCalled();
+    });
+
+    it('applies pagination defaults (page=1, limit=20)', async () => {
+      await service.searchProducts({});
+      expect(mockQb.take).toHaveBeenCalledWith(20);
+      expect(mockQb.skip).toHaveBeenCalledWith(0);
+    });
+
+    it('caps limit at 100', async () => {
+      await service.searchProducts({ limit: 999 });
+      expect(mockQb.take).toHaveBeenCalledWith(100);
     });
   });
 });

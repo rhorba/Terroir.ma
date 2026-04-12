@@ -8,15 +8,38 @@ import {
 } from 'typeorm';
 import { CertificationType } from '../../../common/interfaces/morocco.interface';
 
-export type CertificationStatus =
-  | 'pending'
-  | 'inspection_scheduled'
-  | 'inspection_completed'
-  | 'granted'
-  | 'denied'
-  | 'revoked'
-  | 'expired'
-  | 'renewed';
+/** All 13 states of the SDOQ certification chain (Law 25-06). */
+export enum CertificationStatus {
+  DRAFT = 'DRAFT',
+  SUBMITTED = 'SUBMITTED',
+  DOCUMENT_REVIEW = 'DOCUMENT_REVIEW',
+  INSPECTION_SCHEDULED = 'INSPECTION_SCHEDULED',
+  INSPECTION_IN_PROGRESS = 'INSPECTION_IN_PROGRESS',
+  INSPECTION_COMPLETE = 'INSPECTION_COMPLETE',
+  LAB_TESTING = 'LAB_TESTING',
+  LAB_RESULTS_RECEIVED = 'LAB_RESULTS_RECEIVED',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  GRANTED = 'GRANTED',
+  DENIED = 'DENIED',
+  REVOKED = 'REVOKED',
+  RENEWED = 'RENEWED',
+}
+
+/** The type of event appended to the CertificationEvent ledger on each transition. */
+export enum CertificationEventType {
+  REQUEST_SUBMITTED = 'REQUEST_SUBMITTED',
+  REVIEW_STARTED = 'REVIEW_STARTED',
+  INSPECTION_SCHEDULED = 'INSPECTION_SCHEDULED',
+  INSPECTION_STARTED = 'INSPECTION_STARTED',
+  INSPECTION_COMPLETED = 'INSPECTION_COMPLETED',
+  LAB_REQUESTED = 'LAB_REQUESTED',
+  LAB_RESULTS_RECEIVED = 'LAB_RESULTS_RECEIVED',
+  DECISION_GRANTED = 'DECISION_GRANTED',
+  DECISION_DENIED = 'DECISION_DENIED',
+  CERTIFICATE_REVOKED = 'CERTIFICATE_REVOKED',
+  FINAL_REVIEW_STARTED = 'FINAL_REVIEW_STARTED',
+  CERTIFICATE_RENEWED = 'CERTIFICATE_RENEWED',
+}
 
 /**
  * Certification entity — represents an official terroir product certification.
@@ -33,7 +56,13 @@ export class Certification {
    * Format: TERROIR-{IGP|AOP|LA}-{REGION_CODE}-{YEAR}-{SEQ6}
    * Example: TERROIR-IGP-SOUSS_MASSA-2025-000042
    */
-  @Column({ name: 'certification_number', length: 80, unique: true, nullable: true })
+  @Column({
+    name: 'certification_number',
+    type: 'varchar',
+    length: 80,
+    unique: true,
+    nullable: true,
+  })
   certificationNumber: string | null;
 
   @Column({ name: 'cooperative_id', type: 'uuid' })
@@ -54,8 +83,13 @@ export class Certification {
   @Column({ name: 'region_code', length: 50 })
   regionCode: string;
 
-  @Column({ name: 'status', type: 'varchar', length: 30, default: 'pending' })
-  status: CertificationStatus;
+  @Column({
+    name: 'current_status',
+    type: 'varchar',
+    length: 30,
+    default: CertificationStatus.DRAFT,
+  })
+  currentStatus: CertificationStatus;
 
   @Column({ name: 'requested_by', type: 'uuid' })
   requestedBy: string;

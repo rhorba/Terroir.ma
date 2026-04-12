@@ -24,7 +24,7 @@ export class Cooperative {
   @Column({ length: 200 })
   name: string;
 
-  @Column({ name: 'name_ar', length: 200, nullable: true })
+  @Column({ name: 'name_ar', type: 'varchar', length: 200, nullable: true })
   nameAr: string | null;
 
   /** Identifiant Commun de l'Entreprise — 15 digits */
@@ -32,11 +32,11 @@ export class Cooperative {
   ice: string;
 
   /** Identifiant Fiscal */
-  @Column({ name: 'if_number', length: 8, nullable: true })
+  @Column({ name: 'if_number', type: 'varchar', length: 8, nullable: true })
   ifNumber: string | null;
 
   /** Registre de Commerce */
-  @Column({ name: 'rc_number', length: 20, nullable: true })
+  @Column({ name: 'rc_number', type: 'varchar', length: 20, nullable: true })
   rcNumber: string | null;
 
   @Column({ length: 100 })

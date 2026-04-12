@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CertificationService } from '../../../src/modules/certification/services/certification.service';
 import {
   Certification,
@@ -71,12 +72,14 @@ describe('CertificationService', () => {
   let producer: ReturnType<typeof makeProducer>;
   let qrCodeService: ReturnType<typeof makeQrCodeService>;
   let dataSource: { transaction: jest.Mock; query: jest.Mock };
+  let cacheManager: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
 
   beforeEach(async () => {
     certRepo = makeRepo();
     eventRepo = makeRepo();
     producer = makeProducer();
     qrCodeService = makeQrCodeService();
+    cacheManager = { get: jest.fn(), set: jest.fn(), del: jest.fn() };
 
     // transaction mock: run the callback with a mock entity manager
     dataSource = {
@@ -97,6 +100,7 @@ describe('CertificationService', () => {
         { provide: CertificationProducer, useValue: producer },
         { provide: QrCodeService, useValue: qrCodeService },
         { provide: DataSource, useValue: dataSource },
+        { provide: CACHE_MANAGER, useValue: cacheManager },
       ],
     }).compile();
 
@@ -471,6 +475,80 @@ describe('CertificationService', () => {
       await expect(
         service.renewCertification('cert-001', 'user-001', 'cooperative-admin', 'corr-001'),
       ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ─── getStats() ───────────────────────────────────────────────────────────
+
+  describe('getStats()', () => {
+    const mockRows = {
+      byStatus: [{ current_status: 'GRANTED', count: '5' }],
+      byRegion: [{ region_code: 'SFI', count: '3' }],
+      byProductType: [{ product_type_code: 'ARGAN-OIL', count: '2' }],
+    };
+
+    it('returns stats from Redis cache when cache hit', async () => {
+      const cached = {
+        period: { from: null, to: null },
+        byStatus: [{ status: 'GRANTED', count: 5 }],
+        byRegion: [{ regionCode: 'SFI', count: 3 }],
+        byProductType: [{ productTypeCode: 'ARGAN-OIL', count: 2 }],
+      };
+      cacheManager.get.mockResolvedValue(cached);
+
+      const result = await service.getStats();
+
+      expect(result).toEqual(cached);
+      expect(dataSource.query).not.toHaveBeenCalled();
+    });
+
+    it('queries DB, caches result, and returns stats when cache miss', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      dataSource.query
+        .mockResolvedValueOnce(mockRows.byStatus)
+        .mockResolvedValueOnce(mockRows.byRegion)
+        .mockResolvedValueOnce(mockRows.byProductType);
+
+      const result = await service.getStats();
+
+      expect(dataSource.query).toHaveBeenCalledTimes(3);
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'stats:certifications:all:all',
+        expect.any(Object),
+        300_000,
+      );
+      expect(result.byStatus).toEqual([{ status: 'GRANTED', count: 5 }]);
+      expect(result.byRegion).toEqual([{ regionCode: 'SFI', count: 3 }]);
+      expect(result.byProductType).toEqual([{ productTypeCode: 'ARGAN-OIL', count: 2 }]);
+    });
+
+    it('uses date-scoped cache key and passes params when from/to provided', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      dataSource.query
+        .mockResolvedValueOnce(mockRows.byStatus)
+        .mockResolvedValueOnce(mockRows.byRegion)
+        .mockResolvedValueOnce(mockRows.byProductType);
+
+      await service.getStats('2026-01-01', '2026-12-31');
+
+      expect(cacheManager.get).toHaveBeenCalledWith('stats:certifications:2026-01-01:2026-12-31');
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'stats:certifications:2026-01-01:2026-12-31',
+        expect.any(Object),
+        300_000,
+      );
+    });
+
+    it('sets period.from and period.to to null when no date range provided', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      dataSource.query
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([]);
+
+      const result = await service.getStats();
+
+      expect(result.period).toEqual({ from: null, to: null });
     });
   });
 });

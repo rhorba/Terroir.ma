@@ -1,4 +1,10 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ schema: 'notification', name: 'notification_template' })
 export class NotificationTemplate {
@@ -14,7 +20,7 @@ export class NotificationTemplate {
   @Column({ name: 'language', length: 10 })
   language: string; // ar-MA | fr-MA | zgh
 
-  @Column({ name: 'subject_template', length: 300, nullable: true })
+  @Column({ name: 'subject_template', type: 'varchar', length: 300, nullable: true })
   subjectTemplate: string | null;
 
   @Column({ name: 'body_template', type: 'text' })

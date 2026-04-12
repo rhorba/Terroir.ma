@@ -21,7 +21,7 @@ export class NotificationListener {
   @EventPattern('certification.decision.granted')
   async handleCertificationGranted(
     @Payload() data: CertificationDecisionGrantedEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     try {
       this.logger.log(
@@ -46,16 +46,19 @@ export class NotificationListener {
         correlationId: data.correlationId,
       });
 
-      context.getMessage().ack?.();
+      // ack handled automatically by NestJS Kafka transport
     } catch (error) {
-      this.logger.error({ error, eventId: data.eventId }, 'Failed to process certification.decision.granted');
+      this.logger.error(
+        { error, eventId: data.eventId },
+        'Failed to process certification.decision.granted',
+      );
     }
   }
 
   @EventPattern('lab.test.completed')
   async handleLabTestCompleted(
     @Payload() data: LabTestCompletedEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     try {
       this.logger.log(
@@ -79,7 +82,7 @@ export class NotificationListener {
         correlationId: data.correlationId,
       });
 
-      context.getMessage().ack?.();
+      // ack handled automatically by NestJS Kafka transport
     } catch (error) {
       this.logger.error({ error, eventId: data.eventId }, 'Failed to process lab.test.completed');
     }
@@ -88,7 +91,7 @@ export class NotificationListener {
   @EventPattern('certification.inspection.scheduled')
   async handleInspectionScheduled(
     @Payload() data: CertificationInspectionScheduledEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     try {
       this.logger.log(
@@ -111,9 +114,12 @@ export class NotificationListener {
         correlationId: data.correlationId,
       });
 
-      context.getMessage().ack?.();
+      // ack handled automatically by NestJS Kafka transport
     } catch (error) {
-      this.logger.error({ error, eventId: data.eventId }, 'Failed to process certification.inspection.scheduled');
+      this.logger.error(
+        { error, eventId: data.eventId },
+        'Failed to process certification.inspection.scheduled',
+      );
     }
   }
 }

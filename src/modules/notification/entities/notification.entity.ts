@@ -11,10 +11,10 @@ export class Notification {
   @Column({ name: 'recipient_id', type: 'uuid' })
   recipientId: string;
 
-  @Column({ name: 'recipient_email', length: 200, nullable: true })
+  @Column({ name: 'recipient_email', type: 'varchar', length: 200, nullable: true })
   recipientEmail: string | null;
 
-  @Column({ name: 'recipient_phone', length: 20, nullable: true })
+  @Column({ name: 'recipient_phone', type: 'varchar', length: 20, nullable: true })
   recipientPhone: string | null;
 
   @Column({ name: 'channel', type: 'varchar', length: 10 })
@@ -26,7 +26,7 @@ export class Notification {
   @Column({ name: 'language', length: 10, default: 'fr-MA' })
   language: string;
 
-  @Column({ name: 'subject', length: 300, nullable: true })
+  @Column({ name: 'subject', type: 'varchar', length: 300, nullable: true })
   subject: string | null;
 
   @Column({ name: 'body', type: 'text' })

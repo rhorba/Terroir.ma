@@ -71,7 +71,7 @@ export class BatchService {
 
   private generateBatchNumber(productTypeCode: string): string {
     const year = new Date().getFullYear();
-    const seq = uuidv4().split('-')[0].toUpperCase();
+    const seq = (uuidv4().split('-')[0] ?? 'XXXX').toUpperCase();
     return `BATCH-${productTypeCode}-${year}-${seq}`;
   }
 }

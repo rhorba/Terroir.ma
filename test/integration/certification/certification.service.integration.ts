@@ -7,11 +7,12 @@
  * - Certification number format matches TERROIR-{type}-{region}-{year}-{seq}
  * - Idempotency guard on event processing
  */
-import { Test } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { DataSource } from 'typeorm';
-import { Certification } from '../../../src/modules/certification/entities/certification.entity';
+import {
+  Certification,
+  CertificationStatus,
+} from '../../../src/modules/certification/entities/certification.entity';
 import { Inspection } from '../../../src/modules/certification/entities/inspection.entity';
 import { InspectionReport } from '../../../src/modules/certification/entities/inspection-report.entity';
 import { QrCode } from '../../../src/modules/certification/entities/qr-code.entity';
@@ -30,27 +31,16 @@ describe('CertificationService (integration)', () => {
       .withPassword('test')
       .start();
 
-    await Test.createTestingModule({
-      imports: [
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          url: container.getConnectionUri(),
-          entities: [Certification, Inspection, InspectionReport, QrCode, ExportDocument],
-          schema: 'certification',
-          synchronize: true,
-        }),
-      ],
-    }).compile();
-
     dataSource = new DataSource({
       type: 'postgres',
       url: container.getConnectionUri(),
       entities: [Certification, Inspection, InspectionReport, QrCode, ExportDocument],
       schema: 'certification',
-      synchronize: true,
+      synchronize: false,
     });
     await dataSource.initialize();
     await dataSource.query('CREATE SCHEMA IF NOT EXISTS certification');
+    await dataSource.synchronize();
   });
 
   afterEach(async () => {
@@ -71,6 +61,6 @@ describe('CertificationService (integration)', () => {
 
     expect(found).not.toBeNull();
     expect(found!.certificationNumber).toMatch(/^TERROIR-(AOP|IGP|LA)-[A-Z]{3}-\d{4}-\d{3}$/);
-    expect(found!.status).toBe('granted');
+    expect(found!.currentStatus).toBe(CertificationStatus.GRANTED);
   });
 });

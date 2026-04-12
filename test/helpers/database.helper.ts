@@ -4,7 +4,10 @@ import { DataSource } from 'typeorm';
  * Truncate all tables in the given schemas (in dependency order) between integration tests.
  * Uses TRUNCATE ... CASCADE for safety.
  */
-export async function truncateTables(dataSource: DataSource, schemas: string[] = ['cooperative', 'product', 'certification', 'notification']): Promise<void> {
+export async function truncateTables(
+  dataSource: DataSource,
+  schemas: string[] = ['cooperative', 'product', 'certification', 'notification'],
+): Promise<void> {
   const queryRunner = dataSource.createQueryRunner();
   await queryRunner.connect();
 
@@ -37,7 +40,7 @@ export async function seedRows(
 ): Promise<void> {
   if (rows.length === 0) return;
 
-  const columns = Object.keys(rows[0]);
+  const columns = Object.keys(rows[0]!);
   const colList = columns.map((c) => `"${c}"`).join(', ');
 
   for (const row of rows) {

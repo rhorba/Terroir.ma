@@ -44,16 +44,16 @@ export class ProductProducer {
 
     try {
       await this.kafkaClient.emit('product.harvest.logged', event).toPromise();
-      this.logger.log({ eventId: event.eventId, harvestId: harvest.id }, 'Harvest logged event published');
+      this.logger.log(
+        { eventId: event.eventId, harvestId: harvest.id },
+        'Harvest logged event published',
+      );
     } catch (error) {
       this.logger.error({ error, harvestId: harvest.id }, 'Failed to publish harvest event');
     }
   }
 
-  async publishBatchCreated(
-    batch: ProductionBatch,
-    correlationId: string,
-  ): Promise<void> {
+  async publishBatchCreated(batch: ProductionBatch, correlationId: string): Promise<void> {
     const event: ProductBatchCreatedEvent = {
       eventId: uuidv4(),
       correlationId,
@@ -71,7 +71,10 @@ export class ProductProducer {
 
     try {
       await this.kafkaClient.emit('product.batch.created', event).toPromise();
-      this.logger.log({ eventId: event.eventId, batchId: batch.id }, 'Batch created event published');
+      this.logger.log(
+        { eventId: event.eventId, batchId: batch.id },
+        'Batch created event published',
+      );
     } catch (error) {
       this.logger.error({ error, batchId: batch.id }, 'Failed to publish batch event');
     }
@@ -99,7 +102,10 @@ export class ProductProducer {
 
     try {
       await this.kafkaClient.emit('lab.test.submitted', event).toPromise();
-      this.logger.log({ eventId: event.eventId, labTestId: labTest.id }, 'Lab test submitted event published');
+      this.logger.log(
+        { eventId: event.eventId, labTestId: labTest.id },
+        'Lab test submitted event published',
+      );
     } catch (error) {
       this.logger.error({ error, labTestId: labTest.id }, 'Failed to publish lab test event');
     }
@@ -122,13 +128,16 @@ export class ProductProducer {
       source: 'product',
       labTestId: labTest.id,
       batchId: labTest.batchId,
+      batchReference: labTest.batchId,
       cooperativeId: labTest.cooperativeId,
       productTypeCode: labTest.productTypeCode,
+      productName: labTest.productTypeCode,
       passed: result.passed,
       testValues: result.testValues,
       failedParameters: result.failedParameters,
       completedAt: result.completedAt.toISOString(),
       technician: result.technicianName,
+      labName: labTest.laboratoryId ?? '',
     };
 
     try {
@@ -138,7 +147,10 @@ export class ProductProducer {
         'Lab test completed event published',
       );
     } catch (error) {
-      this.logger.error({ error, labTestId: labTest.id }, 'Failed to publish lab test completed event');
+      this.logger.error(
+        { error, labTestId: labTest.id },
+        'Failed to publish lab test completed event',
+      );
     }
   }
 }

@@ -23,7 +23,7 @@ export class ProductType {
   @Column({ name: 'name_ar', length: 200 })
   nameAr: string;
 
-  @Column({ name: 'name_zgh', length: 200, nullable: true })
+  @Column({ name: 'name_zgh', type: 'varchar', length: 200, nullable: true })
   nameZgh: string | null;
 
   @Column({ name: 'certification_type', type: 'varchar', length: 20 })
@@ -42,10 +42,10 @@ export class ProductType {
     values?: string[];
   }>;
 
-  @Column({ name: 'hs_code', length: 20, nullable: true })
+  @Column({ name: 'hs_code', type: 'varchar', length: 20, nullable: true })
   hsCode: string | null;
 
-  @Column({ name: 'onssa_category', length: 50, nullable: true })
+  @Column({ name: 'onssa_category', type: 'varchar', length: 50, nullable: true })
   onssaCategory: string | null;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })

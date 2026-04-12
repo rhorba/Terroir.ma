@@ -1,6 +1,21 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { of } from 'rxjs';
+import { DataSource } from 'typeorm';
 import { AppModule } from '../../src/app.module';
+import { TestJwtStrategy } from './test-jwt.strategy';
+
+/**
+ * Mock Kafka client — swaps out the real Kafka connection in e2e tests.
+ * Prevents test failures when Redpanda is not running.
+ */
+const mockKafkaClient = {
+  emit: jest.fn().mockReturnValue(of(null)),
+  send: jest.fn().mockReturnValue(of(null)),
+  connect: jest.fn().mockResolvedValue(undefined),
+  close: jest.fn().mockResolvedValue(undefined),
+  subscribeToResponseOf: jest.fn(),
+};
 
 /**
  * Bootstrap a full NestJS application for E2E tests.
@@ -9,7 +24,11 @@ import { AppModule } from '../../src/app.module';
 export async function createTestApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+    providers: [TestJwtStrategy],
+  })
+    .overrideProvider('KAFKA_CLIENT')
+    .useValue(mockKafkaClient)
+    .compile();
 
   const app = moduleFixture.createNestApplication();
 
@@ -22,6 +41,14 @@ export async function createTestApp(): Promise<INestApplication> {
   );
 
   await app.init();
+
+  // Create schemas and synchronize tables for test database
+  const dataSource = app.get(DataSource);
+  for (const schema of ['cooperative', 'product', 'certification', 'notification']) {
+    await dataSource.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
+  }
+  await dataSource.synchronize();
+
   return app;
 }
 

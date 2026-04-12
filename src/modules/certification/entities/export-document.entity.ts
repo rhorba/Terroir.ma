@@ -32,7 +32,7 @@ export class ExportDocument {
   hsCode: string;
 
   /** ONSSA reference number assigned upon submission */
-  @Column({ name: 'onssa_reference', length: 50, nullable: true })
+  @Column({ name: 'onssa_reference', type: 'varchar', length: 50, nullable: true })
   onssaReference: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, name: 'quantity_kg' })
@@ -50,7 +50,7 @@ export class ExportDocument {
   @Column({ name: 'valid_until', type: 'date', nullable: true })
   validUntil: string | null;
 
-  @Column({ name: 'document_url', length: 500, nullable: true })
+  @Column({ name: 'document_url', type: 'varchar', length: 500, nullable: true })
   documentUrl: string | null;
 
   @Column({ name: 'requested_by', type: 'uuid' })

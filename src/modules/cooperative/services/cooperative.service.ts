@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cooperative } from '../entities/cooperative.entity';
@@ -7,6 +12,7 @@ import { Farm } from '../entities/farm.entity';
 import { CreateCooperativeDto } from '../dto/create-cooperative.dto';
 import { UpdateCooperativeDto } from '../dto/update-cooperative.dto';
 import { AddMemberDto } from '../dto/add-member.dto';
+import { UpdateMemberDto } from '../dto/update-member.dto';
 import { MapFarmDto } from '../dto/map-farm.dto';
 import { CooperativeProducer } from '../events/cooperative.producer';
 
@@ -79,11 +85,7 @@ export class CooperativeService {
    * @throws NotFoundException if not found
    * @throws BadRequestException if already active
    */
-  async verify(
-    id: string,
-    verifiedBy: string,
-    correlationId: string,
-  ): Promise<Cooperative> {
+  async verify(id: string, verifiedBy: string, correlationId: string): Promise<Cooperative> {
     const cooperative = await this.findById(id);
 
     if (cooperative.status === 'active') {
@@ -94,10 +96,7 @@ export class CooperativeService {
     }
 
     const verifiedAt = new Date();
-    await this.cooperativeRepo.update(
-      { id },
-      { status: 'active', verifiedAt, verifiedBy },
-    );
+    await this.cooperativeRepo.update({ id }, { status: 'active', verifiedAt, verifiedBy });
 
     const updated = await this.findById(id);
     await this.producer.publishRegistrationVerified(updated, verifiedBy, correlationId);
@@ -108,11 +107,7 @@ export class CooperativeService {
    * Update cooperative details.
    * @throws NotFoundException if not found
    */
-  async update(
-    id: string,
-    dto: UpdateCooperativeDto,
-    _updatedBy: string,
-  ): Promise<Cooperative> {
+  async update(id: string, dto: UpdateCooperativeDto, _updatedBy: string): Promise<Cooperative> {
     const cooperative = await this.findById(id);
     Object.assign(cooperative, dto);
     return this.cooperativeRepo.save(cooperative);
@@ -122,11 +117,7 @@ export class CooperativeService {
    * Add a member to a cooperative.
    * @throws ConflictException if member with same CIN already exists
    */
-  async addMember(
-    cooperativeId: string,
-    dto: AddMemberDto,
-    createdBy: string,
-  ): Promise<void> {
+  async addMember(cooperativeId: string, dto: AddMemberDto, createdBy: string): Promise<void> {
     await this.findById(cooperativeId);
     const existing = await this.memberRepo.findOne({ where: { cin: dto.cin } });
     if (existing) {
@@ -146,13 +137,58 @@ export class CooperativeService {
   }
 
   /**
+   * Return a paginated list of active members for a cooperative.
+   * Scoped to the given cooperativeId — never returns members from other cooperatives.
+   */
+  async getMembers(
+    cooperativeId: string,
+    page: number,
+    limit: number,
+  ): Promise<[Member[], number]> {
+    return this.memberRepo.findAndCount({
+      where: { cooperativeId, isActive: true },
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip: (page - 1) * limit,
+    });
+  }
+
+  /**
+   * Update a member's mutable profile fields (phone, email).
+   * Enforces that requesterId === memberId — members may only update their own profile.
+   * @throws BadRequestException if requesterId !== memberId
+   * @throws NotFoundException if member not found within the cooperative
+   */
+  async updateMember(
+    cooperativeId: string,
+    memberId: string,
+    dto: UpdateMemberDto,
+    requesterId: string,
+  ): Promise<Member> {
+    if (requesterId !== memberId) {
+      throw new BadRequestException({
+        code: 'MEMBER_SELF_UPDATE_ONLY',
+        message: 'Members may only update their own profile',
+      });
+    }
+    const member = await this.memberRepo.findOne({
+      where: { id: memberId, cooperativeId },
+    });
+    if (!member) {
+      throw new NotFoundException({
+        code: 'MEMBER_NOT_FOUND',
+        message: `Member ${memberId} not found in cooperative ${cooperativeId}`,
+      });
+    }
+    if (dto.phone !== undefined) member.phone = dto.phone;
+    if (dto.email !== undefined) member.email = dto.email ?? null;
+    return this.memberRepo.save(member);
+  }
+
+  /**
    * Map a farm to a cooperative with GPS coordinates.
    */
-  async mapFarm(
-    cooperativeId: string,
-    dto: MapFarmDto,
-    createdBy: string,
-  ): Promise<void> {
+  async mapFarm(cooperativeId: string, dto: MapFarmDto, createdBy: string): Promise<void> {
     await this.findById(cooperativeId);
     const location =
       dto.latitude != null && dto.longitude != null

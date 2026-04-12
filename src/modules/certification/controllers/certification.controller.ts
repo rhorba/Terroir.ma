@@ -10,9 +10,15 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
 import { CertificationService } from '../services/certification.service';
+import { CertificationPdfService } from '../services/certification-pdf.service';
+import { StatsQueryDto } from '../dto/stats-query.dto';
+import { CertificationStats } from '../interfaces/certification-stats.interface';
 import { RequestCertificationDto } from '../dto/request-certification.dto';
 import { GrantCertificationDto } from '../dto/grant-certification.dto';
 import { DenyCertificationDto } from '../dto/deny-certification.dto';
@@ -39,7 +45,45 @@ import { PaginationDto, PagedResult } from '../../../common/dto/pagination.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('certifications')
 export class CertificationController {
-  constructor(private readonly certificationService: CertificationService) {}
+  constructor(
+    private readonly certificationService: CertificationService,
+    private readonly certificationPdfService: CertificationPdfService,
+  ) {}
+
+  /**
+   * US-048 — Super-admin views certification statistics by status, region, and product type.
+   * Results cached in Redis for 5 minutes.
+   */
+  @Get('stats')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin')
+  @ApiOperation({ summary: 'US-048: Certification statistics by status / region / product type' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'YYYY-MM-DD' })
+  async getStats(@Query() query: StatsQueryDto): Promise<CertificationStats> {
+    return this.certificationService.getStats(query.from, query.to);
+  }
+
+  /**
+   * US-047 — Generate and download a trilingual PDF conformity certificate.
+   * Available for GRANTED and RENEWED certifications only.
+   */
+  @Get(':id/certificate.pdf')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin', 'certification-body', 'super-admin')
+  @ApiOperation({ summary: 'US-047: Download PDF conformity certificate (AR/FR/ZGH)' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async downloadCertificatePdf(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const buffer = await this.certificationPdfService.generateCertificatePdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': 'attachment; filename="certificate.pdf"',
+    });
+    return new StreamableFile(buffer);
+  }
 
   /**
    * US-042 — Certification body officer views all pending certification requests.

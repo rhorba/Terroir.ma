@@ -1,4 +1,4 @@
-import { IsString, IsEmail, Length, IsOptional } from 'class-validator';
+import { IsString, IsEmail, Length, IsOptional, IsArray } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsMoroccanICE,
@@ -61,4 +61,10 @@ export class CreateCooperativeDto {
   @ApiProperty({ example: '+212661234568' })
   @IsMoroccanPhone()
   presidentPhone: string;
+
+  @ApiPropertyOptional({ example: ['ARGAN_OIL', 'SAFFRON'] })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  productTypes?: string[];
 }

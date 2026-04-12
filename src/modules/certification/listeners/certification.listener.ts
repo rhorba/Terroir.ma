@@ -1,6 +1,11 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload, Ctx, KafkaContext } from '@nestjs/microservices';
-import type { LabTestCompletedEvent, CooperativeRegistrationVerifiedEvent } from '../../../common/interfaces/events';
+import type {
+  LabTestCompletedEvent,
+  CooperativeRegistrationVerifiedEvent,
+  CertificationFinalReviewStartedEvent,
+  CertificationRenewedEvent,
+} from '../../../common/interfaces/events';
 import { CertificationService } from '../services/certification.service';
 
 /**
@@ -15,24 +20,33 @@ export class CertificationListener {
   constructor(private readonly certificationService: CertificationService) {}
 
   /**
-   * When a lab test is completed, update the batch eligibility for certification.
-   * Idempotent: checks eventId before processing.
+   * Step 7: When a lab test is completed, advance the matching certification
+   * from LAB_TESTING → LAB_RESULTS_RECEIVED.
+   * Idempotent: checks correlationId (eventId) before processing.
    */
   @EventPattern('lab.test.completed')
   async handleLabTestCompleted(
     @Payload() data: LabTestCompletedEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     try {
       if (await this.certificationService.isEventProcessed(data.eventId)) {
-        context.getMessage().ack?.();
+        this.logger.log(
+          { eventId: data.eventId },
+          'lab.test.completed already processed — skipping',
+        );
         return;
       }
       this.logger.log(
         { eventId: data.eventId, batchId: data.batchId, passed: data.passed },
-        'Lab test completed — updating certification read model',
+        'Lab test completed — advancing certification to LAB_RESULTS_RECEIVED',
       );
-      context.getMessage().ack?.();
+      await this.certificationService.receiveLabResults(
+        data.batchId,
+        data.labTestId,
+        data.passed,
+        data.eventId,
+      );
     } catch (error) {
       this.logger.error({ error, eventId: data.eventId }, 'Failed to process lab.test.completed');
     }
@@ -44,12 +58,46 @@ export class CertificationListener {
   @EventPattern('cooperative.registration.verified')
   async handleCooperativeVerified(
     @Payload() data: CooperativeRegistrationVerifiedEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, cooperativeId: data.cooperativeId },
       'Cooperative verified — certification module read model updated',
     );
-    context.getMessage().ack?.();
+    // ack handled automatically by NestJS Kafka transport
+  }
+
+  /**
+   * Step 8 notification hook — certification moved to final review.
+   * Notification module will handle the cooperative-admin email.
+   */
+  @EventPattern('certification.review.final-started')
+  async handleFinalReviewStarted(
+    @Payload() data: CertificationFinalReviewStartedEvent,
+    @Ctx() _context: KafkaContext,
+  ): Promise<void> {
+    this.logger.log(
+      { eventId: data.eventId, certificationId: data.certificationId },
+      'Certification moved to final review',
+    );
+  }
+
+  /**
+   * Step 12 notification hook — certification renewal initiated.
+   * Notification module will handle the cooperative-admin email.
+   */
+  @EventPattern('certification.renewed')
+  async handleCertificationRenewed(
+    @Payload() data: CertificationRenewedEvent,
+    @Ctx() _context: KafkaContext,
+  ): Promise<void> {
+    this.logger.log(
+      {
+        eventId: data.eventId,
+        oldCertId: data.oldCertificationId,
+        newCertId: data.newCertificationId,
+      },
+      'Certification renewal initiated',
+    );
   }
 }

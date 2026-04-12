@@ -18,7 +18,7 @@ import { SmsService } from '../../../src/modules/notification/services/sms.servi
 import { ConfigService } from '@nestjs/config';
 import { NOTIFICATION_TEMPLATE_FIXTURES } from '../../fixtures/notification-templates.fixture';
 import { buildSendNotificationOptions } from '../../factories/notification.factory';
-import { seedRows, truncateTables } from '../../helpers/database.helper';
+import { seedRows } from '../../helpers/database.helper';
 
 describe('NotificationService (integration)', () => {
   let container: StartedPostgreSqlContainer;
@@ -39,7 +39,7 @@ describe('NotificationService (integration)', () => {
           url: container.getConnectionUri(),
           entities: [Notification, NotificationTemplate],
           schema: 'notification',
-          synchronize: true, // OK for tests — use migrations in production
+          synchronize: false,
         }),
         TypeOrmModule.forFeature([Notification, NotificationTemplate]),
       ],
@@ -54,15 +54,22 @@ describe('NotificationService (integration)', () => {
     service = module.get<NotificationService>(NotificationService);
     dataSource = module.get<DataSource>(DataSource);
 
-    // Create notification schema
+    // Create schema first, then synchronize tables
     await dataSource.query('CREATE SCHEMA IF NOT EXISTS notification');
+    await dataSource.synchronize();
 
     // Seed templates
-    await seedRows(dataSource, 'notification', 'notification_template', NOTIFICATION_TEMPLATE_FIXTURES);
+    await seedRows(
+      dataSource,
+      'notification',
+      'notification_template',
+      NOTIFICATION_TEMPLATE_FIXTURES,
+    );
   });
 
   afterEach(async () => {
-    await truncateTables(dataSource, ['notification']);
+    // Truncate only sent notifications — preserve seeded templates
+    await dataSource.query('TRUNCATE TABLE notification.notification CASCADE');
   });
 
   afterAll(async () => {

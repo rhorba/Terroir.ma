@@ -96,6 +96,19 @@ export class ExportDocumentService {
     return { data, meta: { page, limit, total } };
   }
 
+  /**
+   * Returns all export documents across all cooperatives (super-admin view).
+   * US-067
+   */
+  async findAll(page: number, limit: number): Promise<PagedResult<ExportDocument>> {
+    const [data, total] = await this.exportDocRepo.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, meta: { page, limit, total } };
+  }
+
   async updateOnssaReference(id: string, onssaReference: string): Promise<ExportDocument> {
     await this.exportDocRepo.update({ id }, { onssaReference, status: 'approved' });
     return this.findById(id);

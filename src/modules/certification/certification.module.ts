@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { redisStore } from 'cache-manager-redis-yet';
 import { CertificationService } from './services/certification.service';
 import { InspectionService } from './services/inspection.service';
 import { QrCodeService } from './services/qr-code.service';
 import { ExportDocumentService } from './services/export-document.service';
+import { CertificationPdfService } from './services/certification-pdf.service';
 import { CertificationController } from './controllers/certification.controller';
 import { InspectionController } from './controllers/inspection.controller';
 import { QrCodeController } from './controllers/qr-code.controller';
@@ -12,6 +15,7 @@ import { ExportDocumentController } from './controllers/export-document.controll
 import { CertificationListener } from './listeners/certification.listener';
 import { CertificationProducer } from './events/certification.producer';
 import { Certification } from './entities/certification.entity';
+import { CertificationEvent } from './entities/certification-event.entity';
 import { Inspection } from './entities/inspection.entity';
 import { InspectionReport } from './entities/inspection-report.entity';
 import { QrCode } from './entities/qr-code.entity';
@@ -29,8 +33,23 @@ import { ExportDocument } from './entities/export-document.entity';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Certification, Inspection, InspectionReport, QrCode, ExportDocument]),
-    CacheModule.register(),
+    TypeOrmModule.forFeature([
+      Certification,
+      CertificationEvent,
+      Inspection,
+      InspectionReport,
+      QrCode,
+      ExportDocument,
+    ]),
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => ({
+        store: redisStore,
+        url: config.get<string>('redis.url'),
+        ttl: 0,
+      }),
+      inject: [ConfigService],
+    }),
   ],
   controllers: [
     CertificationController,
@@ -44,6 +63,7 @@ import { ExportDocument } from './entities/export-document.entity';
     InspectionService,
     QrCodeService,
     ExportDocumentService,
+    CertificationPdfService,
     CertificationProducer,
   ],
   exports: [],

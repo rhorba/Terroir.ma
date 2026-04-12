@@ -10,6 +10,8 @@ import type {
   CertificationDecisionGrantedEvent,
   CertificationDecisionDeniedEvent,
   CertificationDecisionRevokedEvent,
+  CertificationFinalReviewStartedEvent,
+  CertificationRenewedEvent,
   QrCodeGeneratedEvent,
 } from './certification-events';
 import { CertificationType } from '../../../common/interfaces/morocco.interface';
@@ -46,16 +48,19 @@ export class CertificationProducer {
 
     try {
       await this.kafkaClient.emit('certification.request.submitted', event).toPromise();
-      this.logger.log({ eventId: event.eventId, certificationId: certification.id }, 'Certification request event published');
+      this.logger.log(
+        { eventId: event.eventId, certificationId: certification.id },
+        'Certification request event published',
+      );
     } catch (error) {
-      this.logger.error({ error, certificationId: certification.id }, 'Failed to publish certification request');
+      this.logger.error(
+        { error, certificationId: certification.id },
+        'Failed to publish certification request',
+      );
     }
   }
 
-  async publishInspectionScheduled(
-    inspection: Inspection,
-    correlationId: string,
-  ): Promise<void> {
+  async publishInspectionScheduled(inspection: Inspection, correlationId: string): Promise<void> {
     const event: CertificationInspectionScheduledEvent = {
       eventId: uuidv4(),
       correlationId,
@@ -65,16 +70,25 @@ export class CertificationProducer {
       inspectionId: inspection.id,
       certificationRequestId: inspection.certificationId,
       cooperativeId: inspection.cooperativeId,
+      cooperativeName: '',
       inspectorId: inspection.inspectorId,
+      inspectorName: inspection.inspectorName ?? '',
       scheduledDate: inspection.scheduledDate,
+      location: '',
       farmIds: inspection.farmIds,
     };
 
     try {
       await this.kafkaClient.emit('certification.inspection.scheduled', event).toPromise();
-      this.logger.log({ eventId: event.eventId, inspectionId: inspection.id }, 'Inspection scheduled event published');
+      this.logger.log(
+        { eventId: event.eventId, inspectionId: inspection.id },
+        'Inspection scheduled event published',
+      );
     } catch (error) {
-      this.logger.error({ error, inspectionId: inspection.id }, 'Failed to publish inspection scheduled event');
+      this.logger.error(
+        { error, inspectionId: inspection.id },
+        'Failed to publish inspection scheduled event',
+      );
     }
   }
 
@@ -95,10 +109,12 @@ export class CertificationProducer {
       certificationType: certification.certificationType as CertificationType,
       cooperativeId: certification.cooperativeId,
       cooperativeName: certification.cooperativeName,
+      productName: certification.productTypeCode,
       productTypeCode: certification.productTypeCode,
       batchId: certification.batchId,
       regionCode: certification.regionCode,
       grantedBy,
+      grantedAt: certification.grantedAt?.toISOString() ?? new Date().toISOString(),
       validFrom: certification.validFrom ?? '',
       validUntil: certification.validUntil ?? '',
       qrCodeId,
@@ -106,9 +122,15 @@ export class CertificationProducer {
 
     try {
       await this.kafkaClient.emit('certification.decision.granted', event).toPromise();
-      this.logger.log({ eventId: event.eventId, certificationId: certification.id }, 'Certification granted event published');
+      this.logger.log(
+        { eventId: event.eventId, certificationId: certification.id },
+        'Certification granted event published',
+      );
     } catch (error) {
-      this.logger.error({ error, certificationId: certification.id }, 'Failed to publish certification granted event');
+      this.logger.error(
+        { error, certificationId: certification.id },
+        'Failed to publish certification granted event',
+      );
     }
   }
 
@@ -134,9 +156,15 @@ export class CertificationProducer {
 
     try {
       await this.kafkaClient.emit('certification.decision.denied', event).toPromise();
-      this.logger.log({ eventId: event.eventId, certificationId: certification.id }, 'Certification denied event published');
+      this.logger.log(
+        { eventId: event.eventId, certificationId: certification.id },
+        'Certification denied event published',
+      );
     } catch (error) {
-      this.logger.error({ error, certificationId: certification.id }, 'Failed to publish certification denied event');
+      this.logger.error(
+        { error, certificationId: certification.id },
+        'Failed to publish certification denied event',
+      );
     }
   }
 
@@ -162,9 +190,15 @@ export class CertificationProducer {
 
     try {
       await this.kafkaClient.emit('certification.decision.revoked', event).toPromise();
-      this.logger.log({ eventId: event.eventId, certificationId: certification.id }, 'Certification revoked event published');
+      this.logger.log(
+        { eventId: event.eventId, certificationId: certification.id },
+        'Certification revoked event published',
+      );
     } catch (error) {
-      this.logger.error({ error, certificationId: certification.id }, 'Failed to publish certification revoked event');
+      this.logger.error(
+        { error, certificationId: certification.id },
+        'Failed to publish certification revoked event',
+      );
     }
   }
 
@@ -190,9 +224,75 @@ export class CertificationProducer {
 
     try {
       await this.kafkaClient.emit('qrcode.generated', event).toPromise();
-      this.logger.log({ eventId: event.eventId, qrCodeId: qrCode.id }, 'QR code generated event published');
+      this.logger.log(
+        { eventId: event.eventId, qrCodeId: qrCode.id },
+        'QR code generated event published',
+      );
     } catch (error) {
-      this.logger.error({ error, qrCodeId: qrCode.id }, 'Failed to publish QR code generated event');
+      this.logger.error(
+        { error, qrCodeId: qrCode.id },
+        'Failed to publish QR code generated event',
+      );
+    }
+  }
+
+  async publishFinalReviewStarted(
+    certification: Certification,
+    actorId: string,
+    correlationId: string,
+  ): Promise<void> {
+    const event: CertificationFinalReviewStartedEvent = {
+      eventId: uuidv4(),
+      correlationId,
+      timestamp: new Date().toISOString(),
+      version: 1,
+      source: 'certification',
+      certificationId: certification.id,
+      cooperativeId: certification.cooperativeId,
+      actorId,
+    };
+    try {
+      await this.kafkaClient.emit('certification.review.final-started', event).toPromise();
+      this.logger.log(
+        { eventId: event.eventId, certificationId: certification.id },
+        'Final review started event published',
+      );
+    } catch (error) {
+      this.logger.error(
+        { error, certificationId: certification.id },
+        'Failed to publish final review started event',
+      );
+    }
+  }
+
+  async publishCertificationRenewed(
+    oldCertification: Certification,
+    newCertificationId: string,
+    renewedBy: string,
+    correlationId: string,
+  ): Promise<void> {
+    const event: CertificationRenewedEvent = {
+      eventId: uuidv4(),
+      correlationId,
+      timestamp: new Date().toISOString(),
+      version: 1,
+      source: 'certification',
+      oldCertificationId: oldCertification.id,
+      newCertificationId,
+      cooperativeId: oldCertification.cooperativeId,
+      renewedBy,
+    };
+    try {
+      await this.kafkaClient.emit('certification.renewed', event).toPromise();
+      this.logger.log(
+        { eventId: event.eventId, oldCertificationId: oldCertification.id, newCertificationId },
+        'Certification renewed event published',
+      );
+    } catch (error) {
+      this.logger.error(
+        { error, oldCertificationId: oldCertification.id },
+        'Failed to publish certification renewed event',
+      );
     }
   }
 }

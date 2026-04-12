@@ -24,7 +24,7 @@ export class CooperativeListener {
   @EventPattern('cooperative.registration.verified')
   async handleRegistrationVerified(
     @Payload() data: CooperativeRegistrationVerifiedEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, cooperativeId: data.cooperativeId },
@@ -50,7 +50,7 @@ export class CooperativeListener {
         'Failed to update cooperative status',
       );
     } finally {
-      context.getMessage().ack?.();
+      // ack handled automatically by NestJS Kafka transport
     }
   }
 }

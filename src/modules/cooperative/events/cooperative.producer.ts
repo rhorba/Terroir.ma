@@ -5,6 +5,7 @@ import { Cooperative } from '../entities/cooperative.entity';
 import { Farm } from '../entities/farm.entity';
 import type {
   CooperativeRegistrationSubmittedEvent,
+  CooperativeRegistrationVerifiedEvent,
   CooperativeFarmMappedEvent,
 } from './cooperative-events';
 
@@ -41,9 +42,7 @@ export class CooperativeProducer {
     };
 
     try {
-      await this.kafkaClient
-        .emit('cooperative.registration.submitted', event)
-        .toPromise();
+      await this.kafkaClient.emit('cooperative.registration.submitted', event).toPromise();
       this.logger.log(
         { eventId: event.eventId, cooperativeId: cooperative.id },
         'Registration submitted event published',
@@ -77,9 +76,7 @@ export class CooperativeProducer {
     };
 
     try {
-      await this.kafkaClient
-        .emit('cooperative.registration.verified', event)
-        .toPromise();
+      await this.kafkaClient.emit('cooperative.registration.verified', event).toPromise();
       this.logger.log(
         { eventId: event.eventId, cooperativeId: cooperative.id },
         'Registration verified event published',
@@ -111,10 +108,7 @@ export class CooperativeProducer {
 
     try {
       await this.kafkaClient.emit('cooperative.farm.mapped', event).toPromise();
-      this.logger.log(
-        { eventId: event.eventId, farmId: farm.id },
-        'Farm mapped event published',
-      );
+      this.logger.log({ eventId: event.eventId, farmId: farm.id }, 'Farm mapped event published');
     } catch (error) {
       this.logger.error({ error, farmId: farm.id }, 'Failed to publish farm mapped event');
     }

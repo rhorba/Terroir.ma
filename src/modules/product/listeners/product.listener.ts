@@ -30,7 +30,7 @@ export class ProductListener {
   @EventPattern('lab.test.completed')
   async handleLabTestCompleted(
     @Payload() data: LabTestCompletedEvent,
-    @Ctx() context: KafkaContext,
+    @Ctx() _context: KafkaContext,
   ): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, labTestId: data.labTestId, passed: data.passed },
@@ -71,7 +71,7 @@ export class ProductListener {
         'Failed to process lab test completed event',
       );
     } finally {
-      context.getMessage().ack?.();
+      // ack handled automatically by NestJS Kafka transport
     }
   }
 }

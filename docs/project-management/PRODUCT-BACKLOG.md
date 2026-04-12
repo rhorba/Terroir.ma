@@ -96,12 +96,12 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-044   | As a super-admin, I want to assign inspectors to inspections so that the right expert covers the right product                                  | Medium   | Todo   | 3      |
 | US-045   | As a super-admin, I want to configure certification validity periods by product type so that certificates expire appropriately                  | Medium   | Todo   | 3      |
 | US-046   | As a cooperative administrator, I want to renew an expiring certificate so that my products remain certified                                    | Medium   | Done   | 5      |
-| US-047   | As a certification body officer, I want to generate a PDF certificate so that the cooperative has a printable document                          | Medium   | Todo   | 5      |
-| US-048   | As a super-admin, I want to view certification statistics by region and product so that I can report to MAPMDREF                                | Medium   | Todo   | 5      |
+| US-047   | As a certification body officer, I want to generate a PDF certificate so that the cooperative has a printable document                          | Medium   | Done   | 5      |
+| US-048   | As a super-admin, I want to view certification statistics by region and product so that I can report to MAPMDREF                                | Medium   | Done   | 5      |
 | US-049   | As a cooperative administrator, I want to view all certifications for my cooperative so that I can manage my certification portfolio            | Low      | Done   | 3      |
 | US-050   | As a super-admin, I want to export a certification compliance report so that regulatory submissions are supported                               | Low      | Todo   | 5      |
 
-**Epic 4 Total Points:** 85
+**Epic 4 Total Points:** 80
 
 ---
 
@@ -138,7 +138,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-064   | As a cooperative administrator, I want to receive a notification when my export is cleared so that I can proceed with the shipment      | High     | Done   | 2      |
 | US-065   | As a customs agent, I want to reject an export documentation request with reasons so that the cooperative can resolve issues            | Medium   | Done   | 3      |
 | US-066   | As a cooperative administrator, I want to view the status of all my export documentation requests so that I can manage export logistics | Medium   | Done   | 3      |
-| US-067   | As a super-admin, I want to view all export clearances so that I can report export volume to MAPMDREF                                   | Medium   | Todo   | 3      |
+| US-067   | As a super-admin, I want to view all export clearances so that I can report export volume to MAPMDREF                                   | Medium   | Done   | 3      |
 | US-068   | As a customs agent, I want to generate a PDF export certificate so that the cooperative has documentation for the shipment              | Medium   | Todo   | 5      |
 | US-069   | As a cooperative administrator, I want to view HS code assignments for my exports so that I can verify customs classification           | Low      | Todo   | 2      |
 | US-070   | As a super-admin, I want to export a report of all export clearances by destination country so that trade statistics are available      | Low      | Todo   | 3      |
@@ -157,7 +157,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-072   | As any platform user, I want notifications delivered in my preferred language (Arabic, French, or Amazigh) so that I understand them                           | High     | Done   | 8      |
 | US-073   | As a cooperative administrator, I want to receive an SMS for critical events (certification granted, revoked, export cleared) so that I am alerted immediately | High     | Done   | 5      |
 | US-074   | As a platform user, I want to view my notification history so that I can review past alerts                                                                    | Medium   | Done   | 3      |
-| US-075   | As a super-admin, I want to manage notification templates so that messages can be updated without code changes                                                 | Medium   | Todo   | 8      |
+| US-075   | As a super-admin, I want to manage notification templates so that messages can be updated without code changes                                                 | Medium   | Done   | 8      |
 | US-076   | As a super-admin, I want to view failed notification counts so that I can identify delivery problems                                                           | Medium   | Todo   | 3      |
 | US-077   | As a platform user, I want to set my notification preferences (email, SMS, or both) so that I receive alerts on my preferred channel                           | Low      | Todo   | 3      |
 | US-078   | As a super-admin, I want notifications to be retried on failure so that transient errors do not cause missed alerts                                            | High     | Done   | 5      |
@@ -193,12 +193,12 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 | Epic                           | Stories | Total Points | Done   | In Progress | Todo   |
 | ------------------------------ | ------- | ------------ | ------ | ----------- | ------ |
-| Epic 1: Cooperative Onboarding | 10      | 36           | 7      | 0           | 3      |
-| Epic 2: Product Registry       | 10      | 42           | 4      | 0           | 6      |
+| Epic 1: Cooperative Onboarding | 10      | 36           | 9      | 0           | 1      |
+| Epic 2: Product Registry       | 10      | 42           | 5      | 0           | 5      |
 | Epic 3: Lab Testing            | 10      | 47           | 4      | 0           | 6      |
-| Epic 4: Certification Workflow | 20      | 85           | 13     | 0           | 7      |
+| Epic 4: Certification Workflow | 20      | 80           | 17     | 0           | 3      |
 | Epic 5: QR Code & Verification | 10      | 51           | 8      | 0           | 2      |
-| Epic 6: Export Documentation   | 10      | 34           | 6      | 0           | 4      |
-| Epic 7: Notifications          | 10      | 46           | 6      | 0           | 4      |
+| Epic 6: Export Documentation   | 10      | 34           | 7      | 0           | 3      |
+| Epic 7: Notifications          | 10      | 46           | 8      | 0           | 2      |
 | Epic 8: Admin & Reporting      | 10      | 53           | 0      | 0           | 10     |
-| **Total**                      | **90**  | **394**      | **49** | **0**       | **41** |
+| **Total**                      | **90**  | **389**      | **58** | **0**       | **32** |

@@ -7,6 +7,8 @@ export type {
   CertificationDecisionDeniedEvent,
   CertificationDecisionRevokedEvent,
   CertificationDecisionRenewedEvent,
+  CertificationFinalReviewStartedEvent,
+  CertificationRenewedEvent,
   LabTestCompletedEvent,
 } from '../../../common/interfaces/events/certification.events';
 

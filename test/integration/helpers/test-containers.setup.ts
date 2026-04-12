@@ -25,15 +25,29 @@ export async function startTestDatabase(entities: Function[]): Promise<TestDatab
 
   const connectionUri = container.getConnectionUri();
 
+  // Initialize without synchronize first to create schemas
   const dataSource = new DataSource({
     type: 'postgres',
     url: connectionUri,
     entities,
-    synchronize: true, // safe for tests; never use in production
+    synchronize: false,
     logging: false,
   });
 
   await dataSource.initialize();
+
+  // Create schemas inferred from entity metadata
+  const schemas = new Set<string>();
+  for (const entity of entities) {
+    const meta = dataSource.getMetadata(entity as Function);
+    if (meta.schema) schemas.add(meta.schema);
+  }
+  for (const schema of schemas) {
+    await dataSource.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
+  }
+
+  // Now synchronize tables inside the created schemas
+  await dataSource.synchronize();
 
   return { container, dataSource, connectionUri };
 }

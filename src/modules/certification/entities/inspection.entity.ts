@@ -22,7 +22,7 @@ export class Inspection {
   @Column({ name: 'inspector_id', type: 'uuid' })
   inspectorId: string;
 
-  @Column({ name: 'inspector_name', length: 200, nullable: true })
+  @Column({ name: 'inspector_name', type: 'varchar', length: 200, nullable: true })
   inspectorName: string | null;
 
   @Column({ name: 'scheduled_date', type: 'date' })

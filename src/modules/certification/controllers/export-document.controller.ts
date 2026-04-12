@@ -30,6 +30,19 @@ export class ExportDocumentController {
   constructor(private readonly exportDocumentService: ExportDocumentService) {}
 
   /**
+   * US-067 — Super-admin views all export clearances across all cooperatives.
+   */
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles('super-admin')
+  @ApiOperation({ summary: 'US-067: List all export documents (super-admin)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findAll(@Query() query: PaginationDto): Promise<PagedResult<ExportDocument>> {
+    return this.exportDocumentService.findAll(query.page, query.limit);
+  }
+
+  /**
    * US-066 — Cooperative admin views all export documentation requests for their cooperative.
    * Scoped to the cooperative from the JWT claim.
    */

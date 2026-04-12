@@ -6,18 +6,16 @@
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { createTestApp, buildMockJwt, bearerHeader } from '../../helpers/app.helper';
-import { buildCertificationBodyJwt, buildCooperativeAdminJwt } from '../../factories/user.factory';
+import { buildCooperativeAdminJwt } from '../../factories/user.factory';
 
 describe('Certification API (e2e)', () => {
   let app: INestApplication;
   let cooperativeAdminToken: string;
-  let certBodyToken: string;
 
   beforeAll(async () => {
     app = await createTestApp();
 
     cooperativeAdminToken = buildMockJwt(buildCooperativeAdminJwt());
-    certBodyToken = buildMockJwt(buildCertificationBodyJwt());
   });
 
   afterAll(async () => {
@@ -26,10 +24,7 @@ describe('Certification API (e2e)', () => {
 
   describe('POST /certifications/request', () => {
     it('should require authentication', async () => {
-      await request(app.getHttpServer())
-        .post('/certifications/request')
-        .send({})
-        .expect(401);
+      await request(app.getHttpServer()).post('/certifications/request').send({}).expect(401);
     });
 
     it('should return 400 for missing required fields', async () => {

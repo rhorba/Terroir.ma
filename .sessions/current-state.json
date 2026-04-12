@@ -1,18 +1,18 @@
 {
-  "timestamp": "2026-04-10T18:00:00Z",
-  "session_id": "session-2026-04-10-sprint5-close",
+  "timestamp": "2026-04-12T20:00:00Z",
+  "session_id": "session-2026-04-12-sprint6-close",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": 5,
-    "sprint_name": "List Endpoints, QR Download & Trilingual Verification",
-    "start_date": "2026-04-10",
-    "end_date": "2026-04-10",
-    "goal": "Role-scoped list endpoints (US-042/049/043/066), QR PNG+SVG download (US-057), trilingual QR verification (US-059), test:unit:cov script (TM-1)",
+    "sprint_number": 6,
+    "sprint_name": "PDF Certificate, Stats, Export View & Notification Templates",
+    "start_date": "2026-04-12",
+    "end_date": "2026-04-12",
+    "goal": "PDF certificate (US-047), certification stats (US-048), super-admin export clearances view (US-067), notification template management (US-075), migration verification (TM-3)",
     "status": "CLOSED",
-    "story_points_planned": 23,
-    "story_points_completed": 22,
-    "velocity_pct": 96,
-    "note": "TM-3 (migration chain verification) deferred — requires live PostgreSQL. All user-facing stories delivered."
+    "story_points_planned": 22,
+    "story_points_completed": 21,
+    "velocity_pct": 95,
+    "note": "TM-3 deferred again — requires live PostgreSQL. All user-facing stories delivered."
   },
   "active_feature": null,
   "modules_status": {
@@ -34,27 +34,42 @@
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "coverage_statements": "98.23%",
-      "coverage_branches": "89.28%",
+      "coverage_statements": "~98%",
+      "coverage_branches": "~88%",
       "redis_qr_cache": true,
       "cache_key_pattern": "qr:verify:{hmacSignature}",
       "cache_ttl_ms": 300000,
-      "new_endpoints_sprint5": [
-        "GET /certifications/pending (certification-body)",
-        "GET /certifications/my (cooperative-admin)",
-        "GET /inspections/my (inspector)",
-        "GET /export-documents/my (cooperative-admin)",
-        "GET /qr-codes/:id/download?format=png|svg (cooperative-admin)",
-        "GET /verify/:uuid?lang=ar|fr|zgh (public)"
+      "stats_cache_key_pattern": "stats:certifications:{from|all}:{to|all}",
+      "stats_cache_ttl_ms": 300000,
+      "new_endpoints_sprint6": [
+        "GET /certifications/stats?from=&to= (super-admin)",
+        "GET /certifications/:id/certificate.pdf (cooperative-admin, certification-body, super-admin)",
+        "GET /export-documents?page=&limit= (super-admin)"
+      ],
+      "pdf_font_assets_needed": [
+        "assets/fonts/Amiri-Regular.ttf (Arabic — https://github.com/alif-type/amiri/releases)",
+        "assets/fonts/DejaVuSans.ttf (Latin/Tifinagh — https://dejavu-fonts.github.io)"
       ]
     },
     "notification": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "coverage_statements": "96.66%",
-      "coverage_branches": "62.06%",
-      "known_gap": "notification.service.ts lines 92-93 — error path covered by test but branch instrumentation shows 57.69% (Handlebars path combination)"
+      "coverage_statements": "83.58%",
+      "coverage_branches": "67.44%",
+      "known_gaps": [
+        "notification-template.service.ts lines 45-59 (seedFromFiles loop body — requires live filesystem fixtures)",
+        "notification.service.ts lines 78-79, 128-129 (fs.existsSync/readFileSync file fallback — requires .hbs file on disk)"
+      ],
+      "new_endpoints_sprint6": [
+        "GET /notification-templates (super-admin)",
+        "GET /notification-templates/:id (super-admin)",
+        "POST /notification-templates (super-admin)",
+        "PUT /notification-templates/:id (super-admin)",
+        "DELETE /notification-templates/:id (super-admin)",
+        "POST /notification-templates/seed (super-admin)"
+      ],
+      "template_lookup_order": "Redis cache (600s) → DB record → .hbs file in assets/templates/"
     }
   },
   "certification_chain_status": {
@@ -65,17 +80,20 @@
     "qr_redis_cache_wired": true,
     "qr_download_png_svg": true,
     "qr_trilingual_verification": true,
-    "event_ledger": true
+    "event_ledger": true,
+    "pdf_certificate": true,
+    "certification_stats": true
   },
   "test_status": {
     "unit": {
-      "suites": 23,
-      "total": 245,
-      "passing": 245,
-      "coverage_statements": "98.41%",
-      "coverage_branches": "85.79%",
-      "coverage_functions": "96.96%",
-      "coverage_lines": "98.31%"
+      "suites": 25,
+      "total": 271,
+      "passing": 271,
+      "coverage_statements": "96.1%",
+      "coverage_branches": "86.44%",
+      "coverage_functions": "96.72%",
+      "coverage_lines": "96.24%",
+      "coverage_note": "Drop from 98.41% due to filesystem-dependent paths in seedFromFiles() and file fallback in send() — not exercisable without live .hbs fixtures"
     },
     "integration": {
       "status": "requires_postgres",
@@ -88,21 +106,37 @@
   },
   "blockers": [],
   "next_actions": [
-    "Sprint 5 CLOSED — 22/23 SP, 245 unit tests, 98.41% statements / 85.79% branches",
-    "TM-3 deferred: run migration chain verification when PostgreSQL is available",
+    "Sprint 6 CLOSED — 21/22 SP, 271 unit tests, 96.1% statements / 86.44% branches",
+    "TM-3 deferred (2nd sprint): run migration chain verification when PostgreSQL is available",
     "  Steps: docker compose --profile core up -d postgres && npm run migration:run && npm run migration:generate -- --check",
-    "Sprint 6 planning — recommended scope: 21–25 SP",
-    "Sprint 6 candidates:",
-    "  US-043: Inspector views scheduled inspections — endpoint done, backlog entry needs Done status update",
-    "  US-047: Generate PDF certificate — 5 SP (PDFKit/Puppeteer)",
-    "  US-048: Certification statistics by region/product (super-admin) — 5 SP",
-    "  US-053: Offline QR verification for customs agent — 13 SP (Phase 2, flag as deferred)",
-    "  US-058: Track QR scan events — 5 SP (append-only scan log)",
-    "  US-067: Super-admin views all export clearances — 3 SP",
-    "  US-075: Manage notification templates (super-admin) — 8 SP",
-    "  TM-3: Migration chain verification with live DB — 1 SP (carry over from Sprint 5)"
+    "Font files required before GET /certifications/:id/certificate.pdf works at runtime:",
+    "  assets/fonts/Amiri-Regular.ttf — https://github.com/alif-type/amiri/releases (OFL)",
+    "  assets/fonts/DejaVuSans.ttf    — https://dejavu-fonts.github.io (free)",
+    "Backlog update: mark US-047, US-048, US-067, US-075 as Done in PRODUCT-BACKLOG.md",
+    "Sprint 7 planning — recommended scope: 21–25 SP",
+    "Sprint 7 candidates:",
+    "  TM-3: Migration chain verification (carry-over) — 1 SP",
+    "  US-058: Track QR scan events (append-only log) — 5 SP (deferred from Sprint 6)",
+    "  US-010: Super-admin deactivates cooperative — 3 SP",
+    "  US-016: Manage SDOQ product types (super-admin) — 5 SP",
+    "  US-044: Assign inspectors to inspections — 3 SP",
+    "  US-076: View failed notification counts — 3 SP",
+    "  US-086: Manage user roles and permissions — 5 SP"
   ],
   "decisions_made": [
+    "PDF library: PDFKit (zero Docker changes, pure Node.js, supports RTL text alignment)",
+    "PDF layout: single multilingual page (FR primary + AR RTL block + ZGH block) — official Moroccan documents carry all designations",
+    "Arabic shaping: Amiri-Regular.ttf with align:right — full ligature shaping via pdfkit-arabic is Phase 2",
+    "Stats dimensions: status + region + product type + date range filter — YAGNI (no trend charts in v1)",
+    "Stats cache: Redis 300s, cache key stats:certifications:{from|all}:{to|all} — staleness acceptable for reporting",
+    "Template storage: DB-override + file fallback (existsSync → readFileSync) — safe default, rollback = DELETE record",
+    "Template cache: Redis 600s per code:channel:language key, DEL on PUT/DELETE",
+    "NotificationTemplateService.onModuleInit() seeds DB from .hbs files on startup",
+    "jest.mock('fs') blanket mock conflicts with TypeORM path-scurry — use real fs (existsSync returns false in test env)",
+    "CACHE_MANAGER must be provided in all test modules that use CertificationService or NotificationService",
+    "GET /certifications/stats registered before GET /certifications/:id to prevent NestJS UUID param collision",
+    "FindOptionsWhere<NotificationTemplate> required instead of Partial<> for TypeORM strict find() typing",
+    "US-058 (QR scan events) deferred from Sprint 6 — touches public hot path, better with monitoring in place (Phase 2)",
     "i18n is a controller-level transform — verifyQrCode() service signature unchanged; cache stays language-neutral",
     "PagedResult<T> added to existing pagination.dto.ts (avoids naming collision with PaginatedResult<T> in pagination.interface.ts)",
     "cooperative_id JWT claim already in CurrentUserPayload (snake_case) — no interface change needed",
@@ -130,27 +164,46 @@
     "sprint_3": { "planned": 21, "completed": 21, "pct": 100 },
     "sprint_4": { "planned": 21, "completed": 21, "pct": 100 },
     "sprint_5": { "planned": 23, "completed": 22, "pct": 96, "note": "TM-3 deferred (requires live DB)" },
-    "rolling_avg_sp2_sp5": 23
+    "sprint_6": { "planned": 22, "completed": 21, "pct": 95, "note": "TM-3 deferred again (requires live DB)" },
+    "rolling_avg_sp2_sp6": 23
+  },
+  "backlog_status": {
+    "total_stories": 90,
+    "done_stories": 58,
+    "todo_stories": 32,
+    "total_sp": 389,
+    "done_sp_approx": 241,
+    "remaining_sp_approx": 148,
+    "sprints_to_completion_at_23sp": 6.4,
+    "note": "Pending backlog update: mark US-047, US-048, US-067, US-075 as Done"
   },
   "files_modified_this_session": [
-    "src/common/dto/pagination.dto.ts",
-    "src/common/constants/i18n-verification.constants.ts",
-    "src/modules/certification/services/certification.service.ts",
-    "src/modules/certification/services/inspection.service.ts",
+    "docs/project-management/PRODUCT-BACKLOG.md",
     "src/modules/certification/services/export-document.service.ts",
-    "src/modules/certification/services/qr-code.service.ts",
-    "src/modules/certification/controllers/certification.controller.ts",
-    "src/modules/certification/controllers/inspection.controller.ts",
     "src/modules/certification/controllers/export-document.controller.ts",
-    "src/modules/certification/controllers/qr-code.controller.ts",
+    "src/modules/certification/services/certification.service.ts",
+    "src/modules/certification/controllers/certification.controller.ts",
+    "src/modules/certification/certification.module.ts",
+    "src/modules/notification/services/notification.service.ts",
+    "src/modules/notification/notification.module.ts",
     "test/unit/certification/certification.service.spec.ts",
-    "test/unit/certification/inspection.service.spec.ts",
+    "test/unit/certification/certification-state-machine.spec.ts",
     "test/unit/certification/export-document.service.spec.ts",
-    "test/unit/certification/qr-code.service.spec.ts",
-    "test/unit/common/i18n-verification.spec.ts",
-    "docs/plans/2026-04-10-sprint-5-list-endpoints-qr-i18n/design.md",
-    "docs/plans/2026-04-10-sprint-5-list-endpoints-qr-i18n/plan.md",
-    "docs/plans/2026-04-10-sprint-5-list-endpoints-qr-i18n/progress.md",
-    "package.json"
+    "test/unit/notification/notification.service.spec.ts"
+  ],
+  "files_created_this_session": [
+    "docs/plans/2026-04-12-sprint-6/design.md",
+    "docs/plans/2026-04-12-sprint-6/plan.md",
+    "docs/plans/2026-04-12-sprint-6/progress.md",
+    "src/modules/certification/interfaces/certification-stats.interface.ts",
+    "src/modules/certification/dto/stats-query.dto.ts",
+    "src/modules/certification/services/certification-pdf.service.ts",
+    "src/modules/notification/dto/create-notification-template.dto.ts",
+    "src/modules/notification/dto/update-notification-template.dto.ts",
+    "src/modules/notification/services/notification-template.service.ts",
+    "src/modules/notification/controllers/notification-template.controller.ts",
+    "assets/fonts/README.md",
+    "test/unit/certification/certification-pdf.service.spec.ts",
+    "test/unit/notification/notification-template.service.spec.ts"
   ]
 }

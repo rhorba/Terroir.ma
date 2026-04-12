@@ -34,7 +34,7 @@ export class Farm {
   @Column({ name: 'region_code', length: 50 })
   regionCode: string;
 
-  @Column({ name: 'commune', length: 100, nullable: true })
+  @Column({ name: 'commune', type: 'varchar', length: 100, nullable: true })
   commune: string | null;
 
   /** WKT: 'POINT(longitude latitude)' — PostGIS geography column */

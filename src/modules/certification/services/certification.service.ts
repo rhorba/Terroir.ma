@@ -1,6 +1,9 @@
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, In } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
+import { CertificationStats } from '../interfaces/certification-stats.interface';
 import { PagedResult } from '../../../common/dto/pagination.dto';
 import {
   Certification,
@@ -33,6 +36,7 @@ export class CertificationService {
     private readonly producer: CertificationProducer,
     private readonly qrCodeService: QrCodeService,
     private readonly dataSource: DataSource,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   /**
@@ -470,6 +474,56 @@ export class CertificationService {
     );
     await this.producer.publishFinalReviewStarted(updated, actorId, correlationId);
     return updated;
+  }
+
+  /**
+   * Returns certification counts grouped by status, region, and product type.
+   * Results cached in Redis for 300s. US-048.
+   */
+  async getStats(from?: string, to?: string): Promise<CertificationStats> {
+    const fromKey = from ?? 'all';
+    const toKey = to ?? 'all';
+    const cacheKey = `stats:certifications:${fromKey}:${toKey}`;
+
+    const cached = await this.cacheManager.get<CertificationStats>(cacheKey);
+    if (cached) return cached;
+
+    const params: string[] = from && to ? [from, to] : [];
+    const dateFilter = from && to ? `WHERE requested_at BETWEEN $1::date AND $2::date` : '';
+
+    const [byStatus, byRegion, byProductType] = await Promise.all([
+      this.dataSource.query<{ current_status: string; count: string }[]>(
+        `SELECT current_status, COUNT(*)::int AS count
+         FROM certification.certification ${dateFilter}
+         GROUP BY current_status ORDER BY count DESC`,
+        params,
+      ),
+      this.dataSource.query<{ region_code: string; count: string }[]>(
+        `SELECT region_code, COUNT(*)::int AS count
+         FROM certification.certification ${dateFilter}
+         GROUP BY region_code ORDER BY count DESC`,
+        params,
+      ),
+      this.dataSource.query<{ product_type_code: string; count: string }[]>(
+        `SELECT product_type_code, COUNT(*)::int AS count
+         FROM certification.certification ${dateFilter}
+         GROUP BY product_type_code ORDER BY count DESC`,
+        params,
+      ),
+    ]);
+
+    const stats: CertificationStats = {
+      period: { from: from ?? null, to: to ?? null },
+      byStatus: byStatus.map((r) => ({ status: r.current_status, count: Number(r.count) })),
+      byRegion: byRegion.map((r) => ({ regionCode: r.region_code, count: Number(r.count) })),
+      byProductType: byProductType.map((r) => ({
+        productTypeCode: r.product_type_code,
+        count: Number(r.count),
+      })),
+    };
+
+    await this.cacheManager.set(cacheKey, stats, 300_000);
+    return stats;
   }
 
   // ─── Private Helpers ──────────────────────────────────────────────────────

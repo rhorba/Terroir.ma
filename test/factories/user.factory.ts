@@ -12,6 +12,7 @@ type TerroirRole =
   | 'service-account';
 
 export interface MockJwtPayload {
+  [key: string]: unknown;
   sub: string;
   email: string;
   realm_access: { roles: TerroirRole[] };
@@ -21,12 +22,15 @@ export interface MockJwtPayload {
   cooperativeId?: string;
 }
 
-export function buildJwtPayload(role: TerroirRole, overrides: Partial<MockJwtPayload> = {}): MockJwtPayload {
+export function buildJwtPayload(
+  role: TerroirRole,
+  overrides: Partial<MockJwtPayload> = {},
+): MockJwtPayload {
   return {
     sub: faker.string.uuid(),
     email: faker.internet.email(),
     name: faker.person.fullName(),
-    preferred_username: faker.internet.username(),
+    preferred_username: faker.internet.userName(),
     realm_access: { roles: [role] },
     resource_access: { 'terroir-ma': { roles: [role] } },
     ...overrides,

@@ -9,6 +9,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { CertificationService } from '../../../src/modules/certification/services/certification.service';
 import {
   Certification,
@@ -96,6 +97,7 @@ describe('CertificationService — State Machine Guards', () => {
         { provide: CertificationProducer, useFactory: mockProducer },
         { provide: QrCodeService, useFactory: mockQrCodeService },
         { provide: DataSource, useFactory: mockDataSource },
+        { provide: CACHE_MANAGER, useValue: { get: jest.fn(), set: jest.fn(), del: jest.fn() } },
       ],
     }).compile();
 

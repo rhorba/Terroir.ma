@@ -5,25 +5,25 @@ import {
   Put,
   Patch,
   Param,
+  Query,
   Body,
   UseGuards,
   HttpCode,
   HttpStatus,
   Headers,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { CooperativeService } from '../services/cooperative.service';
 import { CreateCooperativeDto } from '../dto/create-cooperative.dto';
 import { UpdateCooperativeDto } from '../dto/update-cooperative.dto';
 import { AddMemberDto } from '../dto/add-member.dto';
+import { UpdateMemberDto } from '../dto/update-member.dto';
 import { MapFarmDto } from '../dto/map-farm.dto';
+import { Member } from '../entities/member.entity';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
-import {
-  CurrentUser,
-  CurrentUserPayload,
-} from '../../../common/decorators/current-user.decorator';
+import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
 import { Cooperative } from '../entities/cooperative.entity';
 
 /**
@@ -109,5 +109,41 @@ export class CooperativeController {
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<void> {
     await this.cooperativeService.mapFarm(id, dto, user.sub);
+  }
+
+  /** List active members of a cooperative (US-009) */
+  @Get(':id/members')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin', 'super-admin')
+  @ApiOperation({ summary: 'List all active members of a cooperative (US-009)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getMembers(
+    @Param('id') id: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ): Promise<{
+    success: boolean;
+    data: Member[];
+    meta: { page: number; limit: number; total: number };
+  }> {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, parseInt(limit, 10) || 20);
+    const [data, total] = await this.cooperativeService.getMembers(id, pageNum, limitNum);
+    return { success: true, data, meta: { page: pageNum, limit: limitNum, total } };
+  }
+
+  /** Update own member profile (US-008) */
+  @Patch(':id/members/:memberId')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-member')
+  @ApiOperation({ summary: 'Update own member profile — phone and email only (US-008)' })
+  async updateMember(
+    @Param('id') id: string,
+    @Param('memberId') memberId: string,
+    @Body() dto: UpdateMemberDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<Member> {
+    return this.cooperativeService.updateMember(id, memberId, dto, user.sub);
   }
 }

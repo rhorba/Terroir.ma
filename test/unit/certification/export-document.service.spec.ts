@@ -215,4 +215,30 @@ describe('ExportDocumentService', () => {
       expect(result).toEqual(savedDoc);
     });
   });
+
+  // ─── findAll() ────────────────────────────────────────────────────────────
+
+  describe('findAll()', () => {
+    it('returns paginated export documents across all cooperatives', async () => {
+      const docs = [{ id: 'doc-001' }, { id: 'doc-002' }];
+      exportDocRepo.findAndCount.mockResolvedValue([docs, 2]);
+
+      const result = await service.findAll(1, 20);
+
+      expect(exportDocRepo.findAndCount).toHaveBeenCalledWith({
+        order: { createdAt: 'DESC' },
+        skip: 0,
+        take: 20,
+      });
+      expect(result).toEqual({ data: docs, meta: { page: 1, limit: 20, total: 2 } });
+    });
+
+    it('returns empty result when no export documents exist', async () => {
+      exportDocRepo.findAndCount.mockResolvedValue([[], 0]);
+
+      const result = await service.findAll(1, 20);
+
+      expect(result).toEqual({ data: [], meta: { page: 1, limit: 20, total: 0 } });
+    });
+  });
 });
