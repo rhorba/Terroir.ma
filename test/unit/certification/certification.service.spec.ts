@@ -13,10 +13,11 @@ import { CertificationProducer } from '../../../src/modules/certification/events
 import { QrCodeService } from '../../../src/modules/certification/services/qr-code.service';
 
 // ─── Entity manager mock used inside dataSource.transaction callbacks ─────────
+// TypeORM manager.query() returns [resultRows, affectedCount] for DML statements
 const makeMockEm = () => ({
   create: jest.fn().mockImplementation((_Entity: unknown, dto: unknown) => dto),
   save: jest.fn().mockImplementation(async (_Entity: unknown, val: unknown) => val),
-  query: jest.fn().mockResolvedValue([{ last_seq: 1 }]),
+  query: jest.fn().mockResolvedValue([[{ last_seq: 1 }], 1]),
 });
 
 const makeRepo = () => ({

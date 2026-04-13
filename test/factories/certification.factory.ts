@@ -15,7 +15,7 @@ export function buildCertificationRequest(overrides: Record<string, unknown> = {
     ]) as CertificationType,
     productTypeCode: faker.helpers.arrayElement(['ARGAN_OIL', 'SAFFRON', 'OLIVE_OIL_PICHOLINE']),
     regionCode: faker.helpers.arrayElement(['MRR', 'SFI', 'DKH']),
-    status: 'pending' as CertificationStatus,
+    currentStatus: CertificationStatus.DRAFT,
     certificationNumber: null,
     requestedBy: faker.string.uuid(),
     requestedAt: faker.date.past(),
@@ -44,7 +44,7 @@ export function buildGrantedCertification(overrides: Record<string, unknown> = {
   const region = faker.helpers.arrayElement(['MRR', 'SFI', 'DKH']);
 
   return buildCertificationRequest({
-    status: 'granted' as CertificationStatus,
+    currentStatus: CertificationStatus.GRANTED,
     certificationNumber: `TERROIR-${type}-${region}-${year}-${String(seq).padStart(3, '0')}`,
     grantedAt: faker.date.recent(),
     grantedBy: faker.string.uuid(),

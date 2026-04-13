@@ -8,6 +8,7 @@
  */
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { DataSource } from 'typeorm';
 import { NotificationService } from '../../../src/modules/notification/services/notification.service';
@@ -34,6 +35,7 @@ describe('NotificationService (integration)', () => {
 
     const module = await Test.createTestingModule({
       imports: [
+        CacheModule.register(),
         TypeOrmModule.forRoot({
           type: 'postgres',
           url: container.getConnectionUri(),

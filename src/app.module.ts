@@ -26,6 +26,8 @@ import { DashboardService } from './common/services/dashboard.service';
 import { AuditLogService } from './common/services/audit-log.service';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { AuditLog } from './common/entities/audit-log.entity';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 import { KafkaClientModule } from './kafka/kafka-client.module';
 
 @Module({
@@ -75,6 +77,17 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
 
     // Health checks
     TerminusModule,
+
+    // Redis cache (CACHE_MANAGER for DashboardService and other AppModule providers)
+    CacheModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (config: ConfigService) => ({
+        store: redisStore,
+        url: config.get<string>('redis.url'),
+        ttl: 0,
+      }),
+      inject: [ConfigService],
+    }),
 
     // Kafka client (global — available to all domain modules)
     KafkaClientModule,

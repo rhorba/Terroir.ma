@@ -42,12 +42,12 @@ export async function createTestApp(): Promise<INestApplication> {
 
   await app.init();
 
-  // Create schemas and synchronize tables for test database
+  // Ensure all required schemas exist (migrations already manage tables).
+  // Do NOT call synchronize() — it conflicts with migration-managed schema.
   const dataSource = app.get(DataSource);
-  for (const schema of ['cooperative', 'product', 'certification', 'notification']) {
+  for (const schema of ['cooperative', 'product', 'certification', 'notification', 'common']) {
     await dataSource.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
   }
-  await dataSource.synchronize();
 
   return app;
 }

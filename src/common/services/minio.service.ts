@@ -38,14 +38,25 @@ export class MinioService implements OnModuleInit {
     });
   }
 
-  /** Ensure the bucket exists on startup. */
+  /** Ensure the bucket exists on startup. Degrades gracefully if MinIO is unreachable. */
   async onModuleInit(): Promise<void> {
     try {
       await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
       this.logger.log(`MinIO bucket '${this.bucket}' already exists`);
-    } catch {
-      await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
-      this.logger.log(`MinIO bucket '${this.bucket}' created`);
+    } catch (headErr: unknown) {
+      const statusCode = (headErr as { $metadata?: { httpStatusCode?: number } }).$metadata
+        ?.httpStatusCode;
+      if (statusCode === 404) {
+        // Bucket missing but MinIO is reachable — create it
+        await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+        this.logger.log(`MinIO bucket '${this.bucket}' created`);
+      } else {
+        // MinIO unreachable (ECONNREFUSED, timeout, etc.) — log and continue
+        this.logger.warn(
+          { err: (headErr as Error).message },
+          `MinIO unreachable on startup — file storage will be unavailable until MinIO is running`,
+        );
+      }
     }
   }
 

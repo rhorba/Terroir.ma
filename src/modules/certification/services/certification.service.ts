@@ -618,7 +618,8 @@ export class CertificationService {
         [typeAbbr, certification.regionCode, year],
       );
 
-      const rows = await manager.query(
+      // TypeORM manager.query() for DML returns [resultRows, affectedCount]
+      const [resultRows] = (await manager.query(
         `UPDATE certification.certification_seq
             SET last_seq = last_seq + 1
           WHERE certification_type = $1
@@ -626,9 +627,14 @@ export class CertificationService {
             AND year = $3
           RETURNING last_seq`,
         [typeAbbr, certification.regionCode, year],
-      );
+      )) as [{ last_seq: number }[], number];
 
-      return (rows[0] as { last_seq: number }).last_seq;
+      if (!resultRows[0]) {
+        throw new Error(
+          `certification_seq counter missing for ${typeAbbr}/${certification.regionCode}/${year}`,
+        );
+      }
+      return resultRows[0].last_seq;
     });
 
     return `TERROIR-${typeAbbr}-${certification.regionCode}-${year}-${String(seq).padStart(3, '0')}`;

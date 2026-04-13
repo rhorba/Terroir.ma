@@ -1,7 +1,7 @@
 /**
  * Integration test: CertificationService 12-step state machine (steps 1–12).
  *
- * Uses Testcontainers PostgreSQL with synchronize: true so migrations are not required.
+ * Uses Testcontainers PostgreSQL. Schema is created manually before synchronize.
  * Walks the full DRAFT → RENEWED chain and verifies:
  * - currentStatus updates correctly at each step
  * - A CertificationEvent row is appended for every transition
@@ -10,6 +10,7 @@
  */
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { DataSource } from 'typeorm';
 import { CertificationService } from '../../../src/modules/certification/services/certification.service';
@@ -37,9 +38,20 @@ const mockProducer = {
 };
 
 const mockQrCodeService = {
-  generateQrCode: jest.fn().mockResolvedValue({ id: 'qr-uuid' }),
+  generateQrCode: jest.fn().mockResolvedValue({ id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a00' }),
   deactivateByCertificationId: jest.fn().mockResolvedValue(undefined),
+  evictQrCache: jest.fn().mockResolvedValue(undefined),
 };
+
+// Fixed valid UUIDs for test data (uuid-typed columns require valid v4 format)
+const COOP_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a01';
+const USER_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02';
+const BATCH_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a03';
+const BATCH_ID_2 = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a04';
+const BATCH_ID_STEPS8 = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a05';
+const BATCH_ID_DENY = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a06';
+const INSP_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a07';
+const LAB_TEST_ID = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a08';
 
 describe('CertificationService — Chain Steps 1–12 (integration)', () => {
   let container: StartedPostgreSqlContainer;
@@ -58,6 +70,7 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
 
     module = await Test.createTestingModule({
       imports: [
+        CacheModule.register(),
         TypeOrmModule.forRoot({
           type: 'postgres',
           url: container.getConnectionUri(),
@@ -69,8 +82,7 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
             QrCode,
             ExportDocument,
           ],
-          synchronize: true,
-          schema: 'public',
+          synchronize: false,
         }),
         TypeOrmModule.forFeature([
           Certification,
@@ -90,13 +102,30 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
 
     service = module.get<CertificationService>(CertificationService);
     dataSource = module.get<DataSource>(DataSource);
+
+    // Create the certification schema before synchronizing tables
+    await dataSource.query('CREATE SCHEMA IF NOT EXISTS certification');
+    await dataSource.synchronize();
+
+    // certification_seq is not a TypeORM entity — create it manually (mirrors migration 003)
+    await dataSource.query(`
+      CREATE TABLE IF NOT EXISTS certification.certification_seq (
+        id                  SERIAL       PRIMARY KEY,
+        certification_type  VARCHAR(20)  NOT NULL,
+        region_code         VARCHAR(50)  NOT NULL,
+        year                INTEGER      NOT NULL,
+        last_seq            INTEGER      NOT NULL DEFAULT 0,
+        UNIQUE (certification_type, region_code, year)
+      )
+    `);
+
     certRepo = dataSource.getRepository(Certification);
     eventRepo = dataSource.getRepository(CertificationEvent);
   }, 120_000);
 
   afterEach(async () => {
-    await eventRepo.query('DELETE FROM certification_event');
-    await certRepo.query('DELETE FROM certification');
+    await dataSource.query('DELETE FROM certification.certification_events');
+    await dataSource.query('DELETE FROM certification.certification');
   });
 
   afterAll(async () => {
@@ -107,29 +136,29 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
   it('walks DRAFT → LAB_RESULTS_RECEIVED and appends 7 CertificationEvent rows', async () => {
     // Seed a DRAFT certification
     const cert = certRepo.create({
-      cooperativeId: 'coop-uuid',
+      cooperativeId: COOP_ID,
       cooperativeName: 'Test Cooperative',
-      batchId: 'batch-uuid',
+      batchId: BATCH_ID,
       productTypeCode: 'ARGAN_OIL',
       certificationType: 'IGP',
       regionCode: 'SFI',
-      requestedBy: 'user-uuid',
+      requestedBy: USER_ID,
       requestedAt: new Date(),
       currentStatus: CertificationStatus.DRAFT,
-      createdBy: 'user-uuid',
+      createdBy: USER_ID,
     });
     const saved = await certRepo.save(cert);
     const id = saved.id;
 
     // Step 1: DRAFT → SUBMITTED
-    let updated = await service.submitRequest(id, 'user-uuid', 'cooperative-admin', 'corr-1');
+    let updated = await service.submitRequest(id, USER_ID, 'cooperative-admin', 'corr-1');
     expect(updated.currentStatus).toBe(CertificationStatus.SUBMITTED);
 
     // Step 2: SUBMITTED → DOCUMENT_REVIEW
     updated = await service.startReview(
       id,
       'Looks complete',
-      'reviewer-uuid',
+      USER_ID,
       'certification-body',
       'corr-2',
     );
@@ -138,22 +167,22 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
     // Step 3: DOCUMENT_REVIEW → INSPECTION_SCHEDULED
     updated = await service.scheduleInspectionChain(
       id,
-      { certificationId: id, inspectorId: 'insp-uuid', scheduledDate: '2026-05-15', farmIds: [] },
-      'reviewer-uuid',
+      { certificationId: id, inspectorId: INSP_ID, scheduledDate: '2026-05-15', farmIds: [] },
+      USER_ID,
       'certification-body',
       'corr-3',
     );
     expect(updated.currentStatus).toBe(CertificationStatus.INSPECTION_SCHEDULED);
 
     // Step 4: INSPECTION_SCHEDULED → INSPECTION_IN_PROGRESS
-    updated = await service.startInspection(id, 'insp-uuid', 'inspector', 'corr-4');
+    updated = await service.startInspection(id, INSP_ID, 'inspector', 'corr-4');
     expect(updated.currentStatus).toBe(CertificationStatus.INSPECTION_IN_PROGRESS);
 
     // Step 5: INSPECTION_IN_PROGRESS → INSPECTION_COMPLETE
     updated = await service.completeInspectionChain(
       id,
       { passed: true, summary: 'No major issues found' },
-      'insp-uuid',
+      INSP_ID,
       'inspector',
       'corr-5',
     );
@@ -162,16 +191,16 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
     // Step 6: INSPECTION_COMPLETE → LAB_TESTING
     updated = await service.requestLab(
       id,
-      'lab-uuid',
+      LAB_TEST_ID,
       'Send 500g samples',
-      'reviewer-uuid',
+      USER_ID,
       'certification-body',
       'corr-6',
     );
     expect(updated.currentStatus).toBe(CertificationStatus.LAB_TESTING);
 
     // Step 7: LAB_TESTING → LAB_RESULTS_RECEIVED (via internal service method)
-    await service.receiveLabResults('batch-uuid', 'lab-test-uuid', true, 'corr-7');
+    await service.receiveLabResults(BATCH_ID, LAB_TEST_ID, true, 'corr-7');
     const final = await certRepo.findOneBy({ id });
     expect(final!.currentStatus).toBe(CertificationStatus.LAB_RESULTS_RECEIVED);
 
@@ -232,55 +261,50 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
 
   it('isEventProcessed returns true after a correlationId is recorded', async () => {
     const cert = certRepo.create({
-      cooperativeId: 'coop-uuid',
+      cooperativeId: COOP_ID,
       cooperativeName: 'Test Coop',
-      batchId: 'batch-uuid-2',
+      batchId: BATCH_ID_2,
       productTypeCode: 'ARGAN_OIL',
       certificationType: 'IGP',
       regionCode: 'SFI',
-      requestedBy: 'user-uuid',
+      requestedBy: USER_ID,
       requestedAt: new Date(),
       currentStatus: CertificationStatus.DRAFT,
-      createdBy: 'user-uuid',
+      createdBy: USER_ID,
     });
     const saved = await certRepo.save(cert);
 
     expect(await service.isEventProcessed('unique-corr-id')).toBe(false);
-    await service.submitRequest(saved.id, 'user-uuid', 'cooperative-admin', 'unique-corr-id');
+    await service.submitRequest(saved.id, USER_ID, 'cooperative-admin', 'unique-corr-id');
     expect(await service.isEventProcessed('unique-corr-id')).toBe(true);
   }, 30_000);
 
   it('walks LAB_RESULTS_RECEIVED → UNDER_REVIEW → GRANTED → RENEWED + new DRAFT (steps 8, 9, 12)', async () => {
     // Seed at LAB_RESULTS_RECEIVED to bypass steps 1–7
     const cert = certRepo.create({
-      cooperativeId: 'coop-uuid',
+      cooperativeId: COOP_ID,
       cooperativeName: 'Test Cooperative',
-      batchId: 'batch-uuid-steps8to12',
+      batchId: BATCH_ID_STEPS8,
       productTypeCode: 'ARGAN_OIL',
       certificationType: 'IGP',
       regionCode: 'SFI',
-      requestedBy: 'user-uuid',
+      requestedBy: USER_ID,
       requestedAt: new Date(),
       currentStatus: CertificationStatus.LAB_RESULTS_RECEIVED,
-      createdBy: 'user-uuid',
+      createdBy: USER_ID,
     });
     const saved = await certRepo.save(cert);
     const id = saved.id;
 
     // Step 8: LAB_RESULTS_RECEIVED → UNDER_REVIEW
-    let updated = await service.startFinalReview(
-      id,
-      'reviewer-uuid',
-      'certification-body',
-      'corr-8',
-    );
+    let updated = await service.startFinalReview(id, USER_ID, 'certification-body', 'corr-8');
     expect(updated.currentStatus).toBe(CertificationStatus.UNDER_REVIEW);
 
     // Step 9: UNDER_REVIEW → GRANTED
     updated = await service.grantCertification(
       id,
       { validFrom: '2026-05-01', validUntil: '2027-05-01' },
-      'reviewer-uuid',
+      USER_ID,
       'certification-body',
       'corr-9',
     );
@@ -288,12 +312,7 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
     expect(updated.certificationNumber).toMatch(/^TERROIR-IGP-SFI-\d{4}-\d{3}$/);
 
     // Step 12: GRANTED → RENEWED (old cert) + new DRAFT
-    const newCert = await service.renewCertification(
-      id,
-      'user-uuid',
-      'cooperative-admin',
-      'corr-12',
-    );
+    const newCert = await service.renewCertification(id, USER_ID, 'cooperative-admin', 'corr-12');
     expect(newCert.currentStatus).toBe(CertificationStatus.DRAFT);
     expect(newCert.renewedFromId).toBe(id);
 
@@ -313,23 +332,23 @@ describe('CertificationService — Chain Steps 1–12 (integration)', () => {
 
   it('walks UNDER_REVIEW → DENIED and appends DECISION_DENIED event (step 10)', async () => {
     const cert = certRepo.create({
-      cooperativeId: 'coop-uuid',
+      cooperativeId: COOP_ID,
       cooperativeName: 'Test Cooperative',
-      batchId: 'batch-uuid-deny',
+      batchId: BATCH_ID_DENY,
       productTypeCode: 'ARGAN_OIL',
       certificationType: 'IGP',
       regionCode: 'SFI',
-      requestedBy: 'user-uuid',
+      requestedBy: USER_ID,
       requestedAt: new Date(),
       currentStatus: CertificationStatus.UNDER_REVIEW,
-      createdBy: 'user-uuid',
+      createdBy: USER_ID,
     });
     const saved = await certRepo.save(cert);
 
     const denied = await service.denyCertification(
       saved.id,
       { reason: 'Lab results below threshold' },
-      'reviewer-uuid',
+      USER_ID,
       'certification-body',
       'corr-10',
     );

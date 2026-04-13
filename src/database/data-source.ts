@@ -1,6 +1,9 @@
 import 'reflect-metadata';
+import * as dotenv from 'dotenv';
 import { DataSource } from 'typeorm';
 import * as path from 'path';
+
+dotenv.config();
 
 /**
  * TypeORM CLI data source.

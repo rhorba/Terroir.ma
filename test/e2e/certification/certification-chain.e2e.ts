@@ -19,6 +19,12 @@ import {
   CertificationStatus,
 } from '../../../src/modules/certification/entities/certification.entity';
 
+// Fixed valid UUIDs for test data (uuid-typed columns reject plain strings)
+const E2E_COOP_ID = 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b01';
+const E2E_BATCH_ID = 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b02';
+const E2E_USER_ID = 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b03';
+const E2E_INSP_ID = 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380b04';
+
 describe('Certification Chain E2E (steps 1–12)', () => {
   let app: INestApplication;
   let cooperativeAdminToken: string;
@@ -43,16 +49,16 @@ describe('Certification Chain E2E (steps 1–12)', () => {
   async function seedDraftCertification(): Promise<string> {
     const repo = dataSource.getRepository(Certification);
     const cert = repo.create({
-      cooperativeId: 'coop-chain-uuid',
+      cooperativeId: E2E_COOP_ID,
       cooperativeName: 'Chain Test Coop',
-      batchId: 'batch-chain-uuid',
+      batchId: E2E_BATCH_ID,
       productTypeCode: 'ARGAN_OIL',
       certificationType: 'IGP',
       regionCode: 'SFI',
-      requestedBy: 'user-uuid',
+      requestedBy: E2E_USER_ID,
       requestedAt: new Date(),
       currentStatus: CertificationStatus.DRAFT,
-      createdBy: 'user-uuid',
+      createdBy: E2E_USER_ID,
     });
     const saved = await repo.save(cert);
     return saved.id;
@@ -88,7 +94,7 @@ describe('Certification Chain E2E (steps 1–12)', () => {
         .set(bearerHeader(certBodyToken))
         .send({
           certificationId: certId,
-          inspectorId: 'insp-uuid-chain',
+          inspectorId: E2E_INSP_ID,
           scheduledDate: '2026-06-01',
           farmIds: [],
         })
