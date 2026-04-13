@@ -24,6 +24,7 @@ import {
   CertificationStats,
   CooperativeComplianceRow,
   OnssaCertRow,
+  CertificationAnalytics,
 } from '../interfaces/certification-stats.interface';
 import { RequestCertificationDto } from '../dto/request-certification.dto';
 import { GrantCertificationDto } from '../dto/grant-certification.dto';
@@ -150,6 +151,23 @@ export class CertificationController {
       'Content-Disposition': `attachment; filename="certifications-export-${date}.json"`,
     });
     return this.certificationService.exportForMapmdref(query);
+  }
+
+  /**
+   * US-082: Certification analytics — counts grouped by region and product type.
+   * Registered before GET /:id (literal-before-param rule).
+   */
+  @Get('analytics')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'certification-body')
+  @ApiOperation({ summary: 'US-082: Certification analytics by region and product type' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'YYYY-MM-DD' })
+  async getAnalytics(
+    @Query() query: ReportQueryDto,
+  ): Promise<{ success: boolean; data: CertificationAnalytics }> {
+    const data = await this.certificationService.getAnalytics(query.from, query.to);
+    return { success: true, data };
   }
 
   /**

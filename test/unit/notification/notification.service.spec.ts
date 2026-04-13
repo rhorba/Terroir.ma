@@ -228,7 +228,7 @@ describe('NotificationService', () => {
     });
   });
 
-  describe('getStats() — US-076', () => {
+  describe('getStats() — US-076 + US-088', () => {
     const mockQb = {
       select: jest.fn().mockReturnThis(),
       addSelect: jest.fn().mockReturnThis(),
@@ -250,6 +250,7 @@ describe('NotificationService', () => {
       const cached = {
         total: 10,
         byStatus: { sent: 8, failed: 2, pending: 0 },
+        byChannel: [],
         from: null,
         to: null,
         generatedAt: '2026-01-01T00:00:00.000Z',
@@ -266,11 +267,14 @@ describe('NotificationService', () => {
     it('queries DB, caches result, and returns stats on cache miss', async () => {
       cacheManager.get = jest.fn().mockResolvedValue(null);
       cacheManager.set = jest.fn();
-      mockQb.getRawMany.mockResolvedValue([
-        { status: 'sent', count: '5' },
-        { status: 'failed', count: '3' },
-        { status: 'pending', count: '2' },
-      ]);
+      // First getRawMany call = status query, second = channel query
+      mockQb.getRawMany
+        .mockResolvedValueOnce([
+          { status: 'sent', count: '5' },
+          { status: 'failed', count: '3' },
+          { status: 'pending', count: '2' },
+        ])
+        .mockResolvedValueOnce([]);
 
       const result = await service.getStats();
 
@@ -293,6 +297,39 @@ describe('NotificationService', () => {
       expect(mockQb.andWhere).toHaveBeenCalledWith('n.created_at >= :from', { from: '2026-01-01' });
       expect(mockQb.andWhere).toHaveBeenCalledWith('n.created_at <= :to', { to: '2026-03-31' });
       expect(cacheManager.get).toHaveBeenCalledWith('stats:notifications:2026-01-01:2026-03-31');
+    });
+
+    it('US-088: computes deliveryRate per channel correctly', async () => {
+      cacheManager.get = jest.fn().mockResolvedValue(null);
+      cacheManager.set = jest.fn();
+      mockQb.getRawMany
+        .mockResolvedValueOnce([
+          { status: 'sent', count: '40' },
+          { status: 'failed', count: '10' },
+        ])
+        .mockResolvedValueOnce([
+          { channel: 'email', sent: '30', failed: '5' },
+          { channel: 'sms', sent: '10', failed: '5' },
+        ]);
+
+      const result = await service.getStats();
+
+      const emailStats = result.byChannel.find((c) => c.channel === 'email');
+      expect(emailStats?.deliveryRate).toBe(86); // Math.round(30/35*100)
+      const smsStats = result.byChannel.find((c) => c.channel === 'sms');
+      expect(smsStats?.deliveryRate).toBe(67); // Math.round(10/15*100)
+    });
+
+    it('US-088: returns deliveryRate 0 when no sent+failed for a channel', async () => {
+      cacheManager.get = jest.fn().mockResolvedValue(null);
+      cacheManager.set = jest.fn();
+      mockQb.getRawMany
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ channel: 'email', sent: '0', failed: '0' }]);
+
+      const result = await service.getStats();
+
+      expect(result.byChannel[0]?.deliveryRate).toBe(0);
     });
   });
 });

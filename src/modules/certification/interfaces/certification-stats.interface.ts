@@ -43,3 +43,29 @@ export interface OnssaCertRow {
   validFrom: string | null;
   validUntil: string | null;
 }
+
+/** US-082: Analytics breakdown by region. */
+export interface RegionAnalyticsRow {
+  region: string;
+  granted: number;
+  denied: number;
+  revoked: number;
+  total: number;
+}
+
+/** US-082: Analytics breakdown by product type. */
+export interface ProductTypeAnalyticsRow {
+  productType: string;
+  granted: number;
+  denied: number;
+  revoked: number;
+  total: number;
+}
+
+/** US-082: Full analytics response. */
+export interface CertificationAnalytics {
+  period: { from: string | null; to: string | null };
+  byRegion: RegionAnalyticsRow[];
+  byProductType: ProductTypeAnalyticsRow[];
+  generatedAt: string;
+}

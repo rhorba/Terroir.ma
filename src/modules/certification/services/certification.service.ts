@@ -7,6 +7,7 @@ import {
   CertificationStats,
   CooperativeComplianceRow,
   OnssaCertRow,
+  CertificationAnalytics,
 } from '../interfaces/certification-stats.interface';
 import { ExportQueryDto } from '../dto/export-query.dto';
 import { PagedResult } from '../../../common/dto/pagination.dto';
@@ -708,5 +709,81 @@ export class CertificationService {
        ORDER BY granted_at DESC`,
       params,
     );
+  }
+
+  /**
+   * US-082: Returns certification counts grouped by region and by product type.
+   * Supports optional date range filter. Redis-cached for 300s.
+   */
+  async getAnalytics(from?: string, to?: string): Promise<CertificationAnalytics> {
+    const cacheKey = `analytics:certifications:${from ?? 'all'}:${to ?? 'all'}`;
+    const cached = await this.cacheManager.get<CertificationAnalytics>(cacheKey);
+    if (cached) return cached;
+
+    const params: string[] = [];
+    let dateFilter = '';
+    if (from && to) {
+      params.push(from, to);
+      dateFilter = `AND created_at BETWEEN $1::date AND $2::date + INTERVAL '1 day'`;
+    } else if (from) {
+      params.push(from);
+      dateFilter = `AND created_at >= $1::date`;
+    } else if (to) {
+      params.push(to);
+      dateFilter = `AND created_at <= $1::date + INTERVAL '1 day'`;
+    }
+
+    const [regionRows, productRows] = await Promise.all([
+      this.dataSource.query<Array<Record<string, string>>>(
+        `SELECT
+          region_code AS region,
+          COUNT(*) FILTER (WHERE current_status = 'GRANTED') AS granted,
+          COUNT(*) FILTER (WHERE current_status = 'DENIED') AS denied,
+          COUNT(*) FILTER (WHERE current_status = 'REVOKED') AS revoked,
+          COUNT(*) AS total
+        FROM certification.certification
+        WHERE deleted_at IS NULL ${dateFilter}
+        GROUP BY region_code
+        ORDER BY total DESC`,
+        params,
+      ),
+      this.dataSource.query<Array<Record<string, string>>>(
+        `SELECT
+          product_type_code AS product_type,
+          COUNT(*) FILTER (WHERE current_status = 'GRANTED') AS granted,
+          COUNT(*) FILTER (WHERE current_status = 'DENIED') AS denied,
+          COUNT(*) FILTER (WHERE current_status = 'REVOKED') AS revoked,
+          COUNT(*) AS total
+        FROM certification.certification
+        WHERE deleted_at IS NULL ${dateFilter}
+        GROUP BY product_type_code
+        ORDER BY total DESC`,
+        params,
+      ),
+    ]);
+
+    const n = (v: string | undefined) => Number(v ?? 0);
+
+    const result: CertificationAnalytics = {
+      period: { from: from ?? null, to: to ?? null },
+      byRegion: regionRows.map((r) => ({
+        region: r['region'] ?? '',
+        granted: n(r['granted']),
+        denied: n(r['denied']),
+        revoked: n(r['revoked']),
+        total: n(r['total']),
+      })),
+      byProductType: productRows.map((r) => ({
+        productType: r['product_type'] ?? '',
+        granted: n(r['granted']),
+        denied: n(r['denied']),
+        revoked: n(r['revoked']),
+        total: n(r['total']),
+      })),
+      generatedAt: new Date().toISOString(),
+    };
+
+    await this.cacheManager.set(cacheKey, result, 300_000);
+    return result;
   }
 }

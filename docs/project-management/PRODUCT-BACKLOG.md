@@ -46,7 +46,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-014   | As a cooperative administrator, I want to view the complete history of a batch so that I can trace its origin and processing steps                            | High     | Done   | 3      |
 | US-015   | As a cooperative administrator, I want to search products by SDOQ type and region so that I can find relevant records quickly                                 | Medium   | Done   | 3      |
 | US-016   | As a super-admin, I want to manage the list of recognized SDOQ product types so that only valid designations are registered                                   | Medium   | Done   | 5      |
-| US-017   | As a cooperative administrator, I want to upload supporting documents for a product registration so that SDOQ compliance can be verified                      | Medium   | Todo   | 3      |
+| US-017   | As a cooperative administrator, I want to upload supporting documents for a product registration so that SDOQ compliance can be verified                      | Medium   | Done   | 3      |
 | US-018   | As an inspector, I want to view a product's SDOQ specification so that I can verify compliance during inspection                                              | High     | Done   | 2      |
 | US-019   | As a cooperative administrator, I want to record post-harvest processing steps for a batch so that the full chain of custody is documented                    | Medium   | Done   | 5      |
 | US-020   | As a super-admin, I want to export product registry data so that regulatory reporting is possible                                                             | Low      | Todo   | 3      |
@@ -66,11 +66,11 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-023   | As a cooperative administrator, I want to receive a notification when lab results are available so that I can review them promptly | High     | Done   | 2      |
 | US-024   | As a cooperative administrator, I want to be notified when a batch fails lab testing so that I can take corrective action          | High     | Done   | 3      |
 | US-025   | As a super-admin, I want to configure test parameters by product type so that lab requirements reflect SDOQ standards              | Medium   | Done   | 1      |
-| US-026   | As a lab technician, I want to upload a PDF lab report alongside structured results so that the full report is archived            | Medium   | Todo   | 3      |
+| US-026   | As a lab technician, I want to upload a PDF lab report alongside structured results so that the full report is archived            | Medium   | Done   | 3      |
 | US-027   | As a super-admin, I want to integrate with an ONSSA lab information system so that results are submitted electronically (Phase 2)  | Low      | Todo   | 13     |
 | US-028   | As a cooperative administrator, I want to view the lab test history for all my batches so that I can track quality trends          | Medium   | Done   | 3      |
 | US-029   | As an inspector, I want to view lab test results for a batch during inspection so that I have full context                         | High     | Done   | 2      |
-| US-030   | As a super-admin, I want to flag a lab as accredited so that only authorized labs can submit results                               | Medium   | Todo   | 3      |
+| US-030   | As a super-admin, I want to flag a lab as accredited so that only authorized labs can submit results                               | Medium   | Done   | 3      |
 
 **Epic 3 Total Points:** 47
 
@@ -141,7 +141,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-065   | As a customs agent, I want to reject an export documentation request with reasons so that the cooperative can resolve issues            | Medium   | Done   | 3      |
 | US-066   | As a cooperative administrator, I want to view the status of all my export documentation requests so that I can manage export logistics | Medium   | Done   | 3      |
 | US-067   | As a super-admin, I want to view all export clearances so that I can report export volume to MAPMDREF                                   | Medium   | Done   | 3      |
-| US-068   | As a customs agent, I want to generate a PDF export certificate so that the cooperative has documentation for the shipment              | Medium   | Todo   | 5      |
+| US-068   | As a customs agent, I want to generate a PDF export certificate so that the cooperative has documentation for the shipment              | Medium   | Done   | 5      |
 | US-069   | As a cooperative administrator, I want to view HS code assignments for my exports so that I can verify customs classification           | Low      | Todo   | 2      |
 | US-070   | As a super-admin, I want to export a report of all export clearances by destination country so that trade statistics are available      | Low      | Todo   | 3      |
 
@@ -176,15 +176,15 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 | Story ID | User Story                                                                                                                                       | Priority | Status | Points |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------ |
-| US-081   | As a super-admin, I want a dashboard showing key platform metrics so that I have an operational overview                                         | Medium   | Todo   | 8      |
-| US-082   | As a super-admin, I want certification analytics broken down by region and product type so that I can identify geographic trends                 | Medium   | Todo   | 8      |
-| US-083   | As a super-admin, I want a cooperative compliance report so that I can identify cooperatives with outstanding obligations                        | Medium   | Todo   | 5      |
+| US-081   | As a super-admin, I want a dashboard showing key platform metrics so that I have an operational overview                                         | Medium   | Done   | 8      |
+| US-082   | As a super-admin, I want certification analytics broken down by region and product type so that I can identify geographic trends                 | Medium   | Done   | 8      |
+| US-083   | As a super-admin, I want a cooperative compliance report so that I can identify cooperatives with outstanding obligations                        | Medium   | Done   | 5      |
 | US-084   | As a MAPMDREF representative, I want to export periodic certification reports so that regulatory obligations are met                             | High     | Done   | 5      |
-| US-085   | As a super-admin, I want to view user activity logs so that platform usage is auditable                                                          | Medium   | Todo   | 5      |
+| US-085   | As a super-admin, I want to view user activity logs so that platform usage is auditable                                                          | Medium   | Done   | 5      |
 | US-086   | As a super-admin, I want to manage user roles and permissions so that access control is maintained                                               | High     | Done   | 5      |
 | US-087   | As a super-admin, I want to view Kafka DLQ message counts so that I can detect processing failures                                               | Medium   | Done   | 3      |
-| US-088   | As a super-admin, I want to view notification delivery rates so that communication effectiveness is monitored                                    | Medium   | Todo   | 3      |
-| US-089   | As a super-admin, I want to generate a report of active certifications so that ONSSA can verify compliance                                       | Medium   | Todo   | 3      |
+| US-088   | As a super-admin, I want to view notification delivery rates so that communication effectiveness is monitored                                    | Medium   | Done   | 3      |
+| US-089   | As a super-admin, I want to generate a report of active certifications so that ONSSA can verify compliance                                       | Medium   | Done   | 3      |
 | US-090   | As a super-admin, I want to configure system settings (campaign year, product types, HS codes) so that the platform reflects current regulations | High     | Todo   | 8      |
 
 **Epic 8 Total Points:** 53
@@ -193,14 +193,14 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 ## Backlog Summary
 
-| Epic                           | Stories | Total Points | Done   | In Progress | Todo   |
-| ------------------------------ | ------- | ------------ | ------ | ----------- | ------ |
-| Epic 1: Cooperative Onboarding | 10      | 36           | 10     | 0           | 0      |
-| Epic 2: Product Registry       | 10      | 42           | 8      | 0           | 2      |
-| Epic 3: Lab Testing            | 10      | 47           | 7      | 0           | 3      |
-| Epic 4: Certification Workflow | 20      | 80           | 19     | 0           | 1      |
-| Epic 5: QR Code & Verification | 10      | 51           | 8      | 0           | 2      |
-| Epic 6: Export Documentation   | 10      | 34           | 7      | 0           | 3      |
-| Epic 7: Notifications          | 10      | 46           | 9      | 0           | 1      |
-| Epic 8: Admin & Reporting      | 10      | 53           | 3      | 0           | 7      |
-| **Total**                      | **90**  | **389**      | **71** | **0**       | **19** |
+| Epic                           | Stories | Total Points | Done   | In Progress | Todo  |
+| ------------------------------ | ------- | ------------ | ------ | ----------- | ----- |
+| Epic 1: Cooperative Onboarding | 10      | 36           | 10     | 0           | 0     |
+| Epic 2: Product Registry       | 10      | 42           | 9      | 0           | 1     |
+| Epic 3: Lab Testing            | 10      | 47           | 9      | 0           | 1     |
+| Epic 4: Certification Workflow | 20      | 80           | 19     | 0           | 1     |
+| Epic 5: QR Code & Verification | 10      | 51           | 8      | 0           | 2     |
+| Epic 6: Export Documentation   | 10      | 34           | 8      | 0           | 2     |
+| Epic 7: Notifications          | 10      | 46           | 9      | 0           | 1     |
+| Epic 8: Admin & Reporting      | 10      | 53           | 8      | 0           | 2     |
+| **Total**                      | **90**  | **389**      | **85** | **0**       | **9** |

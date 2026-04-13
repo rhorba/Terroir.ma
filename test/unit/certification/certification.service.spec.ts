@@ -660,4 +660,49 @@ describe('CertificationService', () => {
       expect(params).toEqual(['2025-01-01', '2025-12-31']);
     });
   });
+
+  // ─── getAnalytics() — US-082 ──────────────────────────────────────────────
+
+  describe('getAnalytics()', () => {
+    it('returns cached analytics when available', async () => {
+      const cached = {
+        period: { from: null, to: null },
+        byRegion: [],
+        byProductType: [],
+        generatedAt: '2026-04-13T00:00:00.000Z',
+      };
+      cacheManager.get.mockResolvedValue(cached);
+
+      const result = await service.getAnalytics();
+
+      expect(result).toBe(cached);
+      expect(dataSource.query).not.toHaveBeenCalled();
+    });
+
+    it('queries DB and maps byRegion and byProductType correctly', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      cacheManager.set.mockResolvedValue(undefined);
+      dataSource.query
+        .mockResolvedValueOnce([
+          { region: 'SOUSS-MASSA', granted: '5', denied: '1', revoked: '0', total: '6' },
+        ])
+        .mockResolvedValueOnce([
+          { product_type: 'ARGAN_OIL', granted: '5', denied: '1', revoked: '0', total: '6' },
+        ]);
+
+      const result = await service.getAnalytics();
+
+      expect(result.byRegion).toHaveLength(1);
+      expect(result.byRegion[0]!.region).toBe('SOUSS-MASSA');
+      expect(result.byRegion[0]!.granted).toBe(5);
+      expect(result.byRegion[0]!.total).toBe(6);
+      expect(result.byProductType[0]!.productType).toBe('ARGAN_OIL');
+      expect(result.period).toEqual({ from: null, to: null });
+      expect(cacheManager.set).toHaveBeenCalledWith(
+        'analytics:certifications:all:all',
+        result,
+        300_000,
+      );
+    });
+  });
 });

@@ -58,7 +58,8 @@ export class NotificationService {
   }
 
   /**
-   * US-076 — Returns notification delivery counts grouped by status.
+   * US-076 + US-088 — Returns notification delivery counts grouped by status and channel.
+   * US-088 adds byChannel with deliveryRate % per channel.
    * Redis-cached for 300s. Key: stats:notifications:{from|all}:{to|all}
    */
   async getStats(from?: string, to?: string): Promise<NotificationStats> {
@@ -66,20 +67,31 @@ export class NotificationService {
     const cached = await this.cacheManager.get<NotificationStats>(cacheKey);
     if (cached) return cached;
 
-    const qb = this.notificationRepo
+    // Query 1: by status
+    const statusQb = this.notificationRepo
       .createQueryBuilder('n')
       .select('n.status', 'status')
       .addSelect('COUNT(*)', 'count')
       .groupBy('n.status');
+    if (from) statusQb.andWhere('n.created_at >= :from', { from });
+    if (to) statusQb.andWhere('n.created_at <= :to', { to });
+    const statusRows: Array<{ status: string; count: string }> = await statusQb.getRawMany();
 
-    if (from) qb.andWhere('n.created_at >= :from', { from });
-    if (to) qb.andWhere('n.created_at <= :to', { to });
-
-    const rows: Array<{ status: string; count: string }> = await qb.getRawMany();
+    // Query 2: by channel — sent and failed counts per channel for delivery rate
+    const channelQb = this.notificationRepo
+      .createQueryBuilder('n')
+      .select('n.channel', 'channel')
+      .addSelect("COUNT(*) FILTER (WHERE n.status = 'sent')", 'sent')
+      .addSelect("COUNT(*) FILTER (WHERE n.status = 'failed')", 'failed')
+      .groupBy('n.channel');
+    if (from) channelQb.andWhere('n.created_at >= :from', { from });
+    if (to) channelQb.andWhere('n.created_at <= :to', { to });
+    const channelRows: Array<{ channel: string; sent: string; failed: string }> =
+      await channelQb.getRawMany();
 
     const byStatus = { sent: 0, failed: 0, pending: 0 };
     let total = 0;
-    for (const row of rows) {
+    for (const row of statusRows) {
       const count = Number(row.count);
       total += count;
       if (row.status === 'sent') byStatus.sent = count;
@@ -87,9 +99,17 @@ export class NotificationService {
       else if (row.status === 'pending') byStatus.pending = count;
     }
 
+    const byChannel = channelRows.map((row) => {
+      const sent = Number(row.sent);
+      const failed = Number(row.failed);
+      const deliveryRate = sent + failed === 0 ? 0 : Math.round((sent / (sent + failed)) * 100);
+      return { channel: row.channel as 'email' | 'sms', sent, failed, deliveryRate };
+    });
+
     const result: NotificationStats = {
       total,
       byStatus,
+      byChannel,
       from: from ?? null,
       to: to ?? null,
       generatedAt: new Date().toISOString(),

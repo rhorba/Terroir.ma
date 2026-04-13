@@ -1,18 +1,18 @@
 {
   "timestamp": "2026-04-13T23:59:00Z",
-  "session_id": "session-2026-04-13-sprint9-close",
+  "session_id": "session-2026-04-13-sprint10-close",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": 9,
-    "sprint_name": "File Uploads, Export PDF, Compliance Reports",
+    "sprint_number": 10,
+    "sprint_name": "Admin Dashboard, Analytics, Audit Logs, Delivery Rates",
     "start_date": "2026-04-13",
     "end_date": "2026-04-13",
-    "goal": "US-017 product docs upload, US-026 lab report PDF upload, US-030 lab accreditation registry, US-068 PDF export certificate, US-083 cooperative compliance report, US-089 ONSSA active certifications report",
+    "goal": "US-081 admin dashboard counts, US-082 certification analytics by region/product, US-085 HTTP audit interceptor + log viewer, US-088 notification delivery rates",
     "status": "CLOSED",
-    "story_points_planned": 22,
-    "story_points_completed": 22,
+    "story_points_planned": 24,
+    "story_points_completed": 24,
     "velocity_pct": 100,
-    "note": "MinIO (S3-compatible) added as infrastructure. All file uploads use MemoryStorage → MinIO with NestJS StreamableFile proxy for downloads. Lab accreditation is metadata only (no enforcement on lab-test submission — Phase 2). cooperativeName already denormalized on Certification entity — US-083 required zero migration."
+    "note": "AuditInterceptor global APP_INTERCEPTOR — zero per-module work. DashboardService raw SQL via DataSource across all 4 schemas — no cross-module imports. US-088 extends existing stats endpoint. Batches 2+3 merged: DashboardService must be created before AdminController that imports it."
   },
   "active_feature": null,
   "modules_status": {
@@ -38,24 +38,17 @@
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "new_endpoints_sprint9": [
+      "endpoints": [
         "POST /products/:id/documents (cooperative-admin) — multipart upload → MinIO",
-        "GET /products/:id/documents (cooperative-admin, inspector, certification-body, super-admin)",
+        "GET /products/:id/documents",
         "GET /products/:id/documents/:docId/download → StreamableFile",
         "POST /lab-tests/:id/report (lab-technician) — PDF only, 20MB max",
-        "GET /lab-tests/:id/report (lab-technician, cooperative-admin, inspector, certification-body, super-admin) → StreamableFile",
+        "GET /lab-tests/:id/report → StreamableFile",
         "POST /labs (super-admin)",
         "GET /labs (super-admin, certification-body)",
-        "GET /labs/:id (super-admin, certification-body)",
+        "GET /labs/:id",
         "POST /labs/:id/accredit (super-admin)",
         "POST /labs/:id/revoke (super-admin)"
-      ],
-      "new_entities_sprint9": [
-        "ProductDocument (product.product_document — stores MinIO key)",
-        "Lab (product.lab — ONSSA accreditation registry)"
-      ],
-      "entity_changes_sprint9": [
-        "LabTest: +reportS3Key (varchar 500 nullable), +reportFileName (varchar 255 nullable)"
       ]
     },
     "certification": {
@@ -67,17 +60,10 @@
       "cache_ttl_ms": 300000,
       "stats_cache_key_pattern": "stats:certifications:{from|all}:{to|all}",
       "stats_cache_ttl_ms": 300000,
-      "new_endpoints_sprint9": [
-        "GET /export-documents/:id/certificate.pdf (customs-agent, cooperative-admin, super-admin) → StreamableFile",
-        "GET /certifications/compliance-report?from=&to= (super-admin, certification-body)",
-        "GET /certifications/onssa-report?from=&to= (super-admin, certification-body)"
-      ],
-      "new_services_sprint9": [
-        "ExportDocumentPdfService — PDFKit, intra-module join ExportDocument + Certification"
-      ],
-      "pdf_font_assets_needed": [
-        "assets/fonts/Amiri-Regular.ttf (Arabic — https://github.com/alif-type/amiri/releases)",
-        "assets/fonts/DejaVuSans.ttf (Latin/Tifinagh — https://dejavu-fonts.github.io)"
+      "analytics_cache_key_pattern": "analytics:certifications:{from|all}:{to|all}",
+      "analytics_cache_ttl_ms": 300000,
+      "new_endpoints_sprint10": [
+        "GET /certifications/analytics?from=&to= (super-admin, certification-body) — registered before /:id"
       ]
     },
     "notification": {
@@ -86,6 +72,9 @@
       "tests_passing": true,
       "stats_cache_key_pattern": "stats:notifications:{from|all}:{to|all}",
       "stats_cache_ttl_ms": 300000,
+      "sprint10_changes": [
+        "GET /notifications/stats now returns byChannel: [{ channel, sent, failed, deliveryRate }]"
+      ],
       "known_gaps": [
         "notification-template.service.ts lines 45-59 (seedFromFiles loop body — requires live filesystem fixtures)",
         "notification.service.ts lines 78-79, 128-129 (fs.existsSync/readFileSync file fallback — requires .hbs file on disk)"
@@ -95,8 +84,18 @@
       "user_controller": true,
       "admin_controller": true,
       "minio_service": true,
-      "new_services_sprint9": [
-        "MinioService — @aws-sdk/client-s3, S3Client wrapper, onModuleInit bucket ensure"
+      "dashboard_service": true,
+      "audit_log_service": true,
+      "audit_interceptor": true,
+      "new_in_sprint10": [
+        "AuditLog entity (src/common/entities/audit-log.entity.ts) — schema: common, append-only",
+        "AuditLogService (src/common/services/audit-log.service.ts) — record() fire-and-forget, findAll() paginated",
+        "DashboardService (src/common/services/dashboard.service.ts) — raw SQL × 5 schemas, Redis 300s",
+        "AuditInterceptor (src/common/interceptors/audit.interceptor.ts) — global APP_INTERCEPTOR, skips unauthenticated",
+        "AuditLogQueryDto (src/common/dto/audit-log-query.dto.ts)",
+        "DashboardMetrics interface (src/common/interfaces/dashboard.interface.ts)",
+        "GET /admin/dashboard (super-admin) — counts only, Redis 300s",
+        "GET /admin/audit-logs (super-admin) — paginated, userId/from/to filters"
       ]
     }
   },
@@ -121,6 +120,7 @@
     "event_ledger": true,
     "pdf_certificate": true,
     "certification_stats": true,
+    "certification_analytics": true,
     "inspector_assignment_event": true,
     "mapmdref_export": true,
     "export_pdf_certificate": true,
@@ -128,8 +128,8 @@
     "onssa_report": true
   },
   "migration_status": {
-    "migration_count": 13,
-    "last_migration": "1700000000013-AddLab",
+    "migration_count": 14,
+    "last_migration": "1700000000014-AddAuditLog",
     "schema_drift": "RESOLVED",
     "tm3_status": "DONE",
     "pending_run": true,
@@ -138,7 +138,8 @@
       "1700000000010-AddProcessingStep — CREATE TABLE product.processing_step",
       "1700000000011-AddProductDocument — CREATE TABLE product.product_document",
       "1700000000012-AddLabTestReportKey — ALTER TABLE product.lab_test ADD report_s3_key, report_file_name",
-      "1700000000013-AddLab — CREATE TABLE product.lab"
+      "1700000000013-AddLab — CREATE TABLE product.lab",
+      "1700000000014-AddAuditLog — CREATE SCHEMA common + CREATE TABLE common.audit_log + 2 indexes"
     ],
     "font_assets_needed": [
       "assets/fonts/Amiri-Regular.ttf",
@@ -147,9 +148,9 @@
   },
   "test_status": {
     "unit": {
-      "suites": 33,
-      "total": 342,
-      "passing": 342,
+      "suites": 35,
+      "total": 357,
+      "passing": 357,
       "coverage_note": "Known gap: seedFromFiles() + fs.existsSync/readFileSync paths require live .hbs fixtures — not exercisable in unit tests"
     },
     "integration": {
@@ -163,47 +164,49 @@
   },
   "blockers": [],
   "next_actions": [
-    "Sprint 9 CLOSED — 22/22 SP (100%), 342 unit tests, 0 failures",
+    "Sprint 10 CLOSED — 24/24 SP (100%), 357 unit tests, 0 failures",
     "Migrations pending (run after docker compose up):",
     "  npm run migration:run",
-    "  Migrations 009-013 must be applied (009+010 from Sprint 8, 011-013 from Sprint 9)",
+    "  Migrations 009-014 must be applied",
     "Font files required before PDF endpoints work at runtime:",
     "  assets/fonts/Amiri-Regular.ttf — https://github.com/alif-type/amiri/releases (OFL)",
     "  assets/fonts/DejaVuSans.ttf    — https://dejavu-fonts.github.io (free)",
-    "Sprint 10 planning — recommended scope: 21-25 SP",
-    "Sprint 10 top candidates (all Todo, High/Medium priority):",
-    "  US-090: System settings config — 8 SP (High) — campaign year, HS codes config",
-    "  US-081: Super-admin dashboard metrics — 8 SP (Medium)",
-    "  US-082: Certification analytics by region/product — 8 SP (Medium)",
-    "  US-085: User activity logs — 5 SP (Medium)",
-    "  US-088: Notification delivery rates — 3 SP (Medium)",
-    "  Option A: US-090 + US-081 + US-085 = 21 SP",
-    "  Option B: US-090 + US-081 + US-088 = 19 SP + filler",
-    "  Option C: US-081 + US-082 + US-085 + US-088 = 24 SP (no US-090)"
+    "Sprint 11 planning — recommended scope: 19–24 SP",
+    "Sprint 11 top candidates:",
+    "  US-090: System settings config — 8 SP (High) — LAST high-priority story — anchor for Sprint 11",
+    "  US-058: Track QR scan events — 5 SP (Low) — 4th deferral",
+    "  US-077: Notification preferences — 3 SP (Low)",
+    "  US-020: Export product registry data — 3 SP (Low)",
+    "  US-069: View HS code assignments — 2 SP (Low)",
+    "  US-070: Export clearances by destination — 3 SP (Low)",
+    "  US-050: Export certification compliance report — 5 SP (Low)",
+    "  US-053: QR offline verification — 13 SP (Medium) — large, consider splitting",
+    "  US-027: ONSSA lab integration — 13 SP (Low) — Phase 2",
+    "Option A (conservative): US-090 + US-069 + US-070 + US-077 + US-020 = 19 SP",
+    "Option B (full velocity): US-090 + US-058 + US-077 + US-020 + US-050 = 24 SP"
   ],
   "decisions_made": [
+    "AuditInterceptor as global APP_INTERCEPTOR — single registration covers all routes, zero per-module work",
+    "AuditInterceptor skips unauthenticated requests (no req.user) — public endpoints not logged",
+    "AuditLog.record() fire-and-forget — void + silent catch — never blocks response path",
+    "DashboardService raw SQL via DataSource — no cross-module service imports; queries 4 schemas directly",
+    "AuditLog no updatedAt — append-only immutability mirrors CertificationEvent pattern",
+    "US-088 extends stats (not new endpoint) — 3 SP story; deliveryRate is arithmetic on existing data",
+    "getAnalytics() positional params ($1, $2) — consistent with onssaReport() pattern",
+    "getAnalytics() parallel Promise.all — two independent GROUP BY queries, no dependency",
+    "Batches 2+3 merged during execution — DashboardService must be created before AdminController that imports it",
+    "VELOCITY-TRACKER.md updated with Sprints 6–10 — was 5 sprints stale",
     "MinIO chosen over local disk: files survive container restarts, Phase 2 cloud S3 swap = one config change",
     "NestJS StreamableFile proxy chosen over presigned URLs: consistent with existing PDF pattern, MinIO stays internal",
     "US-030 lab accreditation: YAGNI metadata only — no enforcement on POST /lab-tests in v1. Phase 2 enforcement.",
-    "US-083 cooperative compliance: cooperativeName already denormalized on Certification entity (confirmed line 72) — zero migration needed",
+    "US-083 cooperative compliance: cooperativeName already denormalized on Certification entity — zero migration needed",
     "ExportDocumentPdfService: intra-module JOIN ExportDocument + Certification allowed (same certification schema, not cross-module)",
     "File upload MIME validation: US-026 lab report enforces application/pdf only via BadRequestException",
     "Multer MemoryStorage: file buffer in RAM → MinIO. 10MB limit for product docs, 20MB for lab reports.",
     "MinioService.onModuleInit(): auto-creates bucket if it doesn't exist — zero manual setup required",
     "MinioService registered in both AppModule (global) AND ProductModule (local injection for services that need it)",
-    "Route ordering: GET /certifications/compliance-report + /onssa-report registered before GET /:id",
-    "Lab entity: no laboratorytId FK on LabTest to Lab in v1 — accreditation is reference data only",
-    "US-018 + US-029: ProductController.findOne() and LabTestController.findOne() have JwtAuthGuard only — any authenticated user including inspector already has access. No code change needed, only traceability tests added.",
-    "US-025: labTestParameters already inherited by UpdateProductTypeDto via PartialType — zero code change to endpoint. validityDays added as the only new field in the DTO.",
-    "US-019 data model: append-only ProcessingStep entity (no updatedAt) — mirrors CertificationEvent immutability pattern",
-    "US-019 Kafka event: product.batch.processing_step_added — topic follows module.entity.action convention",
-    "US-045 enforcement: validityDays stored on ProductType as reference data only. No cross-module enforcement in v1 — callers use it to pre-fill grant form (YAGNI — avoid cross-module lookup from certification to product module)",
-    "US-084 format: JSON array (not CSV/PDF) — MAPMDREF can consume via Power Query. Content-Disposition: attachment header so browser downloads the file. Capped at 10,000 rows.",
-    "US-087 implementation: native fetch to Redpanda Admin HTTP API (http://redpanda:9644). No @nestjs/axios needed. Gracefully returns [] if Admin API unreachable — does not fail the request.",
-    "REDPANDA_ADMIN_URL config key: read from ConfigService, default http://redpanda:9644",
-    "Route ordering: GET /certifications/export registered before GET /certifications/:id (confirmed literal-before-param rule applies here too)",
-    "Route ordering: GET /lab-tests registered before GET /lab-tests/:id",
-    "Session state story IDs were wrong: US-034/US-037/US-040 listed as Sprint 8 candidates but were already Done with different descriptions. Corrected during brainstorm by reading actual PRODUCT-BACKLOG.md.",
+    "Route ordering: GET /certifications/compliance-report + /onssa-report + /analytics registered before GET /:id",
+    "Lab entity: no laboratoryId FK on LabTest to Lab in v1 — accreditation is reference data only",
     "US-086 scoped to read-only (YAGNI): GET /users/me + GET /users/me/roles from JWT claims only — no Keycloak Admin API",
     "US-010 soft deactivation: status = 'suspended' on Cooperative entity, Kafka event published",
     "US-016 soft deactivation: isActive = false on ProductType, ConflictException if already inactive",
@@ -242,56 +245,49 @@
     "sprint_7": { "planned": 20, "completed": 20, "pct": 100, "note": "TM-3 finally done — schema drift fixed" },
     "sprint_8": { "planned": 24, "completed": 24, "pct": 100, "note": "US-018/US-029 free (no role restriction existed). US-025 1 SP (PartialType already covered it)." },
     "sprint_9": { "planned": 22, "completed": 22, "pct": 100, "note": "MinIO infrastructure added. File uploads via MemoryStorage + MinIO. Lab accreditation YAGNI metadata." },
-    "rolling_avg_sp2_sp9": 22.6
+    "sprint_10": { "planned": 24, "completed": 24, "pct": 100, "note": "AuditInterceptor global APP_INTERCEPTOR. DashboardService raw SQL. US-088 extends stats. Batches 2+3 merged." },
+    "rolling_avg_sp2_sp10": 22.8
   },
   "backlog_status": {
     "total_stories": 90,
-    "done_stories": 77,
-    "todo_stories": 13,
+    "done_stories": 85,
+    "todo_stories": 9,
     "total_sp": 389,
-    "done_sp_approx": 305,
-    "remaining_sp_approx": 84,
-    "sprints_to_completion_at_22sp": 3.8,
-    "note": "US-017, US-026, US-030, US-068, US-083, US-089 marked Done this sprint"
+    "done_sp_approx": 329,
+    "remaining_sp_approx": 60,
+    "sprints_to_completion_at_22sp": 2.7,
+    "note": "US-081, US-082, US-085, US-088 marked Done this sprint. US-027 and US-053 are 13 SP each — may be split or deferred."
   },
   "files_created_this_session": [
-    "docs/plans/2026-04-13-sprint-9/design.md",
-    "docs/plans/2026-04-13-sprint-9/plan.md",
-    "docs/plans/2026-04-13-sprint-9/progress.md",
-    "src/config/minio.config.ts",
-    "src/common/services/minio.service.ts",
-    "src/modules/product/entities/lab.entity.ts",
-    "src/modules/product/entities/product-document.entity.ts",
-    "src/modules/product/dto/create-lab.dto.ts",
-    "src/modules/product/services/lab.service.ts",
-    "src/modules/product/services/product-document.service.ts",
-    "src/modules/product/controllers/lab.controller.ts",
-    "src/modules/product/controllers/product-document.controller.ts",
-    "src/modules/certification/services/export-document-pdf.service.ts",
-    "src/modules/certification/dto/report-query.dto.ts",
-    "src/database/migrations/1700000000011-AddProductDocument.ts",
-    "src/database/migrations/1700000000012-AddLabTestReportKey.ts",
-    "src/database/migrations/1700000000013-AddLab.ts",
-    "test/unit/common/minio.service.spec.ts",
-    "test/unit/product/lab.service.spec.ts",
-    "test/unit/product/product-document.service.spec.ts",
-    "test/unit/certification/export-document-pdf.service.spec.ts"
+    "docs/plans/2026-04-13-sprint-10/design.md",
+    "docs/plans/2026-04-13-sprint-10/plan.md",
+    "docs/plans/2026-04-13-sprint-10/progress.md",
+    "src/common/entities/audit-log.entity.ts",
+    "src/common/dto/audit-log-query.dto.ts",
+    "src/common/services/audit-log.service.ts",
+    "src/common/services/dashboard.service.ts",
+    "src/common/interceptors/audit.interceptor.ts",
+    "src/common/interfaces/dashboard.interface.ts",
+    "src/database/migrations/1700000000014-AddAuditLog.ts",
+    "test/unit/common/audit-log.service.spec.ts",
+    "test/unit/common/dashboard.service.spec.ts",
+    ".sessions/sprint-logs/sprint-10.md",
+    ".sessions/sprint-logs/sprint-10-retro.md"
   ],
   "files_modified_this_session": [
-    "infrastructure/docker/docker-compose.yml",
-    ".env.example",
-    "src/config/index.ts",
+    "src/common/controllers/admin.controller.ts",
     "src/app.module.ts",
-    "src/modules/product/entities/lab-test.entity.ts",
-    "src/modules/product/services/lab-test.service.ts",
-    "src/modules/product/controllers/lab-test.controller.ts",
-    "src/modules/product/product.module.ts",
+    "src/modules/certification/interfaces/certification-stats.interface.ts",
     "src/modules/certification/services/certification.service.ts",
     "src/modules/certification/controllers/certification.controller.ts",
-    "src/modules/certification/controllers/export-document.controller.ts",
-    "src/modules/certification/certification.module.ts",
-    "src/modules/certification/interfaces/certification-stats.interface.ts",
-    "test/unit/product/lab-test.service.spec.ts",
-    "test/unit/certification/certification.service.spec.ts"
+    "src/modules/notification/interfaces/notification-stats.interface.ts",
+    "src/modules/notification/services/notification.service.ts",
+    "test/unit/common/admin.controller.spec.ts",
+    "test/unit/certification/certification.service.spec.ts",
+    "test/unit/notification/notification.service.spec.ts",
+    "docs/project-management/PRODUCT-BACKLOG.md",
+    "docs/project-management/VELOCITY-TRACKER.md",
+    ".sessions/daily-logs/2026-04-13.md",
+    ".sessions/current-state.json"
   ]
 }

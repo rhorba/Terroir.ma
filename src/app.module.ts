@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
@@ -21,6 +22,10 @@ import { UserController } from './common/controllers/user.controller';
 import { AdminController } from './common/controllers/admin.controller';
 import { KafkaAdminService } from './common/services/kafka-admin.service';
 import { MinioService } from './common/services/minio.service';
+import { DashboardService } from './common/services/dashboard.service';
+import { AuditLogService } from './common/services/audit-log.service';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { AuditLog } from './common/entities/audit-log.entity';
 import { KafkaClientModule } from './kafka/kafka-client.module';
 
 @Module({
@@ -74,6 +79,9 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     // Kafka client (global — available to all domain modules)
     KafkaClientModule,
 
+    // Common entities
+    TypeOrmModule.forFeature([AuditLog]),
+
     // Domain modules
     CooperativeModule,
     ProductModule,
@@ -81,6 +89,12 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     NotificationModule,
   ],
   controllers: [HealthController, UserController, AdminController],
-  providers: [KafkaAdminService, MinioService],
+  providers: [
+    KafkaAdminService,
+    MinioService,
+    DashboardService,
+    AuditLogService,
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+  ],
 })
 export class AppModule {}
