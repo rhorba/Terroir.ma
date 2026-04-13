@@ -32,6 +32,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1029.0",
     "@nestjs/cache-manager": "^2.3.0",
     "@nestjs/common": "^10.3.0",
     "@nestjs/config": "^3.2.0",
@@ -76,6 +77,7 @@
     "@testcontainers/postgresql": "^10.9.0",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
+    "@types/multer": "^2.1.0",
     "@types/node": "^20.12.7",
     "@types/nodemailer": "^6.4.15",
     "@types/passport-jwt": "^4.0.1",

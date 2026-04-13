@@ -551,4 +551,113 @@ describe('CertificationService', () => {
       expect(result.period).toEqual({ from: null, to: null });
     });
   });
+
+  // ─── exportForMapmdref() — US-084 ─────────────────────────────────────────
+
+  describe('exportForMapmdref()', () => {
+    it('returns all certifications when no filters provided', async () => {
+      const certs = [buildCert({ currentStatus: CertificationStatus.GRANTED })];
+      certRepo.find.mockResolvedValue(certs);
+
+      const result = await service.exportForMapmdref({});
+
+      expect(certRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {}, take: 10_000 }),
+      );
+      expect(result).toEqual(certs);
+    });
+
+    it('applies status filter when provided', async () => {
+      certRepo.find.mockResolvedValue([]);
+
+      await service.exportForMapmdref({ status: CertificationStatus.GRANTED });
+
+      expect(certRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ currentStatus: CertificationStatus.GRANTED }),
+        }),
+      );
+    });
+
+    it('applies Between date range filter when from and to are provided', async () => {
+      certRepo.find.mockResolvedValue([]);
+
+      await service.exportForMapmdref({ from: '2026-01-01', to: '2026-12-31' });
+
+      const call = certRepo.find.mock.calls[0][0] as { where: { requestedAt: unknown } };
+      // Between() returns a FindOperator — verify requestedAt is set
+      expect(call.where.requestedAt).toBeDefined();
+    });
+  });
+
+  // ─── complianceReport() — US-083 ──────────────────────────────────────────
+
+  describe('complianceReport()', () => {
+    it('returns grouped compliance rows with numeric counts', async () => {
+      const rawRows = [
+        {
+          cooperativeId: 'coop-1',
+          cooperativeName: 'Coop Argane',
+          totalRequests: '5',
+          pending: '2',
+          granted: '2',
+          denied: '1',
+          revoked: '0',
+          renewed: '0',
+        },
+      ];
+      dataSource.query.mockResolvedValue(rawRows);
+
+      const result = await service.complianceReport();
+
+      expect(dataSource.query).toHaveBeenCalled();
+      const first = result[0]!;
+      expect(first.cooperativeName).toBe('Coop Argane');
+      expect(first.totalRequests).toBe(5); // PostgreSQL returns strings → cast to number
+      expect(first.granted).toBe(2);
+    });
+
+    it('passes date params to query when from and to are provided', async () => {
+      dataSource.query.mockResolvedValue([]);
+
+      await service.complianceReport('2026-01-01', '2026-12-31');
+
+      const [, params] = dataSource.query.mock.calls[0] as [string, string[]];
+      expect(params).toEqual(['2026-01-01', '2026-12-31']);
+    });
+  });
+
+  // ─── onssaReport() — US-089 ───────────────────────────────────────────────
+
+  describe('onssaReport()', () => {
+    it('returns GRANTED certification rows from dataSource', async () => {
+      const rawRows = [
+        {
+          certificationNumber: 'TERROIR-IGP-SOUSS-2025-000001',
+          cooperativeName: 'Coop Argane',
+          productTypeCode: 'ARGAN-OIL',
+          regionCode: 'SOUSS_MASSA',
+          certificationType: 'IGP',
+          grantedAt: new Date('2025-06-01'),
+          validFrom: '2025-06-01',
+          validUntil: '2026-06-01',
+        },
+      ];
+      dataSource.query.mockResolvedValue(rawRows);
+
+      const result = await service.onssaReport();
+
+      expect(dataSource.query).toHaveBeenCalled();
+      expect(result[0]!.certificationNumber).toBe('TERROIR-IGP-SOUSS-2025-000001');
+    });
+
+    it('passes date params to query when from and to are provided', async () => {
+      dataSource.query.mockResolvedValue([]);
+
+      await service.onssaReport('2025-01-01', '2025-12-31');
+
+      const [, params] = dataSource.query.mock.calls[0] as [string, string[]];
+      expect(params).toEqual(['2025-01-01', '2025-12-31']);
+    });
+  });
 });

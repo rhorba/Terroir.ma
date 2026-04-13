@@ -20,3 +20,14 @@ export interface ProductBatchCreatedEvent extends BaseEvent {
   totalQuantityKg: number;
   processingDate: string;
 }
+
+/** US-019 — Emitted when a cooperative records a post-harvest processing step for a batch. */
+export interface ProductBatchProcessingStepAddedEvent extends BaseEvent {
+  batchId: string;
+  processingStepId: string;
+  cooperativeId: string;
+  stepType: string;
+  doneAt: string;
+  doneBy: string;
+  notes: string | null;
+}

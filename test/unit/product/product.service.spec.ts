@@ -63,6 +63,14 @@ describe('ProductService', () => {
       productRepo.findOne.mockResolvedValue(null);
       await expect(service.findById('non-existent')).rejects.toThrow();
     });
+
+    it('US-018: resolves for any authenticated user — inspector has no role restriction on this endpoint', async () => {
+      const mockProduct = { id: 'uuid-1', productTypeCode: 'ARGAN_OIL' };
+      productRepo.findOne.mockResolvedValue(mockProduct);
+      // ProductController.findOne() uses JwtAuthGuard only (no RolesGuard) — inspector can access
+      const result = await service.findById('uuid-1');
+      expect(result).toEqual(mockProduct);
+    });
   });
 
   describe('searchProducts() — US-015', () => {

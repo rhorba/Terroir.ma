@@ -5,9 +5,11 @@ import { Harvest } from '../entities/harvest.entity';
 import { ProductionBatch } from '../entities/production-batch.entity';
 import { LabTest } from '../entities/lab-test.entity';
 import { LabTestResult } from '../entities/lab-test-result.entity';
+import { ProcessingStep } from '../entities/processing-step.entity';
 import type {
   ProductHarvestLoggedEvent,
   ProductBatchCreatedEvent,
+  ProductBatchProcessingStepAddedEvent,
   LabTestSubmittedEvent,
   LabTestCompletedEvent,
 } from './product-events';
@@ -108,6 +110,40 @@ export class ProductProducer {
       );
     } catch (error) {
       this.logger.error({ error, labTestId: labTest.id }, 'Failed to publish lab test event');
+    }
+  }
+
+  /**
+   * Publish product.batch.processing_step_added after a cooperative records a processing step.
+   * US-019.
+   */
+  async publishProcessingStepAdded(step: ProcessingStep, correlationId: string): Promise<void> {
+    const event: ProductBatchProcessingStepAddedEvent = {
+      eventId: uuidv4(),
+      correlationId,
+      timestamp: new Date().toISOString(),
+      version: 1,
+      source: 'product',
+      batchId: step.batchId,
+      processingStepId: step.id,
+      cooperativeId: step.cooperativeId,
+      stepType: step.stepType,
+      doneAt: step.doneAt.toISOString(),
+      doneBy: step.doneBy,
+      notes: step.notes,
+    };
+
+    try {
+      await this.kafkaClient.emit('product.batch.processing_step_added', event).toPromise();
+      this.logger.log(
+        { eventId: event.eventId, batchId: step.batchId },
+        'Processing step event published',
+      );
+    } catch (error) {
+      this.logger.error(
+        { error, batchId: step.batchId },
+        'Failed to publish processing step event',
+      );
     }
   }
 

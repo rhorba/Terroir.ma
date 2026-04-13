@@ -5,19 +5,28 @@ import { ProductTypeController } from './controllers/product-type.controller';
 import { HarvestController } from './controllers/harvest.controller';
 import { BatchController } from './controllers/batch.controller';
 import { LabTestController } from './controllers/lab-test.controller';
+import { LabController } from './controllers/lab.controller';
+import { ProductDocumentController } from './controllers/product-document.controller';
 import { ProductService } from './services/product.service';
 import { ProductTypeService } from './services/product-type.service';
 import { HarvestService } from './services/harvest.service';
 import { BatchService } from './services/batch.service';
 import { LabTestService } from './services/lab-test.service';
+import { LabService } from './services/lab.service';
+import { ProductDocumentService } from './services/product-document.service';
+import { ProcessingStepService } from './services/processing-step.service';
 import { Product } from './entities/product.entity';
 import { ProductType } from './entities/product-type.entity';
 import { Harvest } from './entities/harvest.entity';
 import { ProductionBatch } from './entities/production-batch.entity';
 import { LabTest } from './entities/lab-test.entity';
 import { LabTestResult } from './entities/lab-test-result.entity';
+import { ProcessingStep } from './entities/processing-step.entity';
+import { Lab } from './entities/lab.entity';
+import { ProductDocument } from './entities/product-document.entity';
 import { ProductProducer } from './events/product.producer';
 import { ProductListener } from './listeners/product.listener';
+import { MinioService } from '../../common/services/minio.service';
 
 /**
  * Product module — manages product catalog, harvest logging, batch creation, and lab tests.
@@ -34,6 +43,9 @@ import { ProductListener } from './listeners/product.listener';
       ProductionBatch,
       LabTest,
       LabTestResult,
+      ProcessingStep,
+      Lab,
+      ProductDocument,
     ]),
   ],
   controllers: [
@@ -42,6 +54,8 @@ import { ProductListener } from './listeners/product.listener';
     HarvestController,
     BatchController,
     LabTestController,
+    LabController,
+    ProductDocumentController,
     ProductListener,
   ],
   providers: [
@@ -50,7 +64,11 @@ import { ProductListener } from './listeners/product.listener';
     HarvestService,
     BatchService,
     LabTestService,
+    LabService,
+    ProductDocumentService,
+    ProcessingStepService,
     ProductProducer,
+    MinioService,
   ],
   exports: [],
 })

@@ -8,6 +8,7 @@ import { InspectionService } from './services/inspection.service';
 import { QrCodeService } from './services/qr-code.service';
 import { ExportDocumentService } from './services/export-document.service';
 import { CertificationPdfService } from './services/certification-pdf.service';
+import { ExportDocumentPdfService } from './services/export-document-pdf.service';
 import { CertificationController } from './controllers/certification.controller';
 import { InspectionController } from './controllers/inspection.controller';
 import { QrCodeController } from './controllers/qr-code.controller';
@@ -64,6 +65,7 @@ import { ExportDocument } from './entities/export-document.entity';
     QrCodeService,
     ExportDocumentService,
     CertificationPdfService,
+    ExportDocumentPdfService,
     CertificationProducer,
   ],
   exports: [],

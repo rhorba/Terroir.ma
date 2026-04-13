@@ -1,9 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, In } from 'typeorm';
+import { Repository, DataSource, In, FindOptionsWhere, Between } from 'typeorm';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
-import { CertificationStats } from '../interfaces/certification-stats.interface';
+import {
+  CertificationStats,
+  CooperativeComplianceRow,
+  OnssaCertRow,
+} from '../interfaces/certification-stats.interface';
+import { ExportQueryDto } from '../dto/export-query.dto';
 import { PagedResult } from '../../../common/dto/pagination.dto';
 import {
   Certification,
@@ -526,6 +531,25 @@ export class CertificationService {
     return stats;
   }
 
+  /**
+   * Export all certifications as a flat array for MAPMDREF regulatory reporting.
+   * US-084: super-admin and certification-body.
+   * Capped at 10,000 rows. Optional date range and status filters.
+   */
+  async exportForMapmdref(query: ExportQueryDto): Promise<Certification[]> {
+    const where: FindOptionsWhere<Certification> = {};
+    if (query.status) where.currentStatus = query.status;
+    if (query.from && query.to) {
+      where.requestedAt = Between(new Date(query.from), new Date(query.to));
+    }
+
+    return this.certRepo.find({
+      where,
+      order: { requestedAt: 'DESC' },
+      take: 10_000,
+    });
+  }
+
   // ─── Private Helpers ──────────────────────────────────────────────────────
 
   /**
@@ -607,5 +631,82 @@ export class CertificationService {
     });
 
     return `TERROIR-${typeAbbr}-${certification.regionCode}-${year}-${String(seq).padStart(3, '0')}`;
+  }
+
+  /**
+   * US-083: Aggregate certification counts grouped by cooperative.
+   * cooperativeName is denormalized on the Certification entity — no cross-module join needed.
+   * Optional date range filters on requested_at.
+   */
+  async complianceReport(from?: string, to?: string): Promise<CooperativeComplianceRow[]> {
+    const params: string[] = [];
+    let dateFilter = '';
+    if (from && to) {
+      params.push(from, to);
+      dateFilter = `AND requested_at BETWEEN $1::date AND $2::date + INTERVAL '1 day'`;
+    }
+
+    const rows = await this.dataSource.query<Record<string, unknown>[]>(
+      `SELECT
+        cooperative_id AS "cooperativeId",
+        cooperative_name AS "cooperativeName",
+        COUNT(*) AS "totalRequests",
+        COUNT(*) FILTER (WHERE current_status IN (
+          'SUBMITTED','DOCUMENT_REVIEW','INSPECTION_SCHEDULED',
+          'INSPECTION_IN_PROGRESS','INSPECTION_COMPLETE',
+          'LAB_TESTING','LAB_RESULTS_RECEIVED','UNDER_REVIEW'
+        )) AS pending,
+        COUNT(*) FILTER (WHERE current_status = 'GRANTED') AS granted,
+        COUNT(*) FILTER (WHERE current_status = 'DENIED') AS denied,
+        COUNT(*) FILTER (WHERE current_status = 'REVOKED') AS revoked,
+        COUNT(*) FILTER (WHERE current_status = 'RENEWED') AS renewed
+       FROM certification.certification
+       WHERE deleted_at IS NULL ${dateFilter}
+       GROUP BY cooperative_id, cooperative_name
+       ORDER BY "totalRequests" DESC`,
+      params,
+    );
+
+    return rows.map((r) => ({
+      cooperativeId: r['cooperativeId'] as string,
+      cooperativeName: r['cooperativeName'] as string,
+      totalRequests: Number(r['totalRequests']),
+      pending: Number(r['pending']),
+      granted: Number(r['granted']),
+      denied: Number(r['denied']),
+      revoked: Number(r['revoked']),
+      renewed: Number(r['renewed']),
+    }));
+  }
+
+  /**
+   * US-089: List all currently GRANTED certifications for ONSSA compliance verification.
+   * Optional date range filters on granted_at.
+   */
+  async onssaReport(from?: string, to?: string): Promise<OnssaCertRow[]> {
+    const params: string[] = [];
+    let dateFilter = '';
+    if (from && to) {
+      params.push(from, to);
+      dateFilter = `AND granted_at BETWEEN $1::date AND $2::date + INTERVAL '1 day'`;
+    }
+
+    return this.dataSource.query<OnssaCertRow[]>(
+      `SELECT
+        certification_number AS "certificationNumber",
+        cooperative_name AS "cooperativeName",
+        product_type_code AS "productTypeCode",
+        region_code AS "regionCode",
+        certification_type AS "certificationType",
+        granted_at AS "grantedAt",
+        valid_from AS "validFrom",
+        valid_until AS "validUntil"
+       FROM certification.certification
+       WHERE current_status = 'GRANTED'
+         AND deleted_at IS NULL
+         ${dateFilter}
+       ORDER BY granted_at DESC`,
+      params,
+    );
   }
 }

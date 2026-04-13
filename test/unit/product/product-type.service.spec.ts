@@ -25,6 +25,7 @@ function buildProductType(overrides: Partial<ProductType> = {}): ProductType {
     hsCode: null,
     onssaCategory: null,
     isActive: true,
+    validityDays: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,
@@ -153,6 +154,39 @@ describe('ProductTypeService', () => {
       repo.findOne.mockResolvedValue(buildProductType({ isActive: false }));
 
       await expect(service.deactivate('pt-uuid')).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('update() — US-045 validityDays', () => {
+    it('sets validityDays when provided', async () => {
+      const original = buildProductType({ validityDays: null });
+      const updated = buildProductType({ validityDays: 365 });
+      repo.findOne.mockResolvedValueOnce(original).mockResolvedValueOnce(updated);
+      repo.update.mockResolvedValue({ affected: 1 });
+
+      const result = await service.update('pt-uuid', { validityDays: 365 });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'pt-uuid' },
+        expect.objectContaining({ validityDays: 365 }),
+      );
+      expect(result.validityDays).toBe(365);
+    });
+
+    it('US-025: updates labTestParameters via existing PUT endpoint (PartialType inheritance)', async () => {
+      const newParams = [{ name: 'acidity', unit: '%', minValue: 0.1, maxValue: 1.5 }];
+      const original = buildProductType({ labTestParameters: [] });
+      const updated = buildProductType({ labTestParameters: newParams });
+      repo.findOne.mockResolvedValueOnce(original).mockResolvedValueOnce(updated);
+      repo.update.mockResolvedValue({ affected: 1 });
+
+      const result = await service.update('pt-uuid', { labTestParameters: newParams });
+
+      expect(repo.update).toHaveBeenCalledWith(
+        { id: 'pt-uuid' },
+        expect.objectContaining({ labTestParameters: newParams }),
+      );
+      expect(result.labTestParameters).toEqual(newParams);
     });
   });
 });

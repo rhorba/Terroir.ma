@@ -9,6 +9,7 @@ import databaseConfig from './config/database.config';
 import kafkaConfig from './config/kafka.config';
 import keycloakConfig from './config/keycloak.config';
 import redisConfig from './config/redis.config';
+import minioConfig from './config/minio.config';
 /* eslint-disable no-restricted-imports */
 import { CooperativeModule } from './modules/cooperative/cooperative.module';
 import { ProductModule } from './modules/product/product.module';
@@ -17,6 +18,9 @@ import { NotificationModule } from './modules/notification/notification.module';
 /* eslint-enable no-restricted-imports */
 import { HealthController } from './health/health.controller';
 import { UserController } from './common/controllers/user.controller';
+import { AdminController } from './common/controllers/admin.controller';
+import { KafkaAdminService } from './common/services/kafka-admin.service';
+import { MinioService } from './common/services/minio.service';
 import { KafkaClientModule } from './kafka/kafka-client.module';
 
 @Module({
@@ -24,7 +28,7 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     // Config
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, databaseConfig, kafkaConfig, keycloakConfig, redisConfig],
+      load: [appConfig, databaseConfig, kafkaConfig, keycloakConfig, redisConfig, minioConfig],
       envFilePath: ['.env', '.env.local'],
     }),
 
@@ -76,6 +80,7 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     CertificationModule,
     NotificationModule,
   ],
-  controllers: [HealthController, UserController],
+  controllers: [HealthController, UserController, AdminController],
+  providers: [KafkaAdminService, MinioService],
 })
 export class AppModule {}

@@ -7,17 +7,25 @@ import { LabTestResult } from '../../../src/modules/product/entities/lab-test-re
 import { ProductionBatch } from '../../../src/modules/product/entities/production-batch.entity';
 import { ProductType } from '../../../src/modules/product/entities/product-type.entity';
 import { ProductProducer } from '../../../src/modules/product/events/product.producer';
+import { MinioService } from '../../../src/common/services/minio.service';
 
 const makeRepo = () => ({
   findOne: jest.fn(),
   save: jest.fn(),
   create: jest.fn().mockImplementation((dto) => dto),
   update: jest.fn().mockResolvedValue({ affected: 1 }),
+  findAndCount: jest.fn(),
 });
 
 const makeProducer = () => ({
   publishLabTestCompleted: jest.fn().mockResolvedValue(undefined),
   publishLabTestSubmitted: jest.fn().mockResolvedValue(undefined),
+});
+
+const makeMinio = () => ({
+  uploadFile: jest.fn().mockResolvedValue(undefined),
+  getFileStream: jest.fn().mockResolvedValue({ pipe: jest.fn() }),
+  deleteFile: jest.fn().mockResolvedValue(undefined),
 });
 
 describe('LabTestService', () => {
@@ -27,6 +35,7 @@ describe('LabTestService', () => {
   let productTypeRepo: ReturnType<typeof makeRepo>;
   let batchRepo: ReturnType<typeof makeRepo>;
   let producer: ReturnType<typeof makeProducer>;
+  let minio: ReturnType<typeof makeMinio>;
 
   beforeEach(async () => {
     labTestRepo = makeRepo();
@@ -34,6 +43,7 @@ describe('LabTestService', () => {
     productTypeRepo = makeRepo();
     batchRepo = makeRepo();
     producer = makeProducer();
+    minio = makeMinio();
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -43,6 +53,7 @@ describe('LabTestService', () => {
         { provide: getRepositoryToken(ProductionBatch), useValue: batchRepo },
         { provide: getRepositoryToken(ProductType), useValue: productTypeRepo },
         { provide: ProductProducer, useValue: producer },
+        { provide: MinioService, useValue: minio },
       ],
     }).compile();
 
@@ -353,6 +364,50 @@ describe('LabTestService', () => {
 
       await expect(service.findById('bad-id')).rejects.toThrow(NotFoundException);
     });
+
+    it('US-029: resolves for any authenticated user — inspector has no role restriction on GET /lab-tests/:id', async () => {
+      const labTest = { id: 'test-001', batchId: 'batch-001' };
+      labTestRepo.findOne.mockResolvedValue(labTest);
+      // LabTestController.findOne() uses JwtAuthGuard only — inspector can access during inspection
+      const result = await service.findById('test-001');
+      expect(result).toEqual(labTest);
+    });
+  });
+
+  // ─── findAll() — US-028 ───────────────────────────────────────────────────
+
+  describe('findAll()', () => {
+    it('returns paginated lab tests with no filters', async () => {
+      const mockTests = [{ id: 'test-001' }, { id: 'test-002' }];
+      labTestRepo.findAndCount.mockResolvedValue([mockTests, 2]);
+
+      const result = await service.findAll({ page: 1, limit: 20 });
+
+      expect(labTestRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({ skip: 0, take: 20 }),
+      );
+      expect(result.data).toEqual(mockTests);
+      expect(result.meta.total).toBe(2);
+    });
+
+    it('applies cooperativeId filter when provided', async () => {
+      labTestRepo.findAndCount.mockResolvedValue([[], 0]);
+
+      await service.findAll({ cooperativeId: 'coop-001', page: 1, limit: 20 });
+
+      expect(labTestRepo.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining({ cooperativeId: 'coop-001' }) }),
+      );
+    });
+
+    it('returns empty page when no lab tests match filter', async () => {
+      labTestRepo.findAndCount.mockResolvedValue([[], 0]);
+
+      const result = await service.findAll({ status: 'cancelled', page: 1, limit: 20 });
+
+      expect(result.data).toHaveLength(0);
+      expect(result.meta.total).toBe(0);
+    });
   });
 
   // ─── findResultByLabTestId() ───────────────────────────────────────────────
@@ -374,6 +429,80 @@ describe('LabTestService', () => {
       const result = await service.findResultByLabTestId('test-001');
 
       expect(result).toBeNull();
+    });
+  });
+
+  // ─── uploadReport() + downloadReport() — US-026 ───────────────────────────
+
+  describe('uploadReport()', () => {
+    it('uploads PDF to MinIO and updates report key on LabTest', async () => {
+      const labTest = { id: 'test-001', batchId: 'batch-001', reportS3Key: null } as LabTest;
+      labTestRepo.findOne.mockResolvedValue(labTest);
+      const updatedLabTest = {
+        ...labTest,
+        reportS3Key: 'lab-reports/test-001/uuid-report.pdf',
+        reportFileName: 'report.pdf',
+      };
+      labTestRepo.update.mockResolvedValue({ affected: 1 });
+      // second findOne call (after update) returns updated record
+      labTestRepo.findOne.mockResolvedValueOnce(labTest).mockResolvedValueOnce(updatedLabTest);
+
+      const file = {
+        originalname: 'report.pdf',
+        mimetype: 'application/pdf',
+        buffer: Buffer.from('pdf'),
+        size: 3,
+      } as Express.Multer.File;
+
+      const result = await service.uploadReport('test-001', file);
+
+      expect(minio.uploadFile).toHaveBeenCalledWith(
+        expect.stringContaining('lab-reports/test-001/'),
+        file.buffer,
+        'application/pdf',
+      );
+      expect(labTestRepo.update).toHaveBeenCalledWith(
+        { id: 'test-001' },
+        expect.objectContaining({ reportFileName: 'report.pdf' }),
+      );
+      expect(result).toEqual(updatedLabTest);
+    });
+
+    it('throws NotFoundException when lab test not found', async () => {
+      labTestRepo.findOne.mockResolvedValue(null);
+      const file = {
+        originalname: 'r.pdf',
+        mimetype: 'application/pdf',
+        buffer: Buffer.from('x'),
+        size: 1,
+      } as Express.Multer.File;
+      await expect(service.uploadReport('missing', file)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('downloadReport()', () => {
+    it('throws NotFoundException when no report has been uploaded', async () => {
+      const labTest = { id: 'test-001', reportS3Key: null, reportFileName: null } as LabTest;
+      labTestRepo.findOne.mockResolvedValue(labTest);
+
+      await expect(service.downloadReport('test-001')).rejects.toThrow(NotFoundException);
+    });
+
+    it('returns stream and fileName when report exists', async () => {
+      const labTest = {
+        id: 'test-001',
+        reportS3Key: 'lab-reports/test-001/uuid-report.pdf',
+        reportFileName: 'report.pdf',
+      } as LabTest;
+      labTestRepo.findOne.mockResolvedValue(labTest);
+      const mockStream = { pipe: jest.fn() };
+      minio.getFileStream.mockResolvedValue(mockStream);
+
+      const result = await service.downloadReport('test-001');
+
+      expect(minio.getFileStream).toHaveBeenCalledWith('lab-reports/test-001/uuid-report.pdf');
+      expect(result.fileName).toBe('report.pdf');
+      expect(result.stream).toBe(mockStream);
     });
   });
 });

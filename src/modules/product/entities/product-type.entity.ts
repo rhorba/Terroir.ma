@@ -52,6 +52,10 @@ export class ProductType {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  /** US-045 — Certificate validity period in days. null = no default configured. */
+  @Column({ name: 'validity_days', type: 'int', nullable: true })
+  validityDays: number | null;
+
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 

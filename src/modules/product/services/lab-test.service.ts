@@ -1,12 +1,17 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, FindOptionsWhere } from 'typeorm';
+import { Readable } from 'stream';
+import { v4 as uuidv4 } from 'uuid';
 import { LabTest } from '../entities/lab-test.entity';
 import { LabTestResult } from '../entities/lab-test-result.entity';
 import { ProductType } from '../entities/product-type.entity';
 import { ProductionBatch } from '../entities/production-batch.entity';
 import { SubmitLabTestDto, RecordLabTestResultDto } from '../dto/submit-lab-test.dto';
+import { LabTestListQueryDto } from '../dto/lab-test-list-query.dto';
+import { PagedResult } from '../../../common/dto/pagination.dto';
 import { ProductProducer } from '../events/product.producer';
+import { MinioService } from '../../../common/services/minio.service';
 
 interface LabTestParameter {
   name: string;
@@ -40,6 +45,7 @@ export class LabTestService {
     @InjectRepository(ProductionBatch)
     private readonly batchRepo: Repository<ProductionBatch>,
     private readonly producer: ProductProducer,
+    private readonly minioService: MinioService,
   ) {}
 
   /**
@@ -198,6 +204,29 @@ export class LabTestService {
     return { passed: failedParameters.length === 0, failedParameters };
   }
 
+  /**
+   * Paginated list of lab tests with optional filters.
+   * US-028: cooperative-admin scoped to own cooperative; super-admin/cert-body/inspector see all.
+   */
+  async findAll(query: LabTestListQueryDto): Promise<PagedResult<LabTest>> {
+    const where: FindOptionsWhere<LabTest> = {};
+    if (query.batchId) where.batchId = query.batchId;
+    if (query.cooperativeId) where.cooperativeId = query.cooperativeId;
+    if (query.status) where.status = query.status;
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+
+    const [data, total] = await this.labTestRepo.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    return { data, meta: { page, limit, total } };
+  }
+
   async findById(id: string): Promise<LabTest> {
     const labTest = await this.labTestRepo.findOne({ where: { id } });
     if (!labTest) {
@@ -211,5 +240,43 @@ export class LabTestService {
 
   async findResultByLabTestId(labTestId: string): Promise<LabTestResult | null> {
     return this.labTestResultRepo.findOne({ where: { labTestId } });
+  }
+
+  /**
+   * US-026: Upload a PDF lab report and store the MinIO key on the LabTest record.
+   * Only PDF MIME type is accepted. Replaces any previously uploaded report.
+   */
+  async uploadReport(id: string, file: Express.Multer.File): Promise<LabTest> {
+    const labTest = await this.findById(id);
+    if (file.mimetype !== 'application/pdf') {
+      throw new BadRequestException({
+        code: 'INVALID_MIME_TYPE',
+        message: 'Only PDF files are accepted for lab reports',
+      });
+    }
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const s3Key = `lab-reports/${labTest.id}/${uuidv4()}-${safeName}`;
+    await this.minioService.uploadFile(s3Key, file.buffer, 'application/pdf');
+    await this.labTestRepo.update(
+      { id },
+      { reportS3Key: s3Key, reportFileName: file.originalname },
+    );
+    this.logger.log({ labTestId: id, s3Key }, 'Lab report uploaded');
+    return this.findById(id);
+  }
+
+  /**
+   * US-026: Stream the PDF lab report from MinIO.
+   */
+  async downloadReport(id: string): Promise<{ stream: Readable; fileName: string }> {
+    const labTest = await this.findById(id);
+    if (!labTest.reportS3Key) {
+      throw new NotFoundException({
+        code: 'REPORT_NOT_FOUND',
+        message: 'No report uploaded for this lab test',
+      });
+    }
+    const stream = await this.minioService.getFileStream(labTest.reportS3Key);
+    return { stream, fileName: labTest.reportFileName ?? 'lab-report.pdf' };
   }
 }

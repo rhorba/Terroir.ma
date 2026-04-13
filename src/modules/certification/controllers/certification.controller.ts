@@ -18,7 +18,13 @@ import { Response } from 'express';
 import { CertificationService } from '../services/certification.service';
 import { CertificationPdfService } from '../services/certification-pdf.service';
 import { StatsQueryDto } from '../dto/stats-query.dto';
-import { CertificationStats } from '../interfaces/certification-stats.interface';
+import { ExportQueryDto } from '../dto/export-query.dto';
+import { ReportQueryDto } from '../dto/report-query.dto';
+import {
+  CertificationStats,
+  CooperativeComplianceRow,
+  OnssaCertRow,
+} from '../interfaces/certification-stats.interface';
 import { RequestCertificationDto } from '../dto/request-certification.dto';
 import { GrantCertificationDto } from '../dto/grant-certification.dto';
 import { DenyCertificationDto } from '../dto/deny-certification.dto';
@@ -33,7 +39,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
-import { Certification } from '../entities/certification.entity';
+import { Certification, CertificationStatus } from '../entities/certification.entity';
 import { PaginationDto, PagedResult } from '../../../common/dto/pagination.dto';
 
 /**
@@ -119,6 +125,59 @@ export class CertificationController {
       query.page,
       query.limit,
     );
+  }
+
+  /**
+   * US-084 — Export certifications as JSON for MAPMDREF regulatory reporting.
+   * Returns up to 10,000 rows with optional date range and status filters.
+   * Content-Disposition: attachment so the browser/client downloads the file.
+   * Registered before GET /:id (literal-before-param rule).
+   */
+  @Get('export')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'certification-body')
+  @ApiOperation({ summary: 'US-084: Export certifications as JSON for MAPMDREF' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'status', required: false, enum: CertificationStatus })
+  async exportForMapmdref(
+    @Query() query: ExportQueryDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<Certification[]> {
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    res.set({
+      'Content-Type': 'application/json',
+      'Content-Disposition': `attachment; filename="certifications-export-${date}.json"`,
+    });
+    return this.certificationService.exportForMapmdref(query);
+  }
+
+  /**
+   * US-083: Cooperative compliance report — certification counts grouped by cooperative.
+   * Registered before GET /:id (literal-before-param rule).
+   */
+  @Get('compliance-report')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'certification-body')
+  @ApiOperation({ summary: 'US-083: Cooperative compliance report (grouped by cooperative)' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'YYYY-MM-DD' })
+  async complianceReport(@Query() query: ReportQueryDto): Promise<CooperativeComplianceRow[]> {
+    return this.certificationService.complianceReport(query.from, query.to);
+  }
+
+  /**
+   * US-089: ONSSA active certifications report — all GRANTED certifications.
+   * Registered before GET /:id (literal-before-param rule).
+   */
+  @Get('onssa-report')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'certification-body')
+  @ApiOperation({ summary: 'US-089: Active certifications report for ONSSA' })
+  @ApiQuery({ name: 'from', required: false, type: String, description: 'YYYY-MM-DD' })
+  @ApiQuery({ name: 'to', required: false, type: String, description: 'YYYY-MM-DD' })
+  async onssaReport(@Query() query: ReportQueryDto): Promise<OnssaCertRow[]> {
+    return this.certificationService.onssaReport(query.from, query.to);
   }
 
   /** Request a new certification for a production batch */

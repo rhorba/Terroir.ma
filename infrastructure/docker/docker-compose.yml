@@ -13,6 +13,8 @@ volumes:
     name: terroir_pgdata
   keycloak_pgdata:
     name: terroir_keycloak_pgdata
+  minio_data:
+    name: terroir_minio_data
 
 services:
   # ─────────────────────────────────────────────
@@ -217,7 +219,33 @@ services:
     restart: unless-stopped
 
   # ─────────────────────────────────────────────
-  # 8. Mailpit (SMTP catch-all + web UI)
+  # 8. MinIO (S3-compatible object storage)
+  # ─────────────────────────────────────────────
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: terroir-minio
+    profiles: [core, full]
+    ports:
+      - '9000:9000' # S3 API
+      - '9001:9001' # Web console
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
+      interval: 10s
+      timeout: 5s
+      start_period: 15s
+      retries: 5
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 9. Mailpit (SMTP catch-all + web UI)
   # ─────────────────────────────────────────────
   mailpit:
     image: axllent/mailpit:latest

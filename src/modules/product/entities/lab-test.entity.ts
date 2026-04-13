@@ -37,6 +37,14 @@ export class LabTest {
   @Column({ name: 'submitted_by', type: 'uuid' })
   submittedBy: string;
 
+  /** MinIO object key for the uploaded PDF lab report (US-026). Null if not yet uploaded. */
+  @Column({ name: 'report_s3_key', type: 'varchar', length: 500, nullable: true })
+  reportS3Key: string | null;
+
+  /** Original filename of the uploaded PDF lab report (US-026). */
+  @Column({ name: 'report_file_name', type: 'varchar', length: 255, nullable: true })
+  reportFileName: string | null;
+
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt: Date;
 

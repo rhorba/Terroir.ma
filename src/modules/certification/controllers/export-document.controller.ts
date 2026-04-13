@@ -8,9 +8,13 @@ import {
   HttpCode,
   HttpStatus,
   Query,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
 import { ExportDocumentService } from '../services/export-document.service';
+import { ExportDocumentPdfService } from '../services/export-document-pdf.service';
 import { GenerateExportDocDto } from '../dto/generate-export-doc.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
@@ -27,7 +31,10 @@ import { PaginationDto, PagedResult } from '../../../common/dto/pagination.dto';
 @UseGuards(JwtAuthGuard)
 @Controller('export-documents')
 export class ExportDocumentController {
-  constructor(private readonly exportDocumentService: ExportDocumentService) {}
+  constructor(
+    private readonly exportDocumentService: ExportDocumentService,
+    private readonly exportDocumentPdfService: ExportDocumentPdfService,
+  ) {}
 
   /**
    * US-067 — Super-admin views all export clearances across all cooperatives.
@@ -75,6 +82,26 @@ export class ExportDocumentController {
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<ExportDocument> {
     return this.exportDocumentService.generateDocument(dto, user.sub);
+  }
+
+  /**
+   * US-068: Generate and download a PDF export certificate.
+   * Registered before GET /:id — but segment count differs so no collision.
+   */
+  @Get(':id/certificate.pdf')
+  @UseGuards(RolesGuard)
+  @Roles('customs-agent', 'cooperative-admin', 'super-admin')
+  @ApiOperation({ summary: 'US-068: Download PDF export certificate' })
+  async downloadExportCertificatePdf(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const buffer = await this.exportDocumentPdfService.generateExportCertificatePdf(id);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `inline; filename="export-cert-${id}.pdf"`,
+    });
+    return new StreamableFile(buffer);
   }
 
   /** Get export document by ID */

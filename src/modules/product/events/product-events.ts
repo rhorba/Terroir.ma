@@ -2,6 +2,7 @@
 export type {
   ProductHarvestLoggedEvent,
   ProductBatchCreatedEvent,
+  ProductBatchProcessingStepAddedEvent,
 } from '../../../common/interfaces/events/product.events';
 
 export type {

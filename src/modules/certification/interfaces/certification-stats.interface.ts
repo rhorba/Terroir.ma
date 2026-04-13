@@ -19,3 +19,27 @@ export interface CertificationStats {
   byRegion: RegionCount[];
   byProductType: ProductTypeCount[];
 }
+
+/** US-083: One row per cooperative in the compliance report. */
+export interface CooperativeComplianceRow {
+  cooperativeId: string;
+  cooperativeName: string;
+  totalRequests: number;
+  pending: number;
+  granted: number;
+  denied: number;
+  revoked: number;
+  renewed: number;
+}
+
+/** US-089: One row per GRANTED certification for the ONSSA report. */
+export interface OnssaCertRow {
+  certificationNumber: string | null;
+  cooperativeName: string;
+  productTypeCode: string;
+  regionCode: string;
+  certificationType: string;
+  grantedAt: Date | null;
+  validFrom: string | null;
+  validUntil: string | null;
+}
