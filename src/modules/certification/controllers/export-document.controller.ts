@@ -16,6 +16,8 @@ import { Response } from 'express';
 import { ExportDocumentService } from '../services/export-document.service';
 import { ExportDocumentPdfService } from '../services/export-document-pdf.service';
 import { GenerateExportDocDto } from '../dto/generate-export-doc.dto';
+import { ClearancesReportQueryDto } from '../dto/clearances-report-query.dto';
+import { HsCodeQueryDto } from '../dto/hs-code-query.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -102,6 +104,64 @@ export class ExportDocumentController {
       'Content-Disposition': `inline; filename="export-cert-${id}.pdf"`,
     });
     return new StreamableFile(buffer);
+  }
+
+  /**
+   * US-070: Export clearances by destination country as CSV.
+   * Registered before GET /:id — literal segment, no collision.
+   */
+  @Get('clearances-report')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'customs-agent')
+  @ApiOperation({ summary: 'US-070: Export clearances by destination country (CSV)' })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
+  @ApiQuery({ name: 'destinationCountry', required: false, type: String })
+  async exportClearancesReport(
+    @Query() query: ClearancesReportQueryDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const csv = await this.exportDocumentService.exportClearancesReport(
+      query.from,
+      query.to,
+      query.destinationCountry,
+    );
+    const date = new Date().toISOString().slice(0, 10);
+    res.set({
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="clearances-${date}.csv"`,
+    });
+    return new StreamableFile(Buffer.from(csv, 'utf-8'));
+  }
+
+  /**
+   * US-069: View HS code assignments.
+   * cooperative-admin is auto-scoped to their JWT cooperativeId.
+   * customs-agent / super-admin: optional cooperativeId filter.
+   * Registered before GET /:id.
+   */
+  @Get('hs-codes')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin', 'customs-agent', 'super-admin')
+  @ApiOperation({ summary: 'US-069: List HS code assignments' })
+  @ApiQuery({ name: 'cooperativeId', required: false, type: String })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
+  async getHsCodeAssignments(
+    @Query() query: HsCodeQueryDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<{ success: boolean; data: unknown[] }> {
+    const roles: string[] = (user.realm_access?.roles ?? []) as string[];
+    const cooperativeId = roles.includes('cooperative-admin')
+      ? (user.cooperative_id ?? user.sub)
+      : query.cooperativeId;
+
+    const data = await this.exportDocumentService.getHsCodeAssignments(
+      cooperativeId,
+      query.from,
+      query.to,
+    );
+    return { success: true, data };
   }
 
   /** Get export document by ID */

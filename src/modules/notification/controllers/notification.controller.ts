@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Query, UseGuards, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  UseGuards,
+  NotFoundException,
+  Put,
+  Body,
+} from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { NotificationService } from '../services/notification.service';
 import { NotificationHistoryQueryDto } from '../dto/notification-history-query.dto';
@@ -9,6 +18,10 @@ import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
 import { Notification } from '../entities/notification.entity';
+import {
+  NotificationPreferenceDto,
+  UpsertNotificationPreferenceDto,
+} from '../dto/notification-preference.dto';
 
 /**
  * Notification module HTTP controller.
@@ -69,6 +82,27 @@ export class NotificationController {
       (page - 1) * limit,
     );
     return { success: true, data, meta: { page, limit, total } };
+  }
+
+  /** US-077: Get notification preferences for current user */
+  @Get('preferences/me')
+  @ApiOperation({ summary: 'US-077: Get notification preferences for current user' })
+  async getPreferences(
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<{ success: boolean; data: NotificationPreferenceDto }> {
+    const data = await this.notificationService.getPreferences(user.sub);
+    return { success: true, data };
+  }
+
+  /** US-077: Update notification preferences for current user */
+  @Put('preferences/me')
+  @ApiOperation({ summary: 'US-077: Update notification preferences for current user' })
+  async updatePreferences(
+    @Body() dto: UpsertNotificationPreferenceDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<{ success: boolean; data: NotificationPreferenceDto }> {
+    const data = await this.notificationService.upsertPreferences(user.sub, dto);
+    return { success: true, data };
   }
 
   /** Get a specific notification by ID (must belong to current user) */

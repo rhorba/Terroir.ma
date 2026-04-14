@@ -4,6 +4,7 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { NotificationService } from '../../../src/modules/notification/services/notification.service';
 import { Notification } from '../../../src/modules/notification/entities/notification.entity';
 import { NotificationTemplate } from '../../../src/modules/notification/entities/notification-template.entity';
+import { NotificationPreference } from '../../../src/modules/notification/entities/notification-preference.entity';
 import { EmailService } from '../../../src/modules/notification/services/email.service';
 import { SmsService } from '../../../src/modules/notification/services/sms.service';
 
@@ -13,6 +14,7 @@ const mockRepo = () => ({
   save: jest.fn(),
   create: jest.fn().mockImplementation((dto) => ({ id: 'notif-uuid', ...dto })),
   update: jest.fn(),
+  upsert: jest.fn().mockResolvedValue(undefined),
   createQueryBuilder: jest.fn(),
 });
 
@@ -23,6 +25,7 @@ describe('NotificationService', () => {
   let service: NotificationService;
   let notificationRepo: ReturnType<typeof mockRepo>;
   let templateRepo: ReturnType<typeof mockRepo>;
+  let preferenceRepo: ReturnType<typeof mockRepo>; // used in getPreferences/upsertPreferences tests
   let emailService: ReturnType<typeof mockEmailService>;
   let cacheManager: { get: jest.Mock; set: jest.Mock; del: jest.Mock };
 
@@ -38,6 +41,7 @@ describe('NotificationService', () => {
         NotificationService,
         { provide: getRepositoryToken(Notification), useFactory: mockRepo },
         { provide: getRepositoryToken(NotificationTemplate), useFactory: mockRepo },
+        { provide: getRepositoryToken(NotificationPreference), useFactory: mockRepo },
         { provide: EmailService, useFactory: mockEmailService },
         { provide: SmsService, useFactory: mockSmsService },
         { provide: CACHE_MANAGER, useValue: cacheManager },
@@ -47,6 +51,7 @@ describe('NotificationService', () => {
     service = module.get<NotificationService>(NotificationService);
     notificationRepo = module.get(getRepositoryToken(Notification));
     templateRepo = module.get(getRepositoryToken(NotificationTemplate));
+    preferenceRepo = module.get(getRepositoryToken(NotificationPreference));
     emailService = module.get<EmailService>(EmailService) as unknown as ReturnType<
       typeof mockEmailService
     >;
@@ -191,7 +196,12 @@ describe('NotificationService', () => {
     } as NotificationTemplate;
 
     it('uses cached template from Redis when cache hit — skips DB query', async () => {
-      cacheManager.get.mockResolvedValue(template);
+      // preferences check runs first (pref: key → null → default channels ['email'])
+      // template lookup runs second (template: key → cached template)
+      cacheManager.get.mockImplementation((key: string) =>
+        key.startsWith('pref:') ? null : Promise.resolve(template),
+      );
+      preferenceRepo.findOne.mockResolvedValue(null); // fallback to default prefs
       notificationRepo.save.mockResolvedValue({ id: 'notif-uuid' });
       emailService.send = jest.fn().mockResolvedValue(undefined);
 
@@ -330,6 +340,70 @@ describe('NotificationService', () => {
       const result = await service.getStats();
 
       expect(result.byChannel[0]?.deliveryRate).toBe(0);
+    });
+  });
+
+  // ─── getPreferences() — US-077 ────────────────────────────────────────────
+
+  describe('getPreferences()', () => {
+    it('returns defaults when no preference row exists', async () => {
+      preferenceRepo.findOne.mockResolvedValue(null);
+      const result = await service.getPreferences('user-123');
+      expect(result).toEqual({ channels: ['email'], language: 'fr' });
+    });
+
+    it('returns stored preferences when row exists', async () => {
+      preferenceRepo.findOne.mockResolvedValue({
+        userId: 'user-456',
+        channels: ['email', 'sms'],
+        language: 'ar',
+      });
+      const result = await service.getPreferences('user-456');
+      expect(result.channels).toContain('sms');
+      expect(result.language).toBe('ar');
+    });
+
+    it('returns cached value without DB call on cache hit', async () => {
+      const cached = { channels: ['sms'], language: 'zgh' };
+      cacheManager.get.mockResolvedValue(cached);
+      const result = await service.getPreferences('user-789');
+      expect(result).toEqual(cached);
+      expect(preferenceRepo.findOne).not.toHaveBeenCalled();
+    });
+  });
+
+  // ─── upsertPreferences() — US-077 ────────────────────────────────────────
+
+  describe('upsertPreferences()', () => {
+    it('calls upsert and invalidates cache', async () => {
+      const result = await service.upsertPreferences('user-789', {
+        channels: ['sms'],
+        language: 'zgh',
+      });
+      expect(preferenceRepo.upsert).toHaveBeenCalled();
+      expect(cacheManager.del).toHaveBeenCalledWith('pref:user-789');
+      expect(result.language).toBe('zgh');
+    });
+  });
+
+  // ─── send() — channel filter — US-077 ────────────────────────────────────
+
+  describe('send() channel filter', () => {
+    it('skips sending when channel not in user preferences', async () => {
+      // User only has 'email' preference — sending via 'sms' should be skipped
+      preferenceRepo.findOne.mockResolvedValue({
+        userId: 'user-pref-test',
+        channels: ['email'],
+        language: 'fr',
+      });
+      await service.send({
+        recipientId: 'user-pref-test',
+        channel: 'sms' as const,
+        templateCode: 'test',
+        context: {},
+      });
+      // notificationRepo.save should NOT be called since we returned early
+      expect(notificationRepo.save).not.toHaveBeenCalled();
     });
   });
 });

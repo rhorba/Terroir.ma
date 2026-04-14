@@ -16,6 +16,7 @@ const makeRepo = () => ({
   save: jest.fn(),
   create: jest.fn().mockImplementation((dto) => ({ id: 'doc-uuid', ...dto })),
   update: jest.fn().mockResolvedValue(undefined),
+  createQueryBuilder: jest.fn(),
 });
 
 const mockProducer = {
@@ -239,6 +240,105 @@ describe('ExportDocumentService', () => {
       const result = await service.findAll(1, 20);
 
       expect(result).toEqual({ data: [], meta: { page: 1, limit: 20, total: 0 } });
+    });
+  });
+
+  // ─── exportClearancesReport() — US-070 ───────────────────────────────────
+
+  describe('exportClearancesReport()', () => {
+    const makeQb = (rows: unknown[]) => ({
+      leftJoin: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(rows),
+    });
+
+    it('returns CSV with header and one data row', async () => {
+      exportDocRepo.createQueryBuilder.mockReturnValue(
+        makeQb([
+          {
+            exportDocId: 'doc-1',
+            cooperativeName: 'Coop Argan',
+            productTypeCode: 'ARGAN',
+            destinationCountry: 'FR',
+            hsCode: '1515.30',
+            clearedAt: new Date('2025-06-01'),
+            status: 'approved',
+          },
+        ]),
+      );
+      const csv = await service.exportClearancesReport();
+      expect(csv).toContain('exportDocId,cooperativeName');
+      expect(csv).toContain('doc-1');
+      expect(csv).toContain('"Coop Argan"');
+      expect(csv).toContain('1515.30');
+    });
+
+    it('returns header-only CSV for empty result', async () => {
+      exportDocRepo.createQueryBuilder.mockReturnValue(makeQb([]));
+      const csv = await service.exportClearancesReport();
+      expect(csv.split('\n')).toHaveLength(1);
+      expect(csv).toContain('exportDocId');
+    });
+
+    it('applies destinationCountry filter', async () => {
+      const qb = makeQb([]);
+      exportDocRepo.createQueryBuilder.mockReturnValue(qb);
+      await service.exportClearancesReport(undefined, undefined, 'DE');
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('destination_country'),
+        expect.objectContaining({ destinationCountry: 'DE' }),
+      );
+    });
+  });
+
+  // ─── getHsCodeAssignments() — US-069 ─────────────────────────────────────
+
+  describe('getHsCodeAssignments()', () => {
+    const makeQb = (rows: unknown[]) => ({
+      leftJoin: jest.fn().mockReturnThis(),
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(rows),
+    });
+
+    it('returns mapped HS code rows', async () => {
+      exportDocRepo.createQueryBuilder.mockReturnValue(
+        makeQb([
+          {
+            exportDocId: 'doc-2',
+            certificationId: 'cert-1',
+            productTypeCode: 'ARGAN',
+            hsCode: '1515.30',
+            destinationCountry: 'DE',
+            assignedAt: new Date('2025-07-01'),
+          },
+        ]),
+      );
+      const result = await service.getHsCodeAssignments('coop-uuid');
+      expect(result).toHaveLength(1);
+      expect(result[0]!.hsCode).toBe('1515.30');
+      expect(result[0]!.destinationCountry).toBe('DE');
+    });
+
+    it('applies cooperativeId filter when provided', async () => {
+      const qb = makeQb([]);
+      exportDocRepo.createQueryBuilder.mockReturnValue(qb);
+      await service.getHsCodeAssignments('coop-scoped');
+      expect(qb.andWhere).toHaveBeenCalledWith(
+        expect.stringContaining('cooperative_id'),
+        expect.objectContaining({ cooperativeId: 'coop-scoped' }),
+      );
+    });
+
+    it('returns empty array when no rows found', async () => {
+      exportDocRepo.createQueryBuilder.mockReturnValue(makeQb([]));
+      const result = await service.getHsCodeAssignments();
+      expect(result).toEqual([]);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Body, Patch } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
@@ -8,6 +8,11 @@ import { DashboardService } from '../services/dashboard.service';
 import { AuditLogService } from '../services/audit-log.service';
 import { AuditLogQueryDto } from '../dto/audit-log-query.dto';
 import { AuditLog } from '../entities/audit-log.entity';
+import { SystemSettingsService } from '../services/system-settings.service';
+import { CampaignSettingsDto } from '../dto/settings/campaign-settings.dto';
+import { CertificationSettingsDto } from '../dto/settings/certification-settings.dto';
+import { PlatformSettingsDto } from '../dto/settings/platform-settings.dto';
+import { CurrentUser, CurrentUserPayload } from '../decorators/current-user.decorator';
 
 @ApiTags('admin')
 @ApiBearerAuth()
@@ -19,6 +24,7 @@ export class AdminController {
     private readonly kafkaAdminService: KafkaAdminService,
     private readonly dashboardService: DashboardService,
     private readonly auditLogService: AuditLogService,
+    private readonly systemSettingsService: SystemSettingsService,
   ) {}
 
   /**
@@ -56,5 +62,62 @@ export class AdminController {
   }> {
     const { data, total, page, limit } = await this.auditLogService.findAll(query);
     return { success: true, data, meta: { page, limit, total } };
+  }
+
+  /** US-090: Get campaign settings */
+  @Get('settings/campaign')
+  @ApiOperation({ summary: 'US-090: Get campaign settings (super-admin)' })
+  async getCampaignSettings(): Promise<{ success: boolean; data: CampaignSettingsDto }> {
+    const data = await this.systemSettingsService.getCampaignSettings();
+    return { success: true, data };
+  }
+
+  /** US-090: Update campaign settings */
+  @Patch('settings/campaign')
+  @ApiOperation({ summary: 'US-090: Update campaign settings (super-admin)' })
+  async updateCampaignSettings(
+    @Body() dto: CampaignSettingsDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<{ success: boolean; data: CampaignSettingsDto }> {
+    const data = await this.systemSettingsService.updateCampaignSettings(dto, user.sub);
+    return { success: true, data };
+  }
+
+  /** US-090: Get certification settings */
+  @Get('settings/certification')
+  @ApiOperation({ summary: 'US-090: Get certification settings (super-admin)' })
+  async getCertificationSettings(): Promise<{ success: boolean; data: CertificationSettingsDto }> {
+    const data = await this.systemSettingsService.getCertificationSettings();
+    return { success: true, data };
+  }
+
+  /** US-090: Update certification settings */
+  @Patch('settings/certification')
+  @ApiOperation({ summary: 'US-090: Update certification settings (super-admin)' })
+  async updateCertificationSettings(
+    @Body() dto: CertificationSettingsDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<{ success: boolean; data: CertificationSettingsDto }> {
+    const data = await this.systemSettingsService.updateCertificationSettings(dto, user.sub);
+    return { success: true, data };
+  }
+
+  /** US-090: Get platform settings */
+  @Get('settings/platform')
+  @ApiOperation({ summary: 'US-090: Get platform settings (super-admin)' })
+  async getPlatformSettings(): Promise<{ success: boolean; data: PlatformSettingsDto }> {
+    const data = await this.systemSettingsService.getPlatformSettings();
+    return { success: true, data };
+  }
+
+  /** US-090: Update platform settings */
+  @Patch('settings/platform')
+  @ApiOperation({ summary: 'US-090: Update platform settings (super-admin)' })
+  async updatePlatformSettings(
+    @Body() dto: PlatformSettingsDto,
+    @CurrentUser() user: CurrentUserPayload,
+  ): Promise<{ success: boolean; data: PlatformSettingsDto }> {
+    const data = await this.systemSettingsService.updatePlatformSettings(dto, user.sub);
+    return { success: true, data };
   }
 }

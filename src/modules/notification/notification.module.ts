@@ -9,6 +9,7 @@ import { EmailService } from './services/email.service';
 import { SmsService } from './services/sms.service';
 import { Notification } from './entities/notification.entity';
 import { NotificationTemplate } from './entities/notification-template.entity';
+import { NotificationPreference } from './entities/notification-preference.entity';
 import { NotificationListener } from './listeners/notification.listener';
 import { NotificationController } from './controllers/notification.controller';
 import { NotificationTemplateController } from './controllers/notification-template.controller';
@@ -22,7 +23,7 @@ import { NotificationTemplateController } from './controllers/notification-templ
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, NotificationTemplate]),
+    TypeOrmModule.forFeature([Notification, NotificationTemplate, NotificationPreference]),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (config: ConfigService) => ({

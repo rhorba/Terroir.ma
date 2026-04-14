@@ -792,4 +792,61 @@ export class CertificationService {
     await this.cacheManager.set(cacheKey, result, 300_000);
     return result;
   }
+
+  /**
+   * US-050: Export certification compliance report as a CSV string.
+   * Columns: certificationNumber, cooperativeName, productTypeCode, regionCode,
+   *          certificationType, currentStatus, validFrom, validUntil, grantedAt
+   */
+  async exportComplianceReport(from?: string, to?: string, status?: string): Promise<string> {
+    const qb = this.certRepo
+      .createQueryBuilder('c')
+      .select('c.certificationNumber', 'certificationNumber')
+      .addSelect('c.cooperativeName', 'cooperativeName')
+      .addSelect('c.productTypeCode', 'productTypeCode')
+      .addSelect('c.regionCode', 'regionCode')
+      .addSelect('c.certificationType', 'certificationType')
+      .addSelect('c.currentStatus', 'currentStatus')
+      .addSelect('c.validFrom', 'validFrom')
+      .addSelect('c.validUntil', 'validUntil')
+      .addSelect('c.grantedAt', 'grantedAt')
+      .where('c.deletedAt IS NULL')
+      .orderBy('c.grantedAt', 'DESC');
+
+    if (from) qb.andWhere('c.createdAt >= :from', { from });
+    if (to) qb.andWhere('c.createdAt <= :to', { to });
+    if (status) qb.andWhere('c.currentStatus = :status', { status });
+
+    const rows = await qb.getRawMany<{
+      certificationNumber: string | null;
+      cooperativeName: string;
+      productTypeCode: string;
+      regionCode: string;
+      certificationType: string;
+      currentStatus: string;
+      validFrom: Date | null;
+      validUntil: Date | null;
+      grantedAt: Date | null;
+    }>();
+
+    const header =
+      'certificationNumber,cooperativeName,productTypeCode,regionCode,' +
+      'certificationType,currentStatus,validFrom,validUntil,grantedAt';
+
+    const csvRows = rows.map((r) =>
+      [
+        r.certificationNumber ?? '',
+        `"${r.cooperativeName.replace(/"/g, '""')}"`,
+        r.productTypeCode,
+        r.regionCode,
+        r.certificationType,
+        r.currentStatus,
+        r.validFrom ? r.validFrom.toISOString() : '',
+        r.validUntil ? r.validUntil.toISOString() : '',
+        r.grantedAt ? r.grantedAt.toISOString() : '',
+      ].join(','),
+    );
+
+    return [header, ...csvRows].join('\n');
+  }
 }

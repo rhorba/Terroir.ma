@@ -49,7 +49,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-017   | As a cooperative administrator, I want to upload supporting documents for a product registration so that SDOQ compliance can be verified                      | Medium   | Done   | 3      |
 | US-018   | As an inspector, I want to view a product's SDOQ specification so that I can verify compliance during inspection                                              | High     | Done   | 2      |
 | US-019   | As a cooperative administrator, I want to record post-harvest processing steps for a batch so that the full chain of custody is documented                    | Medium   | Done   | 5      |
-| US-020   | As a super-admin, I want to export product registry data so that regulatory reporting is possible                                                             | Low      | Todo   | 3      |
+| US-020   | As a super-admin, I want to export product registry data so that regulatory reporting is possible                                                             | Low      | Done   | 3      |
 
 **Epic 2 Total Points:** 42
 
@@ -101,7 +101,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-047   | As a certification body officer, I want to generate a PDF certificate so that the cooperative has a printable document                          | Medium   | Done   | 5      |
 | US-048   | As a super-admin, I want to view certification statistics by region and product so that I can report to MAPMDREF                                | Medium   | Done   | 5      |
 | US-049   | As a cooperative administrator, I want to view all certifications for my cooperative so that I can manage my certification portfolio            | Low      | Done   | 3      |
-| US-050   | As a super-admin, I want to export a certification compliance report so that regulatory submissions are supported                               | Low      | Todo   | 5      |
+| US-050   | As a super-admin, I want to export a certification compliance report so that regulatory submissions are supported                               | Low      | Done   | 5      |
 
 **Epic 4 Total Points:** 80
 
@@ -142,8 +142,8 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-066   | As a cooperative administrator, I want to view the status of all my export documentation requests so that I can manage export logistics | Medium   | Done   | 3      |
 | US-067   | As a super-admin, I want to view all export clearances so that I can report export volume to MAPMDREF                                   | Medium   | Done   | 3      |
 | US-068   | As a customs agent, I want to generate a PDF export certificate so that the cooperative has documentation for the shipment              | Medium   | Done   | 5      |
-| US-069   | As a cooperative administrator, I want to view HS code assignments for my exports so that I can verify customs classification           | Low      | Todo   | 2      |
-| US-070   | As a super-admin, I want to export a report of all export clearances by destination country so that trade statistics are available      | Low      | Todo   | 3      |
+| US-069   | As a cooperative administrator, I want to view HS code assignments for my exports so that I can verify customs classification           | Low      | Done   | 2      |
+| US-070   | As a super-admin, I want to export a report of all export clearances by destination country so that trade statistics are available      | Low      | Done   | 3      |
 
 **Epic 6 Total Points:** 34
 
@@ -161,7 +161,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-074   | As a platform user, I want to view my notification history so that I can review past alerts                                                                    | Medium   | Done   | 3      |
 | US-075   | As a super-admin, I want to manage notification templates so that messages can be updated without code changes                                                 | Medium   | Done   | 8      |
 | US-076   | As a super-admin, I want to view failed notification counts so that I can identify delivery problems                                                           | Medium   | Done   | 3      |
-| US-077   | As a platform user, I want to set my notification preferences (email, SMS, or both) so that I receive alerts on my preferred channel                           | Low      | Todo   | 3      |
+| US-077   | As a platform user, I want to set my notification preferences (email, SMS, or both) so that I receive alerts on my preferred channel                           | Low      | Done   | 3      |
 | US-078   | As a super-admin, I want notifications to be retried on failure so that transient errors do not cause missed alerts                                            | High     | Done   | 5      |
 | US-079   | As a super-admin, I want notification events to be published to Kafka so that notification delivery is decoupled from business logic                           | High     | Done   | 3      |
 | US-080   | As a super-admin, I want Handlebars templates to support RTL layout for Arabic so that notifications render correctly                                          | Medium   | Done   | 3      |
@@ -185,7 +185,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-087   | As a super-admin, I want to view Kafka DLQ message counts so that I can detect processing failures                                               | Medium   | Done   | 3      |
 | US-088   | As a super-admin, I want to view notification delivery rates so that communication effectiveness is monitored                                    | Medium   | Done   | 3      |
 | US-089   | As a super-admin, I want to generate a report of active certifications so that ONSSA can verify compliance                                       | Medium   | Done   | 3      |
-| US-090   | As a super-admin, I want to configure system settings (campaign year, product types, HS codes) so that the platform reflects current regulations | High     | Todo   | 8      |
+| US-090   | As a super-admin, I want to configure system settings (campaign year, product types, HS codes) so that the platform reflects current regulations | High     | Done   | 8      |
 
 **Epic 8 Total Points:** 53
 

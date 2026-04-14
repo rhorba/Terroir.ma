@@ -133,4 +133,112 @@ export class ExportDocumentService {
     this.logger.log({ exportDocId: id, validatedBy }, 'Export document validated');
     return this.findById(doc.id);
   }
+
+  /**
+   * US-070: Export clearances by destination country as CSV.
+   * Joins ExportDocument with Certification (same certification schema — intra-module safe).
+   * Columns: exportDocId, cooperativeName, productTypeCode, destinationCountry, hsCode, clearedAt, status
+   */
+  async exportClearancesReport(
+    from?: string,
+    to?: string,
+    destinationCountry?: string,
+  ): Promise<string> {
+    const qb = this.exportDocRepo
+      .createQueryBuilder('ed')
+      .leftJoin('certification.certification', 'c', 'c.id = ed.certification_id')
+      .select('ed.id', 'exportDocId')
+      .addSelect('c.cooperative_name', 'cooperativeName')
+      .addSelect('c.product_type_code', 'productTypeCode')
+      .addSelect('ed.destination_country', 'destinationCountry')
+      .addSelect('ed.hs_code', 'hsCode')
+      .addSelect('ed.updated_at', 'clearedAt')
+      .addSelect('ed.status', 'status')
+      .orderBy('ed.updated_at', 'DESC');
+
+    if (from) qb.andWhere('ed.updated_at >= :from', { from });
+    if (to) qb.andWhere('ed.updated_at <= :to', { to });
+    if (destinationCountry)
+      qb.andWhere('ed.destination_country = :destinationCountry', { destinationCountry });
+
+    const rows = await qb.getRawMany<{
+      exportDocId: string;
+      cooperativeName: string | null;
+      productTypeCode: string | null;
+      destinationCountry: string;
+      hsCode: string | null;
+      clearedAt: Date;
+      status: string;
+    }>();
+
+    const header =
+      'exportDocId,cooperativeName,productTypeCode,destinationCountry,hsCode,clearedAt,status';
+
+    const csvRows = rows.map((r) =>
+      [
+        r.exportDocId,
+        `"${(r.cooperativeName ?? '').replace(/"/g, '""')}"`,
+        r.productTypeCode ?? '',
+        r.destinationCountry,
+        r.hsCode ?? '',
+        r.clearedAt.toISOString(),
+        r.status,
+      ].join(','),
+    );
+
+    return [header, ...csvRows].join('\n');
+  }
+
+  /**
+   * US-069: List HS code assignments.
+   * cooperative-admin: pass their cooperativeId to scope the query.
+   * customs-agent / super-admin: optional cooperativeId filter.
+   */
+  async getHsCodeAssignments(
+    cooperativeId?: string,
+    from?: string,
+    to?: string,
+  ): Promise<
+    Array<{
+      exportDocId: string;
+      certificationId: string;
+      productTypeCode: string | null;
+      hsCode: string | null;
+      destinationCountry: string;
+      assignedAt: string;
+    }>
+  > {
+    const qb = this.exportDocRepo
+      .createQueryBuilder('ed')
+      .leftJoin('certification.certification', 'c', 'c.id = ed.certification_id')
+      .select('ed.id', 'exportDocId')
+      .addSelect('ed.certification_id', 'certificationId')
+      .addSelect('c.product_type_code', 'productTypeCode')
+      .addSelect('ed.hs_code', 'hsCode')
+      .addSelect('ed.destination_country', 'destinationCountry')
+      .addSelect('ed.created_at', 'assignedAt')
+      .orderBy('ed.created_at', 'DESC');
+
+    if (cooperativeId) qb.andWhere('ed.cooperative_id = :cooperativeId', { cooperativeId });
+    if (from) qb.andWhere('ed.created_at >= :from', { from });
+    if (to) qb.andWhere('ed.created_at <= :to', { to });
+
+    const rows = await qb.getRawMany<{
+      exportDocId: string;
+      certificationId: string;
+      productTypeCode: string | null;
+      hsCode: string | null;
+      destinationCountry: string;
+      assignedAt: Date;
+    }>();
+
+    return rows.map((r) => ({
+      exportDocId: r.exportDocId,
+      certificationId: r.certificationId,
+      productTypeCode: r.productTypeCode,
+      hsCode: r.hsCode,
+      destinationCountry: r.destinationCountry,
+      assignedAt: r.assignedAt.toISOString(),
+    }));
+  }
 }

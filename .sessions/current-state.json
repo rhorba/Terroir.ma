@@ -10,13 +10,13 @@
     "goal": "US-090 system settings (campaign/certification/platform groups), US-050 compliance CSV export, US-077 notification preferences, US-020 product registry export, US-070 clearances report, US-069 HS code assignments",
     "status": "IN_PROGRESS",
     "story_points_planned": 24,
-    "story_points_completed": 0,
-    "velocity_pct": 0,
+    "story_points_completed": 24,
+    "velocity_pct": 100,
     "stories": ["US-090", "US-050", "US-077", "US-020", "US-070", "US-069"],
     "design_doc": "docs/plans/2026-04-13-sprint-11/design.md",
     "note": "US-090 anchors sprint (last High-priority story). All stories are read/config — zero Kafka events. 2 new migrations: 015-AddSystemSetting, 016-AddNotificationPreference. CSV exports use manual string generation (no new npm packages)."
   },
-  "active_feature": null,
+  "active_feature": "sprint-11-complete",
   "modules_status": {
     "cooperative": {
       "entities": true,

@@ -8,7 +8,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Notification, NotificationChannel } from '../entities/notification.entity';
 import { NotificationTemplate } from '../entities/notification-template.entity';
+import { NotificationPreference } from '../entities/notification-preference.entity';
 import { NotificationStats } from '../interfaces/notification-stats.interface';
+import { UpsertNotificationPreferenceDto } from '../dto/notification-preference.dto';
 import { EmailService } from './email.service';
 import { SmsService } from './sms.service';
 
@@ -35,6 +37,8 @@ export class NotificationService {
     private readonly notificationRepo: Repository<Notification>,
     @InjectRepository(NotificationTemplate)
     private readonly templateRepo: Repository<NotificationTemplate>,
+    @InjectRepository(NotificationPreference)
+    private readonly preferenceRepo: Repository<NotificationPreference>,
     private readonly emailService: EmailService,
     private readonly smsService: SmsService,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -119,8 +123,53 @@ export class NotificationService {
     return result;
   }
 
+  /**
+   * US-077: Get notification preferences for a user.
+   * Returns in-memory defaults if no row exists — never throws.
+   * Redis-cached for 300s per user. Key: pref:{userId}.
+   */
+  async getPreferences(userId: string): Promise<{ channels: string[]; language: string }> {
+    const cacheKey = `pref:${userId}`;
+    const cached = await this.cacheManager.get<{ channels: string[]; language: string }>(cacheKey);
+    if (cached) return cached;
+
+    const row = await this.preferenceRepo.findOne({ where: { userId } });
+    const result = row
+      ? { channels: row.channels, language: row.language }
+      : { channels: ['email'], language: 'fr' };
+
+    await this.cacheManager.set(cacheKey, result, 300_000);
+    return result;
+  }
+
+  /**
+   * US-077: Upsert notification preferences for a user.
+   * Invalidates the Redis cache on update.
+   */
+  async upsertPreferences(
+    userId: string,
+    dto: UpsertNotificationPreferenceDto,
+  ): Promise<{ channels: string[]; language: string }> {
+    await this.preferenceRepo.upsert(
+      { userId, channels: dto.channels, language: dto.language },
+      { conflictPaths: ['userId'] },
+    );
+    await this.cacheManager.del(`pref:${userId}`);
+    return { channels: dto.channels, language: dto.language };
+  }
+
   async send(opts: SendNotificationOptions): Promise<void> {
     const language = opts.language ?? 'fr-MA';
+
+    // US-077: Skip if channel not in user's preferences
+    const prefs = await this.getPreferences(opts.recipientId);
+    if (!prefs.channels.includes(opts.channel)) {
+      this.logger.debug(
+        { recipientId: opts.recipientId, channel: opts.channel },
+        'Notification skipped — channel not in user preferences',
+      );
+      return;
+    }
     const cacheKey = `template:${opts.templateCode}:${opts.channel}:${language}`;
 
     // 1. Redis cache check

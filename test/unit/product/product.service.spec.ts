@@ -117,4 +117,44 @@ describe('ProductService', () => {
       expect(mockQb.take).toHaveBeenCalledWith(100);
     });
   });
+
+  // ─── exportProductRegistry() — US-020 ────────────────────────────────────
+
+  describe('exportProductRegistry()', () => {
+    const makeExportQb = (rows: unknown[]) => ({
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(rows),
+    });
+
+    it('returns CSV with header and one data row', async () => {
+      productRepo.createQueryBuilder.mockReturnValue(
+        makeExportQb([
+          {
+            productId: 'uuid-1',
+            name: "Huile d'Argan",
+            productTypeCode: 'ARGAN',
+            cooperativeId: 'coop-uuid',
+            regionCode: 'SOUSS',
+            status: 'active',
+            registeredAt: new Date('2025-03-01'),
+          },
+        ]),
+      );
+      const csv = await service.exportProductRegistry();
+      expect(csv).toContain('productId,name,productTypeCode');
+      expect(csv).toContain('uuid-1');
+      expect(csv).toContain('SOUSS');
+    });
+
+    it('returns header-only for empty result', async () => {
+      productRepo.createQueryBuilder.mockReturnValue(makeExportQb([]));
+      const csv = await service.exportProductRegistry();
+      expect(csv.split('\n')).toHaveLength(1);
+      expect(csv).toContain('productId,name');
+    });
+  });
 });

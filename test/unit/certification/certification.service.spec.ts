@@ -28,6 +28,7 @@ const makeRepo = () => ({
   findAndCount: jest.fn(),
   update: jest.fn(),
   count: jest.fn().mockResolvedValue(0),
+  createQueryBuilder: jest.fn(),
 });
 
 const makeProducer = () => ({
@@ -704,6 +705,49 @@ describe('CertificationService', () => {
         result,
         300_000,
       );
+    });
+  });
+
+  // ─── exportComplianceReport() — US-050 ───────────────────────────────────
+
+  describe('exportComplianceReport()', () => {
+    const makeQb = (rows: unknown[]) => ({
+      select: jest.fn().mockReturnThis(),
+      addSelect: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      orderBy: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawMany: jest.fn().mockResolvedValue(rows),
+    });
+
+    it('returns CSV with header and one data row', async () => {
+      certRepo.createQueryBuilder.mockReturnValue(
+        makeQb([
+          {
+            certificationNumber: 'TERROIR-IGP-MA-2025-0001',
+            cooperativeName: 'Coop Test',
+            productTypeCode: 'ARGAN',
+            regionCode: 'SOUSS',
+            certificationType: 'IGP',
+            currentStatus: 'GRANTED',
+            validFrom: new Date('2025-01-01'),
+            validUntil: new Date('2026-01-01'),
+            grantedAt: new Date('2025-01-15'),
+          },
+        ]),
+      );
+      const csv = await service.exportComplianceReport();
+      expect(csv).toContain('certificationNumber,cooperativeName');
+      expect(csv).toContain('TERROIR-IGP-MA-2025-0001');
+      expect(csv).toContain('"Coop Test"');
+    });
+
+    it('returns header-only CSV for empty result', async () => {
+      certRepo.createQueryBuilder.mockReturnValue(makeQb([]));
+      const csv = await service.exportComplianceReport();
+      const lines = csv.split('\n');
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toContain('certificationNumber');
     });
   });
 });

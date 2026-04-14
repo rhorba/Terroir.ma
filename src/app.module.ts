@@ -26,6 +26,8 @@ import { DashboardService } from './common/services/dashboard.service';
 import { AuditLogService } from './common/services/audit-log.service';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { AuditLog } from './common/entities/audit-log.entity';
+import { SystemSetting } from './common/entities/system-setting.entity';
+import { SystemSettingsService } from './common/services/system-settings.service';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { KafkaClientModule } from './kafka/kafka-client.module';
@@ -93,7 +95,7 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     KafkaClientModule,
 
     // Common entities
-    TypeOrmModule.forFeature([AuditLog]),
+    TypeOrmModule.forFeature([AuditLog, SystemSetting]),
 
     // Domain modules
     CooperativeModule,
@@ -107,6 +109,7 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
     MinioService,
     DashboardService,
     AuditLogService,
+    SystemSettingsService,
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
 })

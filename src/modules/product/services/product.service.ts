@@ -71,4 +71,51 @@ export class ProductService {
       .skip((page - 1) * limit)
       .getManyAndCount();
   }
+
+  /**
+   * US-020: Export product registry as a CSV string.
+   * Columns: productId, name, productTypeCode, cooperativeId, regionCode, status, registeredAt
+   */
+  async exportProductRegistry(from?: string, to?: string): Promise<string> {
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .select('p.id', 'productId')
+      .addSelect('p.name', 'name')
+      .addSelect('p.productTypeCode', 'productTypeCode')
+      .addSelect('p.cooperativeId', 'cooperativeId')
+      .addSelect('p.regionCode', 'regionCode')
+      .addSelect('p.status', 'status')
+      .addSelect('p.createdAt', 'registeredAt')
+      .where('p.deletedAt IS NULL')
+      .orderBy('p.createdAt', 'DESC');
+
+    if (from) qb.andWhere('p.createdAt >= :from', { from });
+    if (to) qb.andWhere('p.createdAt <= :to', { to });
+
+    const rows = await qb.getRawMany<{
+      productId: string;
+      name: string;
+      productTypeCode: string;
+      cooperativeId: string;
+      regionCode: string | null;
+      status: string | null;
+      registeredAt: Date;
+    }>();
+
+    const header = 'productId,name,productTypeCode,cooperativeId,regionCode,status,registeredAt';
+
+    const csvRows = rows.map((r) =>
+      [
+        r.productId,
+        `"${r.name.replace(/"/g, '""')}"`,
+        r.productTypeCode,
+        r.cooperativeId,
+        r.regionCode ?? '',
+        r.status ?? '',
+        r.registeredAt.toISOString(),
+      ].join(','),
+    );
+
+    return [header, ...csvRows].join('\n');
+  }
 }

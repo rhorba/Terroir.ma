@@ -3,21 +3,32 @@ import { AdminController } from '../../../src/common/controllers/admin.controlle
 import { KafkaAdminService } from '../../../src/common/services/kafka-admin.service';
 import { DashboardService } from '../../../src/common/services/dashboard.service';
 import { AuditLogService } from '../../../src/common/services/audit-log.service';
+import { SystemSettingsService } from '../../../src/common/services/system-settings.service';
 
 const makeKafkaAdminService = () => ({ getDlqStats: jest.fn() });
 const makeDashboardService = () => ({ getDashboard: jest.fn() });
 const makeAuditLogService = () => ({ findAll: jest.fn() });
+const makeSystemSettingsService = () => ({
+  getCampaignSettings: jest.fn(),
+  updateCampaignSettings: jest.fn(),
+  getCertificationSettings: jest.fn(),
+  updateCertificationSettings: jest.fn(),
+  getPlatformSettings: jest.fn(),
+  updatePlatformSettings: jest.fn(),
+});
 
 describe('AdminController', () => {
   let controller: AdminController;
   let kafkaAdminService: ReturnType<typeof makeKafkaAdminService>;
   let dashboardService: ReturnType<typeof makeDashboardService>;
   let auditLogService: ReturnType<typeof makeAuditLogService>;
+  let systemSettingsService: ReturnType<typeof makeSystemSettingsService>;
 
   beforeEach(async () => {
     kafkaAdminService = makeKafkaAdminService();
     dashboardService = makeDashboardService();
     auditLogService = makeAuditLogService();
+    systemSettingsService = makeSystemSettingsService();
 
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AdminController],
@@ -25,6 +36,7 @@ describe('AdminController', () => {
         { provide: KafkaAdminService, useValue: kafkaAdminService },
         { provide: DashboardService, useValue: dashboardService },
         { provide: AuditLogService, useValue: auditLogService },
+        { provide: SystemSettingsService, useValue: systemSettingsService },
       ],
     }).compile();
 
@@ -86,6 +98,46 @@ describe('AdminController', () => {
       const result = await controller.getAuditLogs({ page: 1, limit: 20 });
 
       expect(result).toEqual({ success: true, data: [], meta: { page: 1, limit: 20, total: 0 } });
+    });
+  });
+
+  describe('getCampaignSettings()', () => {
+    it('US-090: returns success:true with campaign settings', async () => {
+      const mockSettings = {
+        currentCampaignYear: '2025-2026',
+        campaignStartMonth: 10,
+        campaignEndMonth: 9,
+      };
+      systemSettingsService.getCampaignSettings.mockResolvedValue(mockSettings);
+
+      const result = await controller.getCampaignSettings();
+
+      expect(result).toEqual({ success: true, data: mockSettings });
+    });
+  });
+
+  describe('updateCampaignSettings()', () => {
+    it('US-090: updates campaign settings and returns result', async () => {
+      const dto = { currentCampaignYear: '2026-2027', campaignStartMonth: 10, campaignEndMonth: 9 };
+      systemSettingsService.updateCampaignSettings.mockResolvedValue(dto);
+
+      const result = await controller.updateCampaignSettings(dto, {
+        sub: 'user-1',
+      } as import('../../../src/common/decorators/current-user.decorator').CurrentUserPayload);
+
+      expect(result).toEqual({ success: true, data: dto });
+      expect(systemSettingsService.updateCampaignSettings).toHaveBeenCalledWith(dto, 'user-1');
+    });
+  });
+
+  describe('getPlatformSettings()', () => {
+    it('US-090: returns success:true with platform settings', async () => {
+      const mockSettings = { maintenanceMode: false, supportEmail: 'support@terroir.ma' };
+      systemSettingsService.getPlatformSettings.mockResolvedValue(mockSettings);
+
+      const result = await controller.getPlatformSettings();
+
+      expect(result).toEqual({ success: true, data: mockSettings });
     });
   });
 });

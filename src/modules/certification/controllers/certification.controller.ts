@@ -20,6 +20,7 @@ import { CertificationPdfService } from '../services/certification-pdf.service';
 import { StatsQueryDto } from '../dto/stats-query.dto';
 import { ExportQueryDto } from '../dto/export-query.dto';
 import { ReportQueryDto } from '../dto/report-query.dto';
+import { ComplianceExportQueryDto } from '../dto/compliance-export-query.dto';
 import {
   CertificationStats,
   CooperativeComplianceRow,
@@ -196,6 +197,34 @@ export class CertificationController {
   @ApiQuery({ name: 'to', required: false, type: String, description: 'YYYY-MM-DD' })
   async onssaReport(@Query() query: ReportQueryDto): Promise<OnssaCertRow[]> {
     return this.certificationService.onssaReport(query.from, query.to);
+  }
+
+  /**
+   * US-050: Export certification compliance report as CSV.
+   * Registered before GET /:id to avoid NestJS param collision.
+   */
+  @Get('compliance-export')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'certification-body')
+  @ApiOperation({ summary: 'US-050: Export certification compliance report (CSV)' })
+  @ApiQuery({ name: 'from', required: false, type: String })
+  @ApiQuery({ name: 'to', required: false, type: String })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  async exportComplianceReport(
+    @Query() query: ComplianceExportQueryDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const csv = await this.certificationService.exportComplianceReport(
+      query.from,
+      query.to,
+      query.status,
+    );
+    const date = new Date().toISOString().slice(0, 10);
+    res.set({
+      'Content-Type': 'text/csv',
+      'Content-Disposition': `attachment; filename="compliance-${date}.csv"`,
+    });
+    return new StreamableFile(Buffer.from(csv, 'utf-8'));
   }
 
   /** Request a new certification for a production batch */
