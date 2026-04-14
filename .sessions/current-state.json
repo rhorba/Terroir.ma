@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-14T22:45:00Z",
-  "session_id": "session-2026-04-14-sprint12-complete",
+  "timestamp": "2026-04-14T23:15:00Z",
+  "session_id": "session-2026-04-14-sprint12-retro",
   "project_phase": "feature-development",
   "current_sprint": {
     "sprint_number": 12,
@@ -169,16 +169,20 @@
   },
   "blockers": [],
   "next_actions": [
-    "Sprint 12 CLOSED — 13/13 SP (100%), 386 unit tests, 29 integration tests, 35 E2E tests",
+    "Sprint 12 CLOSED + retro complete — 13/13 SP (100%), 386 unit, 29 integration, 35 E2E",
     "v1 feature development COMPLETE — all planned stories delivered",
-    "Post-sprint checklist DONE: migration 017 applied, fonts verified, openapi.json generated, integration + E2E green",
-    "Optional next steps:",
-    "  Phase 2 planning: Prometheus/Grafana monitoring, Jaeger tracing, Kafka Schema Registry",
-    "  US-053: QR offline verification (13 SP, Medium) — deferred from v1",
-    "  US-027: ONSSA lab integration (13 SP, Low) — deferred to Phase 2",
-    "  Security hardening: OWASP ZAP scan, penetration testing",
-    "  Performance testing: k6/Artillery load tests",
-    "  Production deployment: Kubernetes manifests, Helm charts"
+    "Housekeeping done: US-058 marked Done in backlog, VELOCITY-TRACKER Sprint 12 row added",
+    "Sprint 12 retro saved: .sessions/sprint-logs/sprint-12-retro.md",
+    "Phase 2 planning — recommended scope for next session:",
+    "  /brainstorm phase-2-monitoring — Prometheus/Grafana, Jaeger, health endpoint enhancements",
+    "  /brainstorm phase-2-performance — k6/Artillery load tests, Redis cache tuning",
+    "  /brainstorm phase-2-security — OWASP ZAP scan, dependency audit, secrets rotation",
+    "  /brainstorm phase-2-deployment — Kubernetes manifests, Helm charts, multi-stage Dockerfile",
+    "  US-053: QR offline verification (13 SP, Medium) — if still in scope",
+    "  US-027: ONSSA lab integration (13 SP, Low) — Phase 2",
+    "Standing practices to adopt:",
+    "  Sync .env from .env.example at the start of every sprint",
+    "  Run smoke tests against live app before committing new E2E files"
   ],
   "decisions_made_this_sprint": [
     "QrScanEvent: append-only, fire-and-forget .save().catch() — never blocks verifyQrCode() response",
