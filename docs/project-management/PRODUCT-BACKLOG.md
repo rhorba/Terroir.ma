@@ -120,7 +120,7 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 | US-055   | As a consumer, I want to see product details (origin, cooperative, product type) when verifying a QR code so that I have meaningful information | High     | Done   | 3      |
 | US-056   | As a super-admin, I want revoked certificate QR codes to return a revoked status so that consumers are not misled                               | High     | Done   | 3      |
 | US-057   | As a cooperative administrator, I want to download the QR code image for my certificate so that I can print it on packaging                     | Medium   | Done   | 3      |
-| US-058   | As a super-admin, I want to track QR scan events so that I can monitor product distribution                                                     | Low      | Todo   | 5      |
+| US-058   | As a super-admin, I want to track QR scan events so that I can monitor product distribution                                                     | Low      | Done   | 5      |
 | US-059   | As a consumer, I want the verification page to display in Arabic, French, or Amazigh so that it is accessible to all Moroccan users             | Medium   | Done   | 5      |
 | US-060   | As a super-admin, I want QR verification to use Redis caching so that repeated scans do not overload the database                               | High     | Done   | 3      |
 

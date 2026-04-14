@@ -15,16 +15,17 @@
 | 9      | MinIO File Storage, Lab Registry, Document Uploads, Export PDF       | 22             | 22               | 100%       | 1-session sprint — 342 unit tests; MinIO infrastructure added                          |
 | 10     | Admin Dashboard, Certification Analytics, Audit Logs, Delivery Rates | 24             | 24               | 100%       | 1-session sprint — 357 unit tests; AuditInterceptor global pattern                     |
 | 11     | System Config, Reports, Preferences                                  | 24             | 24               | 100%       | 1-session sprint — 382 unit tests; 12 new endpoints; 2 migrations; zero Kafka events   |
+| 12     | v1 Hardening — QR Scan Events, ENV Validation, OpenAPI, Tests        | 13             | 13               | 100%       | 1-session sprint — 386 unit · 29 integration · 35 E2E; openapi.json generated; v1 DONE |
 
 ## Rolling Average Velocity
 
 | Window                            | Average         |
 | --------------------------------- | --------------- |
-| Last 1 sprint (Sp 11)             | 24 SP           |
-| Last 2 sprints (Sp 10+11)         | 24.0 SP/session |
-| Last 3 sprints (Sp 9+10+11)       | 23.3 SP/session |
-| Last 5 sprints (Sp 7–11)          | 22.8 SP/session |
-| All-time (feature sprints Sp2–11) | 22.9 SP/session |
+| Last 1 sprint (Sp 12)             | 13 SP           |
+| Last 2 sprints (Sp 11+12)         | 18.5 SP/session |
+| Last 3 sprints (Sp 10+11+12)      | 20.3 SP/session |
+| Last 5 sprints (Sp 8–12)          | 19.2 SP/session |
+| All-time (feature sprints Sp2–12) | 21.5 SP/session |
 
 _Sprint 1 excluded from rolling average — scaffold sprint is not representative of feature velocity._
 
