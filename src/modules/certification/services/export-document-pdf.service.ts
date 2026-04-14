@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as PDFDocument from 'pdfkit';
 import * as path from 'path';
+import { existsSync } from 'fs';
 import { ExportDocument } from '../entities/export-document.entity';
 import { Certification } from '../entities/certification.entity';
 
@@ -52,8 +53,17 @@ export class ExportDocumentPdfService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      const dejavu = path.join(this.fontsDir, 'DejaVuSans.ttf');
-      doc.registerFont('DejaVu', dejavu);
+      const dejavuPath = path.join(this.fontsDir, 'DejaVuSans.ttf');
+      const hasDejaVu = existsSync(dejavuPath);
+
+      if (!hasDejaVu) {
+        this.logger.warn(
+          'DejaVuSans.ttf not found — using Helvetica fallback. Run scripts/download-fonts.sh to install.',
+        );
+      }
+
+      if (hasDejaVu) doc.registerFont('DejaVu', dejavuPath);
+      const latinFont = hasDejaVu ? 'DejaVu' : 'Helvetica';
 
       const formatDate = (d: string | Date | null): string => {
         if (!d) return '—';
@@ -86,8 +96,8 @@ export class ExportDocumentPdfService {
 
       // ── Field helper ─────────────────────────────────────────────────────────
       const field = (label: string, value: string): void => {
-        doc.font('DejaVu').fontSize(10).fillColor('#555').text(`${label}:  `, { continued: true });
-        doc.font('DejaVu').fontSize(10).fillColor('#000').text(value);
+        doc.font(latinFont).fontSize(10).fillColor('#555').text(`${label}:  `, { continued: true });
+        doc.font(latinFont).fontSize(10).fillColor('#000').text(value);
       };
 
       // ── Export document fields ────────────────────────────────────────────────

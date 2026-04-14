@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'nestjs-pino';
 import helmet from 'helmet';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
@@ -43,6 +44,22 @@ async function bootstrap(): Promise<void> {
     new LoggingInterceptor(),
     new ResponseInterceptor(),
   );
+
+  // OpenAPI — available at /api-docs in non-production environments
+  if (configService.get<string>('NODE_ENV') !== 'production') {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Terroir.ma API')
+      .setDescription(
+        'Modular monolith for Morocco SDOQ terroir product certification (Law 25-06). ' +
+          'All endpoints require Bearer JWT issued by Keycloak except /health, /ready, and /verify/:sig.',
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api-docs', app, document);
+  }
 
   await app.listen(port);
   const logger = app.get(Logger);

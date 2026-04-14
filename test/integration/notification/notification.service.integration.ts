@@ -14,6 +14,7 @@ import { DataSource } from 'typeorm';
 import { NotificationService } from '../../../src/modules/notification/services/notification.service';
 import { Notification } from '../../../src/modules/notification/entities/notification.entity';
 import { NotificationTemplate } from '../../../src/modules/notification/entities/notification-template.entity';
+import { NotificationPreference } from '../../../src/modules/notification/entities/notification-preference.entity';
 import { EmailService } from '../../../src/modules/notification/services/email.service';
 import { SmsService } from '../../../src/modules/notification/services/sms.service';
 import { ConfigService } from '@nestjs/config';
@@ -39,11 +40,11 @@ describe('NotificationService (integration)', () => {
         TypeOrmModule.forRoot({
           type: 'postgres',
           url: container.getConnectionUri(),
-          entities: [Notification, NotificationTemplate],
+          entities: [Notification, NotificationTemplate, NotificationPreference],
           schema: 'notification',
           synchronize: false,
         }),
-        TypeOrmModule.forFeature([Notification, NotificationTemplate]),
+        TypeOrmModule.forFeature([Notification, NotificationTemplate, NotificationPreference]),
       ],
       providers: [
         NotificationService,

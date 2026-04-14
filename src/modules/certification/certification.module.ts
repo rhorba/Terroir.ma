@@ -20,6 +20,7 @@ import { CertificationEvent } from './entities/certification-event.entity';
 import { Inspection } from './entities/inspection.entity';
 import { InspectionReport } from './entities/inspection-report.entity';
 import { QrCode } from './entities/qr-code.entity';
+import { QrScanEvent } from './entities/qr-scan-event.entity';
 import { ExportDocument } from './entities/export-document.entity';
 
 /**
@@ -40,6 +41,7 @@ import { ExportDocument } from './entities/export-document.entity';
       Inspection,
       InspectionReport,
       QrCode,
+      QrScanEvent,
       ExportDocument,
     ]),
     CacheModule.registerAsync({

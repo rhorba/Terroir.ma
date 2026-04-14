@@ -17,6 +17,8 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiQuery } from '@nestj
 import { Response } from 'express';
 import { CertificationService } from '../services/certification.service';
 import { CertificationPdfService } from '../services/certification-pdf.service';
+import { QrCodeService } from '../services/qr-code.service';
+import { ScanStatsResponseDto } from '../dto/scan-stats-response.dto';
 import { StatsQueryDto } from '../dto/stats-query.dto';
 import { ExportQueryDto } from '../dto/export-query.dto';
 import { ReportQueryDto } from '../dto/report-query.dto';
@@ -56,6 +58,7 @@ export class CertificationController {
   constructor(
     private readonly certificationService: CertificationService,
     private readonly certificationPdfService: CertificationPdfService,
+    private readonly qrCodeService: QrCodeService,
   ) {}
 
   /**
@@ -454,5 +457,17 @@ export class CertificationController {
   ): Promise<Certification> {
     const role = user.realm_access?.roles?.[0] ?? 'certification-body';
     return this.certificationService.revokeCertification(id, reason, user.sub, role, correlationId);
+  }
+
+  /**
+   * US-058 — Aggregate QR scan statistics for a certification.
+   */
+  @Get(':id/scan-stats')
+  @UseGuards(RolesGuard)
+  @Roles('super-admin', 'certification-body')
+  @ApiOperation({ summary: 'US-058: QR scan statistics for a certification' })
+  @ApiParam({ name: 'id', description: 'Certification UUID' })
+  async getScanStats(@Param('id') id: string): Promise<ScanStatsResponseDto> {
+    return this.qrCodeService.getScanStats(id);
   }
 }

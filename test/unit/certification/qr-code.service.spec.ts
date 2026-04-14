@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { QrCodeService } from '../../../src/modules/certification/services/qr-code.service';
 import { QrCode } from '../../../src/modules/certification/entities/qr-code.entity';
+import { QrScanEvent } from '../../../src/modules/certification/entities/qr-scan-event.entity';
 import {
   Certification,
   CertificationStatus,
@@ -12,10 +13,25 @@ import { CertificationProducer } from '../../../src/modules/certification/events
 
 const makeRepo = () => ({
   findOne: jest.fn(),
-  save: jest.fn(),
-  create: jest.fn(),
+  save: jest.fn().mockResolvedValue({}),
+  create: jest.fn((dto: unknown) => dto),
   update: jest.fn(),
   increment: jest.fn().mockResolvedValue(undefined),
+});
+
+const makeQrScanEventRepo = () => ({
+  create: jest.fn((dto: unknown) => dto),
+  save: jest.fn().mockResolvedValue({}),
+  manager: {
+    query: jest.fn().mockResolvedValue([
+      {
+        total_scans: '5',
+        last_30_days_scans: '2',
+        first_scan_at: '2026-01-01T00:00:00Z',
+        last_scan_at: '2026-04-01T00:00:00Z',
+      },
+    ]),
+  },
 });
 
 const makeCacheManager = () => ({
@@ -42,11 +58,13 @@ describe('QrCodeService', () => {
   let service: QrCodeService;
   let qrCodeRepo: ReturnType<typeof makeRepo>;
   let certRepo: ReturnType<typeof makeRepo>;
+  let qrScanEventRepo: ReturnType<typeof makeQrScanEventRepo>;
   let cacheManager: ReturnType<typeof makeCacheManager>;
 
   beforeEach(async () => {
     qrCodeRepo = makeRepo();
     certRepo = makeRepo();
+    qrScanEventRepo = makeQrScanEventRepo();
     cacheManager = makeCacheManager();
 
     const module: TestingModule = await Test.createTestingModule({
@@ -54,6 +72,7 @@ describe('QrCodeService', () => {
         QrCodeService,
         { provide: getRepositoryToken(QrCode), useValue: qrCodeRepo },
         { provide: getRepositoryToken(Certification), useValue: certRepo },
+        { provide: getRepositoryToken(QrScanEvent), useValue: qrScanEventRepo },
         { provide: CACHE_MANAGER, useValue: cacheManager },
         { provide: CertificationProducer, useFactory: mockProducer },
         { provide: ConfigService, useValue: configService },
@@ -422,6 +441,65 @@ describe('QrCodeService', () => {
       await service.evictQrCache('cert-uuid');
 
       expect(cacheManager.del).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('US-058 — QR scan event tracking', () => {
+    const sig = 'scan-event-sig';
+    const activeQr = {
+      id: 'qr-scan-uuid',
+      certificationId: 'cert-scan-uuid',
+      hmacSignature: sig,
+      isActive: true,
+      scansCount: 0,
+      expiresAt: null,
+    };
+
+    it('writes QrScanEvent fire-and-forget on GRANTED scan', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      qrCodeRepo.findOne.mockResolvedValue(activeQr);
+      qrCodeRepo.increment.mockResolvedValue(undefined);
+      certRepo.findOne.mockResolvedValue({
+        id: 'cert-scan-uuid',
+        currentStatus: CertificationStatus.GRANTED,
+      });
+
+      await service.verifyQrCode(sig, '192.168.1.1');
+
+      expect(qrScanEventRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          qrCodeId: 'qr-scan-uuid',
+          certificationId: 'cert-scan-uuid',
+          ipAddress: '192.168.1.1',
+        }),
+      );
+      expect(qrScanEventRepo.save).toHaveBeenCalled();
+    });
+
+    it('does NOT write QrScanEvent when QR code is not found', async () => {
+      cacheManager.get.mockResolvedValue(null);
+      qrCodeRepo.findOne.mockResolvedValue(null);
+
+      await service.verifyQrCode('bad-sig');
+
+      expect(qrScanEventRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('getScanStats() returns totals cast to numbers', async () => {
+      const result = await service.getScanStats('cert-scan-uuid');
+
+      expect(result.totalScans).toBe(5);
+      expect(result.last30DaysScans).toBe(2);
+      expect(typeof result.totalScans).toBe('number');
+    });
+
+    it('getScanStats() passes certificationId to query', async () => {
+      await service.getScanStats('cert-scan-uuid');
+
+      expect(qrScanEventRepo.manager.query).toHaveBeenCalledWith(
+        expect.stringContaining('certification.qr_scan_event'),
+        ['cert-scan-uuid'],
+      );
     });
   });
 });

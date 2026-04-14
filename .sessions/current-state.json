@@ -1,38 +1,39 @@
 {
-  "timestamp": "2026-04-14T00:00:00Z",
-  "session_id": "session-2026-04-14-sprint11-start",
+  "timestamp": "2026-04-14T22:45:00Z",
+  "session_id": "session-2026-04-14-sprint12-complete",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": 11,
-    "sprint_name": "System Config, Reports, Preferences",
+    "sprint_number": 12,
+    "sprint_name": "v1 Hardening — QR Scan Events, ENV Validation, OpenAPI, Tests",
     "start_date": "2026-04-14",
     "end_date": "2026-04-27",
-    "goal": "US-090 system settings (campaign/certification/platform groups), US-050 compliance CSV export, US-077 notification preferences, US-020 product registry export, US-070 clearances report, US-069 HS code assignments",
-    "status": "IN_PROGRESS",
-    "story_points_planned": 24,
-    "story_points_completed": 24,
+    "goal": "US-058 QR scan event tracking, Joi ENV validation, Swagger/OpenAPI generation, font fallback, integration + E2E smoke tests",
+    "status": "DONE",
+    "story_points_planned": 13,
+    "story_points_completed": 13,
     "velocity_pct": 100,
-    "stories": ["US-090", "US-050", "US-077", "US-020", "US-070", "US-069"],
-    "design_doc": "docs/plans/2026-04-13-sprint-11/design.md",
-    "note": "US-090 anchors sprint (last High-priority story). All stories are read/config — zero Kafka events. 2 new migrations: 015-AddSystemSetting, 016-AddNotificationPreference. CSV exports use manual string generation (no new npm packages)."
+    "stories": ["US-058"],
+    "design_doc": "docs/plans/2026-04-14-sprint-12/design.md",
+    "plan_doc": "docs/plans/2026-04-14-sprint-12/plan.md",
+    "progress_doc": "docs/plans/2026-04-14-sprint-12/progress.md",
+    "note": "All 22 tasks completed + full post-sprint checklist executed. Migration 017 applied. OpenAPI JSON generated. 10/10 integration suites, 8/8 E2E suites."
   },
-  "active_feature": "sprint-11-complete",
+  "active_feature": "sprint-12-complete",
   "modules_status": {
     "cooperative": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
       "endpoints": [
-        "POST /cooperatives",
+        "POST /cooperatives (cooperative-admin)",
         "GET /cooperatives/:id",
-        "PUT /cooperatives/:id",
-        "PUT /cooperatives/:id/verify",
-        "PUT /cooperatives/:id/reject",
+        "PUT /cooperatives/:id (cooperative-admin)",
+        "PATCH /cooperatives/:id/verify (super-admin)",
         "PUT /cooperatives/:id/deactivate (super-admin)",
-        "POST /cooperatives/:id/members",
+        "POST /cooperatives/:id/members (cooperative-admin)",
         "GET /cooperatives/:id/members",
-        "PUT /cooperatives/:id/members/:memberId",
-        "POST /cooperatives/:id/farms",
+        "PATCH /cooperatives/:id/members/:memberId (cooperative-admin)",
+        "POST /cooperatives/:id/farms (cooperative-admin)",
         "GET /cooperatives/:id/farms"
       ]
     },
@@ -58,25 +59,15 @@
       "controllers": true,
       "tests_passing": true,
       "redis_qr_cache": true,
-      "cache_key_pattern": "qr:verify:{hmacSignature}",
-      "cache_ttl_ms": 300000,
-      "stats_cache_key_pattern": "stats:certifications:{from|all}:{to|all}",
-      "stats_cache_ttl_ms": 300000,
-      "analytics_cache_key_pattern": "analytics:certifications:{from|all}:{to|all}",
-      "analytics_cache_ttl_ms": 300000,
-      "new_endpoints_sprint10": [
-        "GET /certifications/analytics?from=&to= (super-admin, certification-body) — registered before /:id"
+      "qr_scan_event_tracking": true,
+      "new_endpoints_sprint12": [
+        "GET /certifications/:id/scan-stats (super-admin, certification-body)"
       ]
     },
     "notification": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "stats_cache_key_pattern": "stats:notifications:{from|all}:{to|all}",
-      "stats_cache_ttl_ms": 300000,
-      "sprint10_changes": [
-        "GET /notifications/stats now returns byChannel: [{ channel, sent, failed, deliveryRate }]"
-      ],
       "known_gaps": [
         "notification-template.service.ts lines 45-59 (seedFromFiles loop body — requires live filesystem fixtures)",
         "notification.service.ts lines 78-79, 128-129 (fs.existsSync/readFileSync file fallback — requires .hbs file on disk)"
@@ -89,16 +80,8 @@
       "dashboard_service": true,
       "audit_log_service": true,
       "audit_interceptor": true,
-      "new_in_sprint10": [
-        "AuditLog entity (src/common/entities/audit-log.entity.ts) — schema: common, append-only",
-        "AuditLogService (src/common/services/audit-log.service.ts) — record() fire-and-forget, findAll() paginated",
-        "DashboardService (src/common/services/dashboard.service.ts) — raw SQL × 5 schemas, Redis 300s",
-        "AuditInterceptor (src/common/interceptors/audit.interceptor.ts) — global APP_INTERCEPTOR, skips unauthenticated",
-        "AuditLogQueryDto (src/common/dto/audit-log-query.dto.ts)",
-        "DashboardMetrics interface (src/common/interfaces/dashboard.interface.ts)",
-        "GET /admin/dashboard (super-admin) — counts only, Redis 300s",
-        "GET /admin/audit-logs (super-admin) — paginated, userId/from/to filters"
-      ]
+      "system_settings_service": true,
+      "env_validation": true
     }
   },
   "infrastructure": {
@@ -109,6 +92,20 @@
       "volume": "terroir_minio_data",
       "bucket": "terroir-uploads",
       "env_vars": ["MINIO_ENDPOINT", "MINIO_PORT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_BUCKET", "MINIO_USE_SSL"]
+    },
+    "env_validation": {
+      "added": true,
+      "file": "src/config/env.validation.ts",
+      "library": "joi",
+      "required_vars": ["DATABASE_URL", "REDIS_HOST", "KAFKA_BROKERS", "QR_HMAC_SECRET", "KEYCLOAK_URL", "KEYCLOAK_REALM", "KEYCLOAK_CLIENT_ID", "KEYCLOAK_JWKS_URI", "MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY"],
+      "note": "App refuses to start with descriptive multi-error message on missing required vars"
+    },
+    "openapi": {
+      "added": true,
+      "swagger_ui": "/api-docs (non-production only)",
+      "export_script": "src/scripts/export-openapi.ts",
+      "npm_script": "export:openapi",
+      "output": "docs/api/openapi.json"
     }
   },
   "certification_chain_status": {
@@ -117,179 +114,139 @@
     "chain_steps_total": 12,
     "qr_verification_working": true,
     "qr_redis_cache_wired": true,
+    "qr_scan_event_tracking": true,
     "qr_download_png_svg": true,
     "qr_trilingual_verification": true,
     "event_ledger": true,
     "pdf_certificate": true,
     "certification_stats": true,
-    "certification_analytics": true,
-    "inspector_assignment_event": true,
-    "mapmdref_export": true,
-    "export_pdf_certificate": true,
-    "compliance_report": true,
-    "onssa_report": true
+    "certification_analytics": true
   },
   "migration_status": {
-    "migration_count": 14,
-    "last_migration": "1700000000014-AddAuditLog",
+    "migration_count": 17,
+    "last_migration": "1700000000017-AddQrScanEvent",
+    "last_migration_applied": "2026-04-14",
     "schema_drift": "RESOLVED",
-    "tm3_status": "DONE",
-    "pending_run": true,
-    "pending_migrations": [
-      "1700000000009-AddProductTypeValidityDays — ALTER TABLE product.product_type ADD COLUMN validity_days INT NULL",
-      "1700000000010-AddProcessingStep — CREATE TABLE product.processing_step",
-      "1700000000011-AddProductDocument — CREATE TABLE product.product_document",
-      "1700000000012-AddLabTestReportKey — ALTER TABLE product.lab_test ADD report_s3_key, report_file_name",
-      "1700000000013-AddLab — CREATE TABLE product.lab",
-      "1700000000014-AddAuditLog — CREATE SCHEMA common + CREATE TABLE common.audit_log + 2 indexes"
-    ],
-    "font_assets_needed": [
-      "assets/fonts/Amiri-Regular.ttf",
-      "assets/fonts/DejaVuSans.ttf"
-    ]
+    "pending_run": false,
+    "all_migrations_applied": true
+  },
+  "font_assets": {
+    "amiri_regular": "assets/fonts/Amiri-Regular.ttf",
+    "dejavusans": "assets/fonts/DejaVuSans.ttf",
+    "status": "present (pre-existing from Apr 12)",
+    "fallback": "Helvetica (if missing)"
   },
   "test_status": {
     "unit": {
-      "suites": 35,
-      "total": 357,
-      "passing": 357,
-      "coverage_note": "Known gap: seedFromFiles() + fs.existsSync/readFileSync paths require live .hbs fixtures — not exercisable in unit tests"
+      "suites": 36,
+      "total": 386,
+      "passing": 386,
+      "failures": 0
     },
     "integration": {
-      "status": "requires_postgres",
-      "note": "Testcontainers-based; run with docker compose up"
+      "suites": 10,
+      "total": 29,
+      "passing": 29,
+      "failures": 0,
+      "new_this_sprint": [
+        "test/integration/common/system-settings.integration.ts",
+        "test/integration/common/audit-log.integration.ts",
+        "test/integration/certification/qr-scan-event.integration.ts",
+        "test/integration/notification/notification-preference.integration.ts"
+      ]
     },
     "e2e": {
-      "status": "requires_postgres",
-      "note": "Self-initializing DB via createTestApp(); run with docker compose up"
+      "suites": 8,
+      "total": 35,
+      "passing": 35,
+      "failures": 0,
+      "new_this_sprint": [
+        "test/e2e/smoke/cooperative-onboarding.e2e.ts",
+        "test/e2e/smoke/certification-grant.e2e.ts",
+        "test/e2e/smoke/qr-verify.e2e.ts"
+      ]
     }
   },
   "blockers": [],
   "next_actions": [
-    "Sprint 10 CLOSED — 24/24 SP (100%), 357 unit tests, 0 failures",
-    "Migrations pending (run after docker compose up):",
-    "  npm run migration:run",
-    "  Migrations 009-014 must be applied",
-    "Font files required before PDF endpoints work at runtime:",
-    "  assets/fonts/Amiri-Regular.ttf — https://github.com/alif-type/amiri/releases (OFL)",
-    "  assets/fonts/DejaVuSans.ttf    — https://dejavu-fonts.github.io (free)",
-    "Sprint 11 planning — recommended scope: 19–24 SP",
-    "Sprint 11 top candidates:",
-    "  US-090: System settings config — 8 SP (High) — LAST high-priority story — anchor for Sprint 11",
-    "  US-058: Track QR scan events — 5 SP (Low) — 4th deferral",
-    "  US-077: Notification preferences — 3 SP (Low)",
-    "  US-020: Export product registry data — 3 SP (Low)",
-    "  US-069: View HS code assignments — 2 SP (Low)",
-    "  US-070: Export clearances by destination — 3 SP (Low)",
-    "  US-050: Export certification compliance report — 5 SP (Low)",
-    "  US-053: QR offline verification — 13 SP (Medium) — large, consider splitting",
-    "  US-027: ONSSA lab integration — 13 SP (Low) — Phase 2",
-    "Option A (conservative): US-090 + US-069 + US-070 + US-077 + US-020 = 19 SP",
-    "Option B (full velocity): US-090 + US-058 + US-077 + US-020 + US-050 = 24 SP"
+    "Sprint 12 CLOSED — 13/13 SP (100%), 386 unit tests, 29 integration tests, 35 E2E tests",
+    "v1 feature development COMPLETE — all planned stories delivered",
+    "Post-sprint checklist DONE: migration 017 applied, fonts verified, openapi.json generated, integration + E2E green",
+    "Optional next steps:",
+    "  Phase 2 planning: Prometheus/Grafana monitoring, Jaeger tracing, Kafka Schema Registry",
+    "  US-053: QR offline verification (13 SP, Medium) — deferred from v1",
+    "  US-027: ONSSA lab integration (13 SP, Low) — deferred to Phase 2",
+    "  Security hardening: OWASP ZAP scan, penetration testing",
+    "  Performance testing: k6/Artillery load tests",
+    "  Production deployment: Kubernetes manifests, Helm charts"
   ],
-  "decisions_made": [
-    "AuditInterceptor as global APP_INTERCEPTOR — single registration covers all routes, zero per-module work",
-    "AuditInterceptor skips unauthenticated requests (no req.user) — public endpoints not logged",
-    "AuditLog.record() fire-and-forget — void + silent catch — never blocks response path",
-    "DashboardService raw SQL via DataSource — no cross-module service imports; queries 4 schemas directly",
-    "AuditLog no updatedAt — append-only immutability mirrors CertificationEvent pattern",
-    "US-088 extends stats (not new endpoint) — 3 SP story; deliveryRate is arithmetic on existing data",
-    "getAnalytics() positional params ($1, $2) — consistent with onssaReport() pattern",
-    "getAnalytics() parallel Promise.all — two independent GROUP BY queries, no dependency",
-    "Batches 2+3 merged during execution — DashboardService must be created before AdminController that imports it",
-    "VELOCITY-TRACKER.md updated with Sprints 6–10 — was 5 sprints stale",
-    "MinIO chosen over local disk: files survive container restarts, Phase 2 cloud S3 swap = one config change",
-    "NestJS StreamableFile proxy chosen over presigned URLs: consistent with existing PDF pattern, MinIO stays internal",
-    "US-030 lab accreditation: YAGNI metadata only — no enforcement on POST /lab-tests in v1. Phase 2 enforcement.",
-    "US-083 cooperative compliance: cooperativeName already denormalized on Certification entity — zero migration needed",
-    "ExportDocumentPdfService: intra-module JOIN ExportDocument + Certification allowed (same certification schema, not cross-module)",
-    "File upload MIME validation: US-026 lab report enforces application/pdf only via BadRequestException",
-    "Multer MemoryStorage: file buffer in RAM → MinIO. 10MB limit for product docs, 20MB for lab reports.",
-    "MinioService.onModuleInit(): auto-creates bucket if it doesn't exist — zero manual setup required",
-    "MinioService registered in both AppModule (global) AND ProductModule (local injection for services that need it)",
-    "Route ordering: GET /certifications/compliance-report + /onssa-report + /analytics registered before GET /:id",
-    "Lab entity: no laboratoryId FK on LabTest to Lab in v1 — accreditation is reference data only",
-    "US-086 scoped to read-only (YAGNI): GET /users/me + GET /users/me/roles from JWT claims only — no Keycloak Admin API",
-    "US-010 soft deactivation: status = 'suspended' on Cooperative entity, Kafka event published",
-    "US-016 soft deactivation: isActive = false on ProductType, ConflictException if already inactive",
-    "US-044 guard: assignInspector() throws ConflictException for completed AND cancelled — only scheduled allows reassignment",
-    "US-076 cache key: stats:notifications:{from|all}:{to|all} TTL 300s — consistent with certification stats pattern",
-    "Route ordering rule confirmed: GET /notifications/stats before GET /notifications/:id (NestJS literal-before-param)",
-    "Two-file ceremony: InspectionInspectorAssignedEvent added to common interface + certification-events.ts barrel",
-    "TM-3 approach: drop all 4 schemas + migration table, re-run fresh — necessary due to pre-existing schema state",
-    "QrCode.hmacSignature: added unique:true to entity column decorator to match DB constraint",
-    "PDF library: PDFKit (zero Docker changes, pure Node.js, supports RTL text alignment)",
-    "PDF layout: single multilingual page (FR primary + AR RTL block + ZGH block)",
-    "Arabic shaping: Amiri-Regular.ttf with align:right — full ligature shaping via pdfkit-arabic is Phase 2",
-    "Stats dimensions: status + region + product type + date range filter — YAGNI (no trend charts in v1)",
-    "Stats cache: Redis 300s, cache key stats:certifications:{from|all}:{to|all}",
-    "Template storage: DB-override + file fallback (existsSync → readFileSync) — safe default, rollback = DELETE record",
-    "Template cache: Redis 600s per code:channel:language key, DEL on PUT/DELETE",
-    "jest.mock('fs') anti-pattern: blanket fs mock conflicts with TypeORM path-scurry — use real fs (existsSync returns false in test env)",
-    "CACHE_MANAGER must be provided in all test modules that use CertificationService or NotificationService",
-    "GET /certifications/stats registered before GET /certifications/:id to prevent NestJS UUID param collision",
-    "useValue (not useFactory) for all test mocks that need external control",
-    "em.create() + em.save() pattern for TypeORM JSONB strict typing",
-    "Modular monolith architecture chosen over microservices for v1",
-    "Redpanda over Apache Kafka (lighter, Kafka-compatible)",
-    "PostgreSQL schemas per module (not separate databases)",
-    "HMAC-SHA256 for QR code signing",
-    "CertificationEvent ledger: append-only, currentStatus materialized column",
-    "applyTransition() uses dataSource.transaction() for atomic event + status update"
+  "decisions_made_this_sprint": [
+    "QrScanEvent: append-only, fire-and-forget .save().catch() — never blocks verifyQrCode() response",
+    "QrScanEvent.ipAddress: must use explicit type:'varchar' in @Column — TypeORM can't infer from string|null union",
+    "getScanStats(): raw SQL with COUNT + FILTER (last30Days) — clean aggregation without ORM gymnastics",
+    "Joi ENV validation: abortEarly:false — shows ALL missing vars in one startup error",
+    "OpenAPI export script: NestFactory.create(AppModule) triggers full bootstrap including Joi validation",
+    "MINIO_ENDPOINT/MINIO_ACCESS_KEY/MINIO_SECRET_KEY added to .env (were missing, blocking export:openapi)",
+    "Font fallback: existsSync guard + WARN log + Helvetica — PDF endpoints work even without font assets",
+    "Test app helper (createTestApp) does NOT set global prefix or ResponseInterceptor — smoke tests use bare paths",
+    "CooperativeStatus after verify is 'active' (not 'verified') — smoke test fixed to match domain enum"
   ],
   "velocity_history": {
     "sprint_1": { "planned": 89, "completed": 89, "pct": 100, "note": "scaffold — atypical" },
     "sprint_2": { "planned": 30, "completed": 30, "pct": 100 },
     "sprint_3": { "planned": 21, "completed": 21, "pct": 100 },
     "sprint_4": { "planned": 21, "completed": 21, "pct": 100 },
-    "sprint_5": { "planned": 23, "completed": 22, "pct": 96, "note": "TM-3 deferred (requires live DB)" },
-    "sprint_6": { "planned": 22, "completed": 21, "pct": 95, "note": "TM-3 deferred again (requires live DB)" },
-    "sprint_7": { "planned": 20, "completed": 20, "pct": 100, "note": "TM-3 finally done — schema drift fixed" },
-    "sprint_8": { "planned": 24, "completed": 24, "pct": 100, "note": "US-018/US-029 free (no role restriction existed). US-025 1 SP (PartialType already covered it)." },
-    "sprint_9": { "planned": 22, "completed": 22, "pct": 100, "note": "MinIO infrastructure added. File uploads via MemoryStorage + MinIO. Lab accreditation YAGNI metadata." },
-    "sprint_10": { "planned": 24, "completed": 24, "pct": 100, "note": "AuditInterceptor global APP_INTERCEPTOR. DashboardService raw SQL. US-088 extends stats. Batches 2+3 merged." },
-    "rolling_avg_sp2_sp10": 22.8
+    "sprint_5": { "planned": 23, "completed": 22, "pct": 96 },
+    "sprint_6": { "planned": 22, "completed": 21, "pct": 95 },
+    "sprint_7": { "planned": 20, "completed": 20, "pct": 100 },
+    "sprint_8": { "planned": 24, "completed": 24, "pct": 100 },
+    "sprint_9": { "planned": 22, "completed": 22, "pct": 100 },
+    "sprint_10": { "planned": 24, "completed": 24, "pct": 100 },
+    "sprint_11": { "planned": 24, "completed": 24, "pct": 100 },
+    "sprint_12": { "planned": 13, "completed": 13, "pct": 100, "note": "v1 hardening sprint. All 22 tasks + post-sprint checklist." },
+    "rolling_avg_sp2_sp12": 22.0
   },
   "backlog_status": {
     "total_stories": 90,
-    "done_stories": 85,
-    "todo_stories": 9,
-    "total_sp": 389,
-    "done_sp_approx": 329,
-    "remaining_sp_approx": 60,
-    "sprints_to_completion_at_22sp": 2.7,
-    "note": "US-081, US-082, US-085, US-088 marked Done this sprint. US-027 and US-053 are 13 SP each — may be split or deferred."
+    "done_stories": 86,
+    "todo_stories": 4,
+    "done_sp_approx": 342,
+    "remaining_deferred": ["US-053 (13 SP, QR offline)", "US-027 (13 SP, ONSSA lab)"],
+    "note": "US-058 Done this sprint. v1 feature development effectively complete."
   },
-  "files_created_this_session": [
-    "docs/plans/2026-04-13-sprint-10/design.md",
-    "docs/plans/2026-04-13-sprint-10/plan.md",
-    "docs/plans/2026-04-13-sprint-10/progress.md",
-    "src/common/entities/audit-log.entity.ts",
-    "src/common/dto/audit-log-query.dto.ts",
-    "src/common/services/audit-log.service.ts",
-    "src/common/services/dashboard.service.ts",
-    "src/common/interceptors/audit.interceptor.ts",
-    "src/common/interfaces/dashboard.interface.ts",
-    "src/database/migrations/1700000000014-AddAuditLog.ts",
-    "test/unit/common/audit-log.service.spec.ts",
-    "test/unit/common/dashboard.service.spec.ts",
-    ".sessions/sprint-logs/sprint-10.md",
-    ".sessions/sprint-logs/sprint-10-retro.md"
+  "files_created_this_sprint": [
+    "src/database/migrations/1700000000017-AddQrScanEvent.ts",
+    "src/modules/certification/entities/qr-scan-event.entity.ts",
+    "src/modules/certification/dto/scan-stats-response.dto.ts",
+    "src/config/env.validation.ts",
+    "src/scripts/export-openapi.ts",
+    "assets/fonts/.gitkeep",
+    "scripts/download-fonts.sh",
+    "test/integration/common/system-settings.integration.ts",
+    "test/integration/common/audit-log.integration.ts",
+    "test/integration/certification/qr-scan-event.integration.ts",
+    "test/integration/notification/notification-preference.integration.ts",
+    "test/e2e/smoke/cooperative-onboarding.e2e.ts",
+    "test/e2e/smoke/certification-grant.e2e.ts",
+    "test/e2e/smoke/qr-verify.e2e.ts",
+    "docs/plans/2026-04-14-sprint-12/design.md",
+    "docs/plans/2026-04-14-sprint-12/plan.md",
+    "docs/plans/2026-04-14-sprint-12/progress.md",
+    "docs/api/openapi.json"
   ],
-  "files_modified_this_session": [
-    "src/common/controllers/admin.controller.ts",
-    "src/app.module.ts",
-    "src/modules/certification/interfaces/certification-stats.interface.ts",
-    "src/modules/certification/services/certification.service.ts",
+  "files_modified_this_sprint": [
+    "src/modules/certification/services/qr-code.service.ts",
     "src/modules/certification/controllers/certification.controller.ts",
-    "src/modules/notification/interfaces/notification-stats.interface.ts",
-    "src/modules/notification/services/notification.service.ts",
-    "test/unit/common/admin.controller.spec.ts",
-    "test/unit/certification/certification.service.spec.ts",
-    "test/unit/notification/notification.service.spec.ts",
-    "docs/project-management/PRODUCT-BACKLOG.md",
-    "docs/project-management/VELOCITY-TRACKER.md",
-    ".sessions/daily-logs/2026-04-13.md",
-    ".sessions/current-state.json"
+    "src/modules/certification/certification.module.ts",
+    "src/modules/certification/services/certification-pdf.service.ts",
+    "src/modules/certification/services/export-document-pdf.service.ts",
+    "src/health/health.controller.ts",
+    "src/app.module.ts",
+    "src/main.ts",
+    "package.json",
+    "test/unit/certification/qr-code.service.spec.ts",
+    "test/integration/notification/notification.service.integration.ts",
+    "test/integration/notification/notification-preference.integration.ts",
+    ".env"
   ]
 }

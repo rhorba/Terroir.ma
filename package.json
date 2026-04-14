@@ -29,6 +29,7 @@
     "migration:show": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:show -d src/database/data-source.ts",
     "migration:check": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:generate src/database/migrations/SchemaDriftCheck -d src/database/data-source.ts --check",
     "fonts:download": "node scripts/download-fonts.js",
+    "export:openapi": "ts-node -r tsconfig-paths/register src/scripts/export-openapi.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -51,6 +52,7 @@
     "class-validator": "^0.14.1",
     "handlebars": "^4.7.8",
     "helmet": "^7.1.0",
+    "joi": "^18.1.2",
     "jwks-rsa": "^3.1.0",
     "kafkajs": "^2.2.4",
     "nestjs-pino": "^4.1.0",

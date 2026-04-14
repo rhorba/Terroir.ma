@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TerminusModule } from '@nestjs/terminus';
+import { validateEnv } from './config/env.validation';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import kafkaConfig from './config/kafka.config';
@@ -39,6 +40,7 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
       isGlobal: true,
       load: [appConfig, databaseConfig, kafkaConfig, keycloakConfig, redisConfig, minioConfig],
       envFilePath: ['.env', '.env.local'],
+      validate: validateEnv,
     }),
 
     // Logging

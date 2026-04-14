@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import * as PDFDocument from 'pdfkit';
 import * as QRCode from 'qrcode';
 import * as path from 'path';
+import { existsSync } from 'fs';
 import { Certification, CertificationStatus } from '../entities/certification.entity';
 import { QrCode } from '../entities/qr-code.entity';
 
@@ -69,11 +70,27 @@ export class CertificationPdfService {
       doc.on('end', () => resolve(Buffer.concat(chunks)));
       doc.on('error', reject);
 
-      const amiri = path.join(this.fontsDir, 'Amiri-Regular.ttf');
-      const dejavu = path.join(this.fontsDir, 'DejaVuSans.ttf');
+      const amiriPath = path.join(this.fontsDir, 'Amiri-Regular.ttf');
+      const dejavuPath = path.join(this.fontsDir, 'DejaVuSans.ttf');
+      const hasAmiri = existsSync(amiriPath);
+      const hasDejaVu = existsSync(dejavuPath);
 
-      doc.registerFont('Amiri', amiri);
-      doc.registerFont('DejaVu', dejavu);
+      if (!hasDejaVu) {
+        this.logger.warn(
+          'DejaVuSans.ttf not found — using Helvetica fallback. Run scripts/download-fonts.sh to install.',
+        );
+      }
+      if (!hasAmiri) {
+        this.logger.warn(
+          'Amiri-Regular.ttf not found — Arabic block will use Helvetica. Run scripts/download-fonts.sh.',
+        );
+      }
+
+      if (hasDejaVu) doc.registerFont('DejaVu', dejavuPath);
+      if (hasAmiri) doc.registerFont('Amiri', amiriPath);
+
+      const latinFont = hasDejaVu ? 'DejaVu' : 'Helvetica';
+      const arabicFont = hasAmiri ? 'Amiri' : 'Helvetica';
 
       const formatDate = (d: string | Date | null): string => {
         if (!d) return '—';
@@ -96,11 +113,11 @@ export class CertificationPdfService {
       doc.moveDown(0.5);
 
       // ── Trilingual header ────────────────────────────────────────────────────
-      doc.font('DejaVu').fontSize(14).fillColor('#000').text('CERTIFICAT DE CONFORMITÉ', {
+      doc.font(latinFont).fontSize(14).fillColor('#000').text('CERTIFICAT DE CONFORMITÉ', {
         align: 'center',
       });
-      doc.font('Amiri').fontSize(14).text('شهادة المطابقة', { align: 'right' });
-      doc.font('DejaVu').fontSize(12).text('ⴰⵙⵉⴼⵍⵍ ⵏ ⵓⵎⴷⵢⴰⵣ', { align: 'center' });
+      doc.font(arabicFont).fontSize(14).text('شهادة المطابقة', { align: 'right' });
+      doc.font(latinFont).fontSize(12).text('ⴰⵙⵉⴼⵍⵍ ⵏ ⵓⵎⴷⵢⴰⵣ', { align: 'center' });
       doc.moveDown(0.5);
       doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke('#aaa');
       doc.moveDown(0.5);
@@ -112,8 +129,12 @@ export class CertificationPdfService {
           .fontSize(10)
           .fillColor('#555')
           .text(`${labelFr} / `, { continued: true });
-        doc.font('Amiri').fontSize(10).fillColor('#555').text(`${labelAr}:  `, { continued: true });
-        doc.font('DejaVu').fontSize(10).fillColor('#000').text(value);
+        doc
+          .font(arabicFont)
+          .fontSize(10)
+          .fillColor('#555')
+          .text(`${labelAr}:  `, { continued: true });
+        doc.font(latinFont).fontSize(10).fillColor('#000').text(value);
       };
 
       field('Numéro', 'رقم الشهادة', cert.certificationNumber ?? '—');

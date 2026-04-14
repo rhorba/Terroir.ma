@@ -1,0 +1,4670 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "HealthController_liveness",
+        "summary": "Liveness probe — is the app process alive?",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["health"]
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "HealthController_readiness",
+        "summary": "Readiness probe — are all dependencies available?",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up"
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect"
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": ["status"],
+                        "properties": {
+                          "status": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": ["health"]
+      }
+    },
+    "/api/v1/users/me": {
+      "get": {
+        "operationId": "UserController_getMe",
+        "summary": "US-086: Get current user profile from JWT claims",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["users"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/me/roles": {
+      "get": {
+        "operationId": "UserController_getMyRoles",
+        "summary": "US-086: Get current user Keycloak roles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["users"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/kafka/dlq-stats": {
+      "get": {
+        "operationId": "AdminController_getDlqStats",
+        "summary": "US-087: Kafka DLQ topic message counts (super-admin)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard": {
+      "get": {
+        "operationId": "AdminController_getDashboard",
+        "summary": "US-081: Platform metrics dashboard (super-admin)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/audit-logs": {
+      "get": {
+        "operationId": "AdminController_getAuditLogs",
+        "summary": "US-085: Paginated user activity audit log (super-admin)",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by userId (UUID)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Start date (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "End date (ISO 8601)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/settings/campaign": {
+      "get": {
+        "operationId": "AdminController_getCampaignSettings",
+        "summary": "US-090: Get campaign settings (super-admin)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_updateCampaignSettings",
+        "summary": "US-090: Update campaign settings (super-admin)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CampaignSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/settings/certification": {
+      "get": {
+        "operationId": "AdminController_getCertificationSettings",
+        "summary": "US-090: Get certification settings (super-admin)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_updateCertificationSettings",
+        "summary": "US-090: Update certification settings (super-admin)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificationSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/settings/platform": {
+      "get": {
+        "operationId": "AdminController_getPlatformSettings",
+        "summary": "US-090: Get platform settings (super-admin)",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_updatePlatformSettings",
+        "summary": "US-090: Update platform settings (super-admin)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["admin"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives": {
+      "post": {
+        "operationId": "CooperativeController_register",
+        "summary": "Register a new cooperative",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCooperativeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives/{id}": {
+      "get": {
+        "operationId": "CooperativeController_findOne",
+        "summary": "Get cooperative by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "CooperativeController_update",
+        "summary": "Update cooperative details",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCooperativeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives/{id}/members": {
+      "post": {
+        "operationId": "CooperativeController_addMember",
+        "summary": "Add a member to cooperative",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "CooperativeController_getMembers",
+        "summary": "List all active members of a cooperative (US-009)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives/{id}/deactivate": {
+      "put": {
+        "operationId": "CooperativeController_deactivate",
+        "summary": "US-010: Deactivate a cooperative (super-admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeactivateCooperativeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives/{id}/verify": {
+      "patch": {
+        "operationId": "CooperativeController_verify",
+        "summary": "Verify a cooperative (super-admin only)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-correlation-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives/{id}/farms": {
+      "post": {
+        "operationId": "CooperativeController_mapFarm",
+        "summary": "Map a farm to cooperative",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapFarmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/cooperatives/{id}/members/{memberId}": {
+      "patch": {
+        "operationId": "CooperativeController_updateMember",
+        "summary": "Update own member profile — phone and email only (US-008)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "memberId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["cooperatives"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products": {
+      "post": {
+        "operationId": "ProductController_create",
+        "summary": "Create a product for a cooperative",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["products"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ProductController_searchProducts",
+        "summary": "Search products by SDOQ type and region (US-015)",
+        "parameters": [
+          {
+            "name": "productTypeCode",
+            "required": false,
+            "in": "query",
+            "description": "Exact SDOQ product type code",
+            "schema": {
+              "example": "ARGAN_OIL",
+              "type": "string"
+            }
+          },
+          {
+            "name": "regionCode",
+            "required": false,
+            "in": "query",
+            "description": "Region code (matched via ProductType)",
+            "schema": {
+              "example": "SOUSS-MASSA",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["products"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/export": {
+      "get": {
+        "operationId": "ProductController_exportProductRegistry",
+        "summary": "US-020: Export product registry as CSV (super-admin)",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Filter products registered on or after this date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Filter products registered on or before this date",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["products"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/{id}": {
+      "get": {
+        "operationId": "ProductController_findOne",
+        "summary": "Get product by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["products"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/cooperative/{cooperativeId}": {
+      "get": {
+        "operationId": "ProductController_findByCooperative",
+        "summary": "Get all products for a cooperative",
+        "parameters": [
+          {
+            "name": "cooperativeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["products"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/product-types": {
+      "get": {
+        "operationId": "ProductTypeController_findAll",
+        "summary": "US-016: List active SDOQ product types",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["product-types"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ProductTypeController_create",
+        "summary": "US-016: Create SDOQ product type (super-admin)",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["product-types"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/product-types/{id}": {
+      "get": {
+        "operationId": "ProductTypeController_findOne",
+        "summary": "US-016: Get SDOQ product type by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["product-types"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ProductTypeController_update",
+        "summary": "US-016: Update SDOQ product type (super-admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["product-types"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ProductTypeController_deactivate",
+        "summary": "US-016: Deactivate SDOQ product type (super-admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["product-types"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/harvests": {
+      "post": {
+        "operationId": "HarvestController_logHarvest",
+        "summary": "Log a new harvest record",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogHarvestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["harvests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/harvests/{id}": {
+      "get": {
+        "operationId": "HarvestController_findOne",
+        "summary": "Get harvest by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["harvests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/harvests/farm/{farmId}": {
+      "get": {
+        "operationId": "HarvestController_findByFarm",
+        "summary": "List all harvests for a farm",
+        "parameters": [
+          {
+            "name": "farmId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["harvests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/harvests/cooperative/{cooperativeId}": {
+      "get": {
+        "operationId": "HarvestController_findByCooperative",
+        "summary": "List all harvests for a cooperative, optionally filtered by campaign year",
+        "parameters": [
+          {
+            "name": "cooperativeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "campaignYear",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2025/2026",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["harvests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/batches": {
+      "post": {
+        "operationId": "BatchController_create",
+        "summary": "Create a new production batch from harvests",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["batches"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/batches/{id}": {
+      "get": {
+        "operationId": "BatchController_findOne",
+        "summary": "Get production batch by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["batches"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/batches/cooperative/{cooperativeId}": {
+      "get": {
+        "operationId": "BatchController_findByCooperative",
+        "summary": "List all production batches for a cooperative",
+        "parameters": [
+          {
+            "name": "cooperativeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["batches"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/batches/{id}/processing-steps": {
+      "post": {
+        "operationId": "BatchController_addProcessingStep",
+        "summary": "US-019: Add a post-harvest processing step to a batch",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddProcessingStepDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["batches"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "BatchController_listProcessingSteps",
+        "summary": "US-019: List post-harvest processing steps for a batch",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["batches"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lab-tests": {
+      "get": {
+        "operationId": "LabTestController_findAll",
+        "summary": "US-028: List lab tests with optional filters",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by batch UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cooperativeId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by cooperative UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": ["submitted", "in_progress", "completed", "cancelled"],
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "LabTestController_submit",
+        "summary": "Submit a new lab test for a production batch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitLabTestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lab-tests/{id}/results": {
+      "post": {
+        "operationId": "LabTestController_recordResult",
+        "summary": "Record lab test result",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-correlation-id",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordLabTestResultDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lab-tests/{id}/report": {
+      "post": {
+        "operationId": "LabTestController_uploadReport",
+        "summary": "US-026: Upload PDF lab report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "LabTestController_downloadReport",
+        "summary": "US-026: Download PDF lab report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lab-tests/{id}": {
+      "get": {
+        "operationId": "LabTestController_findOne",
+        "summary": "Get lab test by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/lab-tests/{id}/result": {
+      "get": {
+        "operationId": "LabTestController_findResult",
+        "summary": "Get lab test result",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["lab-tests"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/labs": {
+      "post": {
+        "operationId": "LabController_create",
+        "summary": "US-030: Register a new ONSSA laboratory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLabDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["labs"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "LabController_findAll",
+        "summary": "US-030: List all laboratories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["labs"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/labs/{id}": {
+      "get": {
+        "operationId": "LabController_findOne",
+        "summary": "US-030: Get laboratory by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["labs"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/labs/{id}/accredit": {
+      "post": {
+        "operationId": "LabController_accredit",
+        "summary": "US-030: Grant ONSSA accreditation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["labs"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/labs/{id}/revoke": {
+      "post": {
+        "operationId": "LabController_revoke",
+        "summary": "US-030: Revoke ONSSA accreditation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["labs"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/{id}/documents": {
+      "post": {
+        "operationId": "ProductDocumentController_upload",
+        "summary": "US-017: Upload supporting document for product registration",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["product-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ProductDocumentController_findAll",
+        "summary": "US-017: List supporting documents for a product",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["product-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/products/{id}/documents/{docId}/download": {
+      "get": {
+        "operationId": "ProductDocumentController_download",
+        "summary": "US-017: Download supporting document",
+        "parameters": [
+          {
+            "name": "docId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["product-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/stats": {
+      "get": {
+        "operationId": "CertificationController_getStats",
+        "summary": "US-048: Certification statistics by status / region / product type",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2026-12-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/certificate.pdf": {
+      "get": {
+        "operationId": "CertificationController_downloadCertificatePdf",
+        "summary": "US-047: Download PDF conformity certificate (AR/FR/ZGH)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/pending": {
+      "get": {
+        "operationId": "CertificationController_findPending",
+        "summary": "US-042: List pending certification requests (cert-body view)",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/my": {
+      "get": {
+        "operationId": "CertificationController_findMyCertifications",
+        "summary": "US-049: List certifications for the calling cooperative",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/export": {
+      "get": {
+        "operationId": "CertificationController_exportForMapmdref",
+        "summary": "US-084: Export certifications as JSON for MAPMDREF",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2026-12-31",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by certification status",
+            "schema": {
+              "enum": [
+                "DRAFT",
+                "SUBMITTED",
+                "DOCUMENT_REVIEW",
+                "INSPECTION_SCHEDULED",
+                "INSPECTION_IN_PROGRESS",
+                "INSPECTION_COMPLETE",
+                "LAB_TESTING",
+                "LAB_RESULTS_RECEIVED",
+                "UNDER_REVIEW",
+                "GRANTED",
+                "DENIED",
+                "REVOKED",
+                "RENEWED"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/analytics": {
+      "get": {
+        "operationId": "CertificationController_getAnalytics",
+        "summary": "US-082: Certification analytics by region and product type",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2025-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2025-12-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/compliance-report": {
+      "get": {
+        "operationId": "CertificationController_complianceReport",
+        "summary": "US-083: Cooperative compliance report (grouped by cooperative)",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2025-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2025-12-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/onssa-report": {
+      "get": {
+        "operationId": "CertificationController_onssaReport",
+        "summary": "US-089: Active certifications report for ONSSA",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2025-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "YYYY-MM-DD",
+            "schema": {
+              "example": "2025-12-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/compliance-export": {
+      "get": {
+        "operationId": "CertificationController_exportComplianceReport",
+        "summary": "US-050: Export certification compliance report (CSV)",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Filter certifications created on or after this date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Filter certifications created on or before this date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Filter by current_status (e.g. GRANTED, DENIED)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/request": {
+      "post": {
+        "operationId": "CertificationController_requestCertification",
+        "summary": "Request certification for a production batch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCertificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}": {
+      "get": {
+        "operationId": "CertificationController_findOne",
+        "summary": "Get certification by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/grant": {
+      "patch": {
+        "operationId": "CertificationController_grantCertification",
+        "summary": "Grant certification decision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantCertificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/deny": {
+      "patch": {
+        "operationId": "CertificationController_denyCertification",
+        "summary": "Deny certification decision",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DenyCertificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/submit": {
+      "post": {
+        "operationId": "CertificationController_submitRequest",
+        "summary": "Step 1: Submit a draft certification request",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitCertificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/start-review": {
+      "post": {
+        "operationId": "CertificationController_startReview",
+        "summary": "Step 2: Start document review",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/schedule-inspection": {
+      "post": {
+        "operationId": "CertificationController_scheduleInspectionChain",
+        "summary": "Step 3: Schedule a field inspection",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleInspectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/start-inspection": {
+      "post": {
+        "operationId": "CertificationController_startInspection",
+        "summary": "Step 4: Inspector starts the field visit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartInspectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/complete-inspection": {
+      "post": {
+        "operationId": "CertificationController_completeInspectionChain",
+        "summary": "Step 5: Inspector files the inspection report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompleteInspectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/request-lab": {
+      "post": {
+        "operationId": "CertificationController_requestLab",
+        "summary": "Step 6: Send batch to lab testing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestLabDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/start-final-review": {
+      "post": {
+        "operationId": "CertificationController_startFinalReview",
+        "summary": "Step 8: Start final review of lab results",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartFinalReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/renew": {
+      "post": {
+        "operationId": "CertificationController_renewCertification",
+        "summary": "Step 12: Renew a granted certification",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/revoke": {
+      "patch": {
+        "operationId": "CertificationController_revokeCertification",
+        "summary": "Revoke a granted certification",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/certifications/{id}/scan-stats": {
+      "get": {
+        "operationId": "CertificationController_getScanStats",
+        "summary": "US-058: QR scan statistics for a certification",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["certifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inspections/my": {
+      "get": {
+        "operationId": "InspectionController_findMyInspections",
+        "summary": "US-043: List inspections assigned to the calling inspector",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inspections"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inspections": {
+      "post": {
+        "operationId": "InspectionController_scheduleInspection",
+        "summary": "Schedule a field inspection",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScheduleInspectionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inspections"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inspections/{id}/assign-inspector": {
+      "put": {
+        "operationId": "InspectionController_assignInspector",
+        "summary": "US-044: Assign inspector to inspection (super-admin)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssignInspectorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inspections"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inspections/{id}": {
+      "get": {
+        "operationId": "InspectionController_findOne",
+        "summary": "Get inspection by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inspections"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inspections/{id}/report": {
+      "patch": {
+        "operationId": "InspectionController_fileReport",
+        "summary": "File inspection report after field visit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FileInspectionReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inspections"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/qr-codes/{certificationId}/download": {
+      "get": {
+        "operationId": "QrCodeController_downloadQrCode",
+        "summary": "US-057: Download QR code as PNG or SVG for packaging",
+        "parameters": [
+          {
+            "name": "certificationId",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "format",
+            "required": false,
+            "in": "query",
+            "description": "Image format (default: png)",
+            "schema": {
+              "enum": ["png", "svg"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["qr-codes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/qr-codes/{certificationId}": {
+      "post": {
+        "operationId": "QrCodeController_generateQrCode",
+        "summary": "Generate QR code for a granted certification",
+        "parameters": [
+          {
+            "name": "certificationId",
+            "required": true,
+            "in": "path",
+            "description": "Certification UUID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["qr-codes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/verify/{uuid}": {
+      "get": {
+        "operationId": "QrCodeController_verifyQrCode",
+        "summary": "Verify QR code and return certification chain (public)",
+        "parameters": [
+          {
+            "name": "uuid",
+            "required": true,
+            "in": "path",
+            "description": "QR code HMAC signature or UUID from scanned QR",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sig",
+            "required": false,
+            "in": "query",
+            "description": "HMAC signature for verification",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "required": false,
+            "in": "query",
+            "description": "Response language (default: fr)",
+            "schema": {
+              "enum": ["ar", "fr", "zgh"],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["qr-codes"]
+      }
+    },
+    "/api/v1/export-documents": {
+      "get": {
+        "operationId": "ExportDocumentController_findAll",
+        "summary": "US-067: List all export documents (super-admin)",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ExportDocumentController_generateExportDoc",
+        "summary": "Generate export documentation for certified batch",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestExportDocumentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/export-documents/my": {
+      "get": {
+        "operationId": "ExportDocumentController_findMyExportDocuments",
+        "summary": "US-066: List export documents for the calling cooperative",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/export-documents/{id}/certificate.pdf": {
+      "get": {
+        "operationId": "ExportDocumentController_downloadExportCertificatePdf",
+        "summary": "US-068: Download PDF export certificate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/export-documents/clearances-report": {
+      "get": {
+        "operationId": "ExportDocumentController_exportClearancesReport",
+        "summary": "US-070: Export clearances by destination country (CSV)",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Filter clearances updated on or after this date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Filter clearances updated on or before this date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "destinationCountry",
+            "required": false,
+            "in": "query",
+            "description": "ISO 3166-1 alpha-2 destination country code (e.g. FR, DE)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/export-documents/hs-codes": {
+      "get": {
+        "operationId": "ExportDocumentController_getHsCodeAssignments",
+        "summary": "US-069: List HS code assignments",
+        "parameters": [
+          {
+            "name": "cooperativeId",
+            "required": false,
+            "in": "query",
+            "description": "Filter by cooperative UUID (cooperative-admin is auto-scoped from JWT)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Filter HS codes assigned on or after this date",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Filter HS codes assigned on or before this date",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/export-documents/{id}": {
+      "get": {
+        "operationId": "ExportDocumentController_findOne",
+        "summary": "Get export document by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/export-documents/{id}/validate": {
+      "post": {
+        "operationId": "ExportDocumentController_validateDocument",
+        "summary": "Validate export document for customs clearance",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["export-documents"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications/stats": {
+      "get": {
+        "operationId": "NotificationController_getStats",
+        "summary": "US-076: Notification delivery counts by status (super-admin)",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "description": "Filter from date (ISO 8601)",
+            "schema": {
+              "example": "2026-01-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "description": "Filter to date (ISO 8601)",
+            "schema": {
+              "example": "2026-12-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications": {
+      "get": {
+        "operationId": "NotificationController_findMine",
+        "summary": "List notifications for the current user",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications/history": {
+      "get": {
+        "operationId": "NotificationController_getHistory",
+        "summary": "Paginated notification history for the current user (US-074)",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Page number (1-based)",
+            "schema": {
+              "minimum": 1,
+              "example": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "example": 20,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications/preferences/me": {
+      "get": {
+        "operationId": "NotificationController_getPreferences",
+        "summary": "US-077: Get notification preferences for current user",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "NotificationController_updatePreferences",
+        "summary": "US-077: Update notification preferences for current user",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertNotificationPreferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notifications/{id}": {
+      "get": {
+        "operationId": "NotificationController_findOne",
+        "summary": "Get a notification by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notifications"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification-templates": {
+      "get": {
+        "operationId": "NotificationTemplateController_findAll",
+        "summary": "US-075: List notification templates (filterable by code/channel/language)",
+        "parameters": [
+          {
+            "name": "code",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "language",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notification-templates"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "NotificationTemplateController_create",
+        "summary": "US-075: Create notification template",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNotificationTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["notification-templates"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification-templates/{id}": {
+      "get": {
+        "operationId": "NotificationTemplateController_findOne",
+        "summary": "US-075: Get notification template by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notification-templates"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "NotificationTemplateController_update",
+        "summary": "US-075: Update notification template (invalidates Redis cache)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationTemplateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notification-templates"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "NotificationTemplateController_deactivate",
+        "summary": "US-075: Deactivate notification template (soft delete, sets isActive=false)",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["notification-templates"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/notification-templates/seed": {
+      "post": {
+        "operationId": "NotificationTemplateController_seed",
+        "summary": "US-075: Seed templates from .hbs files into DB",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["notification-templates"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Terroir.ma API",
+    "description": "SDOQ terroir product certification platform — Morocco Law 25-06",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CampaignSettingsDto": {
+        "type": "object",
+        "properties": {
+          "currentCampaignYear": {
+            "type": "string",
+            "example": "2025-2026"
+          },
+          "campaignStartMonth": {
+            "type": "number",
+            "example": 10,
+            "minimum": 1,
+            "maximum": 12
+          },
+          "campaignEndMonth": {
+            "type": "number",
+            "example": 9,
+            "minimum": 1,
+            "maximum": 12
+          }
+        },
+        "required": ["currentCampaignYear", "campaignStartMonth", "campaignEndMonth"]
+      },
+      "CertificationSettingsDto": {
+        "type": "object",
+        "properties": {
+          "defaultValidityDays": {
+            "type": "number",
+            "example": 365
+          },
+          "maxRenewalGraceDays": {
+            "type": "number",
+            "example": 90
+          }
+        },
+        "required": ["defaultValidityDays", "maxRenewalGraceDays"]
+      },
+      "PlatformSettingsDto": {
+        "type": "object",
+        "properties": {
+          "maintenanceMode": {
+            "type": "boolean",
+            "example": false
+          },
+          "supportEmail": {
+            "type": "string",
+            "example": "support@terroir.ma"
+          }
+        },
+        "required": ["maintenanceMode", "supportEmail"]
+      },
+      "CreateCooperativeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Coopérative Tifawin"
+          },
+          "nameAr": {
+            "type": "string",
+            "example": "تعاونية تيفاوين"
+          },
+          "ice": {
+            "type": "string",
+            "example": "001234567891234"
+          },
+          "ifNumber": {
+            "type": "string"
+          },
+          "rcNumber": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "example": "contact@tifawin.ma"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+212661234567"
+          },
+          "regionCode": {
+            "type": "string",
+            "example": "SOUSS_MASSA"
+          },
+          "city": {
+            "type": "string",
+            "example": "Tiznit"
+          },
+          "presidentName": {
+            "type": "string",
+            "example": "Fatima Zahra Ait Benhamed"
+          },
+          "presidentCin": {
+            "type": "string",
+            "example": "AB123456"
+          },
+          "presidentPhone": {
+            "type": "string",
+            "example": "+212661234568"
+          },
+          "productTypes": {
+            "example": ["ARGAN_OIL", "SAFFRON"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "ice",
+          "email",
+          "phone",
+          "regionCode",
+          "city",
+          "presidentName",
+          "presidentCin",
+          "presidentPhone"
+        ]
+      },
+      "UpdateCooperativeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Coopérative Tifawin"
+          },
+          "nameAr": {
+            "type": "string",
+            "example": "تعاونية تيفاوين"
+          },
+          "ice": {
+            "type": "string",
+            "example": "001234567891234"
+          },
+          "ifNumber": {
+            "type": "string"
+          },
+          "rcNumber": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "example": "contact@tifawin.ma"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+212661234567"
+          },
+          "regionCode": {
+            "type": "string",
+            "example": "SOUSS_MASSA"
+          },
+          "city": {
+            "type": "string",
+            "example": "Tiznit"
+          },
+          "presidentName": {
+            "type": "string",
+            "example": "Fatima Zahra Ait Benhamed"
+          },
+          "presidentCin": {
+            "type": "string",
+            "example": "AB123456"
+          },
+          "presidentPhone": {
+            "type": "string",
+            "example": "+212661234568"
+          },
+          "productTypes": {
+            "example": ["ARGAN_OIL", "SAFFRON"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "AddMemberDto": {
+        "type": "object",
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Amina Benali"
+          },
+          "fullNameAr": {
+            "type": "string",
+            "example": "أمينة بنعلي"
+          },
+          "cin": {
+            "type": "string",
+            "example": "CD789012"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+212662345678"
+          },
+          "email": {
+            "type": "string",
+            "example": "amina@tifawin.ma"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["president", "secretary", "treasurer", "member"],
+            "default": "member"
+          }
+        },
+        "required": ["fullName", "cin", "phone", "role"]
+      },
+      "DeactivateCooperativeDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "description": "Reason for deactivation",
+            "maxLength": 500
+          }
+        }
+      },
+      "MapFarmDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ferme Arganier Tifawin Nord"
+          },
+          "areaHectares": {
+            "type": "number",
+            "example": 5.5
+          },
+          "cropTypes": {
+            "example": ["ARGAN_OIL"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "regionCode": {
+            "type": "string",
+            "example": "SOUSS_MASSA"
+          },
+          "commune": {
+            "type": "string",
+            "example": "Tiznit"
+          },
+          "latitude": {
+            "type": "number",
+            "example": 29.6974
+          },
+          "longitude": {
+            "type": "number",
+            "example": -9.8022
+          }
+        },
+        "required": ["name", "areaHectares", "cropTypes", "regionCode"]
+      },
+      "UpdateMemberDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "+212612345678",
+            "description": "Moroccan phone number"
+          },
+          "email": {
+            "type": "string",
+            "example": "member@coop.ma",
+            "description": "Contact email address"
+          }
+        }
+      },
+      "CreateProductDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Huile d'argan vierge pressée à froid"
+          },
+          "productTypeCode": {
+            "type": "string",
+            "example": "ARGAN_OIL"
+          },
+          "description": {
+            "type": "string",
+            "example": "Huile d'argan bio certifiée IGP Souss-Massa"
+          }
+        },
+        "required": ["name", "productTypeCode"]
+      },
+      "LabTestParameterDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Parameter name (e.g., acidity)",
+            "example": "acidity"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Unit of measurement",
+            "example": "%"
+          },
+          "minValue": {
+            "type": "number",
+            "description": "Minimum acceptable value"
+          },
+          "maxValue": {
+            "type": "number",
+            "description": "Maximum acceptable value"
+          },
+          "type": {
+            "type": "string",
+            "description": "Parameter type (numeric, enum)",
+            "example": "numeric"
+          },
+          "values": {
+            "description": "Allowed enum values",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["name", "unit"]
+      },
+      "CreateProductTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Unique product type code",
+            "example": "SAFFRON_TALIOUINE"
+          },
+          "nameFr": {
+            "type": "string",
+            "description": "French name",
+            "example": "Safran de Taliouine"
+          },
+          "nameAr": {
+            "type": "string",
+            "description": "Arabic name",
+            "example": "زعفران تالوين"
+          },
+          "nameZgh": {
+            "type": "string",
+            "description": "Amazigh (Tifinagh) name",
+            "example": "ⵣⵄⴼⵔⴰⵏ"
+          },
+          "certificationType": {
+            "type": "string",
+            "description": "SDOQ certification type",
+            "enum": ["IGP", "AOP", "LA"]
+          },
+          "regionCode": {
+            "type": "string",
+            "description": "Region code",
+            "example": "SOUSS_MASSA"
+          },
+          "labTestParameters": {
+            "description": "Required lab test parameters",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabTestParameterDto"
+            }
+          },
+          "hsCode": {
+            "type": "string",
+            "description": "HS code for customs",
+            "example": "0910.20"
+          },
+          "onssaCategory": {
+            "type": "string",
+            "description": "ONSSA category code"
+          }
+        },
+        "required": [
+          "code",
+          "nameFr",
+          "nameAr",
+          "certificationType",
+          "regionCode",
+          "labTestParameters"
+        ]
+      },
+      "UpdateProductTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Unique product type code",
+            "example": "SAFFRON_TALIOUINE"
+          },
+          "nameFr": {
+            "type": "string",
+            "description": "French name",
+            "example": "Safran de Taliouine"
+          },
+          "nameAr": {
+            "type": "string",
+            "description": "Arabic name",
+            "example": "زعفران تالوين"
+          },
+          "nameZgh": {
+            "type": "string",
+            "description": "Amazigh (Tifinagh) name",
+            "example": "ⵣⵄⴼⵔⴰⵏ"
+          },
+          "certificationType": {
+            "type": "string",
+            "description": "SDOQ certification type",
+            "enum": ["IGP", "AOP", "LA"]
+          },
+          "regionCode": {
+            "type": "string",
+            "description": "Region code",
+            "example": "SOUSS_MASSA"
+          },
+          "labTestParameters": {
+            "description": "Required lab test parameters",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LabTestParameterDto"
+            }
+          },
+          "hsCode": {
+            "type": "string",
+            "description": "HS code for customs",
+            "example": "0910.20"
+          },
+          "onssaCategory": {
+            "type": "string",
+            "description": "ONSSA category code"
+          },
+          "validityDays": {
+            "type": "number",
+            "description": "Certificate validity in days (1–3650)",
+            "example": 365
+          }
+        }
+      },
+      "LogHarvestDto": {
+        "type": "object",
+        "properties": {
+          "farmId": {
+            "type": "string",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "productTypeCode": {
+            "type": "string",
+            "example": "ARGAN_OIL"
+          },
+          "quantityKg": {
+            "type": "number",
+            "example": 1250.5,
+            "description": "Quantity in kilograms"
+          },
+          "harvestDate": {
+            "type": "string",
+            "example": "2025-11-15",
+            "description": "ISO 8601 date"
+          },
+          "campaignYear": {
+            "type": "string",
+            "example": "2025/2026"
+          },
+          "method": {
+            "type": "string",
+            "example": "manual_picking",
+            "description": "Harvest method"
+          },
+          "metadata": {
+            "type": "object",
+            "example": {
+              "weatherCondition": "sunny",
+              "workers": 12
+            }
+          }
+        },
+        "required": [
+          "farmId",
+          "productTypeCode",
+          "quantityKg",
+          "harvestDate",
+          "campaignYear",
+          "method"
+        ]
+      },
+      "CreateBatchDto": {
+        "type": "object",
+        "properties": {
+          "productTypeCode": {
+            "type": "string",
+            "example": "ARGAN_OIL"
+          },
+          "harvestIds": {
+            "example": ["uuid-1", "uuid-2"],
+            "description": "Harvest IDs to group into this batch",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "totalQuantityKg": {
+            "type": "number",
+            "example": 3800.75,
+            "description": "Total quantity in kg"
+          },
+          "processingDate": {
+            "type": "string",
+            "example": "2025-12-01",
+            "description": "Date of processing"
+          }
+        },
+        "required": ["productTypeCode", "harvestIds", "totalQuantityKg", "processingDate"]
+      },
+      "AddProcessingStepDto": {
+        "type": "object",
+        "properties": {
+          "stepType": {
+            "type": "string",
+            "enum": [
+              "SORTING",
+              "WASHING",
+              "PRESSING",
+              "DRYING",
+              "PACKAGING",
+              "STORAGE",
+              "TRANSPORT",
+              "OTHER"
+            ],
+            "description": "Type of processing step"
+          },
+          "doneAt": {
+            "type": "string",
+            "description": "When the step was performed (ISO 8601)",
+            "example": "2026-04-10T08:00:00Z"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notes or observations",
+            "maxLength": 1000
+          }
+        },
+        "required": ["stepType", "doneAt"]
+      },
+      "SubmitLabTestDto": {
+        "type": "object",
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "example": "uuid-of-batch"
+          },
+          "laboratoryId": {
+            "type": "string",
+            "example": "uuid-of-laboratory"
+          },
+          "expectedResultDate": {
+            "type": "string",
+            "example": "2026-01-15"
+          }
+        },
+        "required": ["batchId"]
+      },
+      "RecordLabTestResultDto": {
+        "type": "object",
+        "properties": {
+          "labTestId": {
+            "type": "string",
+            "example": "uuid-of-lab-test"
+          },
+          "testValues": {
+            "type": "object",
+            "example": {
+              "acidity": 0.8,
+              "peroxideValue": 8.5,
+              "color": "golden_yellow",
+              "unsaponifiables": 1.2
+            },
+            "description": "Measured parameter values keyed by parameter name"
+          },
+          "technicianName": {
+            "type": "string",
+            "example": "Hassan Moussaoui"
+          },
+          "laboratoryName": {
+            "type": "string",
+            "example": "Laboratoire ONSSA Agadir"
+          }
+        },
+        "required": ["labTestId", "testValues"]
+      },
+      "CreateLabDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Laboratoire ONSSA Casablanca"
+          },
+          "onssaAccreditationNumber": {
+            "type": "string",
+            "example": "ONSSA-2025-0042"
+          }
+        },
+        "required": ["name"]
+      },
+      "RequestCertificationDto": {
+        "type": "object",
+        "properties": {
+          "batchId": {
+            "type": "string",
+            "example": "uuid-of-batch"
+          },
+          "regionCode": {
+            "type": "string",
+            "example": "SOUSS_MASSA"
+          },
+          "certificationType": {
+            "type": "string",
+            "enum": ["IGP", "AOP", "LABEL_AGRICOLE"]
+          },
+          "cooperativeName": {
+            "type": "string",
+            "example": "Coopérative Tifawin"
+          },
+          "productTypeCode": {
+            "type": "string",
+            "example": "ARGAN_OIL"
+          }
+        },
+        "required": [
+          "batchId",
+          "regionCode",
+          "certificationType",
+          "cooperativeName",
+          "productTypeCode"
+        ]
+      },
+      "GrantCertificationDto": {
+        "type": "object",
+        "properties": {
+          "validFrom": {
+            "type": "string",
+            "example": "2026-01-01"
+          },
+          "validUntil": {
+            "type": "string",
+            "example": "2029-01-01"
+          }
+        },
+        "required": ["validFrom", "validUntil"]
+      },
+      "DenyCertificationDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "example": "Lab test parameters for acidity exceeded maximum allowed values."
+          }
+        },
+        "required": ["reason"]
+      },
+      "SubmitCertificationDto": {
+        "type": "object",
+        "properties": {
+          "remarks": {
+            "type": "string",
+            "description": "Optional remarks from the cooperative admin"
+          }
+        }
+      },
+      "StartReviewDto": {
+        "type": "object",
+        "properties": {
+          "remarks": {
+            "type": "string",
+            "description": "Optional reviewer remarks"
+          }
+        }
+      },
+      "ScheduleInspectionDto": {
+        "type": "object",
+        "properties": {
+          "certificationId": {
+            "type": "string",
+            "example": "uuid-of-certification"
+          },
+          "inspectorId": {
+            "type": "string",
+            "example": "uuid-of-inspector"
+          },
+          "inspectorName": {
+            "type": "string",
+            "example": "Youssef El Mansouri"
+          },
+          "scheduledDate": {
+            "type": "string",
+            "example": "2026-04-15"
+          },
+          "farmIds": {
+            "example": ["uuid-farm-1", "uuid-farm-2"],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": ["certificationId", "inspectorId", "scheduledDate", "farmIds"]
+      },
+      "StartInspectionDto": {
+        "type": "object",
+        "properties": {
+          "remarks": {
+            "type": "string",
+            "description": "Optional remarks from the inspector on arrival"
+          }
+        }
+      },
+      "FarmFindingDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "NonConformityDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "CompleteInspectionDto": {
+        "type": "object",
+        "properties": {
+          "passed": {
+            "type": "boolean"
+          },
+          "summary": {
+            "type": "string",
+            "example": "Inspection completed successfully. No major non-conformities found."
+          },
+          "farmFindings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FarmFindingDto"
+            }
+          },
+          "nonConformities": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NonConformityDto"
+            }
+          }
+        },
+        "required": ["passed", "summary"]
+      },
+      "RequestLabDto": {
+        "type": "object",
+        "properties": {
+          "labId": {
+            "type": "string",
+            "description": "UUID of the accredited laboratory to receive samples"
+          },
+          "remarks": {
+            "type": "string",
+            "description": "Optional remarks about the lab request"
+          }
+        }
+      },
+      "StartFinalReviewDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AssignInspectorDto": {
+        "type": "object",
+        "properties": {
+          "inspectorId": {
+            "type": "string",
+            "description": "Keycloak UUID of the inspector to assign"
+          },
+          "inspectorName": {
+            "type": "string",
+            "description": "Display name of the inspector",
+            "maxLength": 200
+          }
+        },
+        "required": ["inspectorId", "inspectorName"]
+      },
+      "FileInspectionReportDto": {
+        "type": "object",
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "description": "Did the cooperative pass the inspection?"
+          },
+          "reportSummary": {
+            "type": "string",
+            "description": "Summary of inspection findings (min 20 chars)"
+          },
+          "detailedObservations": {
+            "type": "string",
+            "description": "Detailed observations in Markdown"
+          },
+          "nonConformities": {
+            "type": "string",
+            "description": "Non-conformities found (if any)"
+          }
+        },
+        "required": ["passed", "reportSummary"]
+      },
+      "RequestExportDocumentDto": {
+        "type": "object",
+        "properties": {
+          "certificationId": {
+            "type": "string",
+            "example": "uuid-of-certification"
+          },
+          "destinationCountry": {
+            "type": "string",
+            "example": "FR",
+            "description": "ISO 3166-1 alpha-2 destination country"
+          },
+          "hsCode": {
+            "type": "string",
+            "example": "1515.30",
+            "description": "HS code for argan oil"
+          },
+          "quantityKg": {
+            "type": "number",
+            "example": 5000
+          },
+          "consigneeName": {
+            "type": "string",
+            "example": "Naturalia SAS"
+          },
+          "consigneeCountry": {
+            "type": "string",
+            "example": "FR"
+          }
+        },
+        "required": [
+          "certificationId",
+          "destinationCountry",
+          "hsCode",
+          "quantityKg",
+          "consigneeName",
+          "consigneeCountry"
+        ]
+      },
+      "UpsertNotificationPreferenceDto": {
+        "type": "object",
+        "properties": {
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["email", "sms"]
+            }
+          },
+          "language": {
+            "type": "string",
+            "enum": ["ar", "fr", "zgh"]
+          }
+        },
+        "required": ["channels", "language"]
+      },
+      "CreateNotificationTemplateDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "certification-granted",
+            "description": "Template code matching notification event"
+          },
+          "channel": {
+            "type": "string",
+            "example": "email",
+            "enum": ["email", "sms"]
+          },
+          "language": {
+            "type": "string",
+            "example": "fr-MA",
+            "enum": ["fr-MA", "ar-MA", "zgh"]
+          },
+          "subjectTemplate": {
+            "type": "string",
+            "example": "Votre certificat {{certificationNumber}} a été délivré"
+          },
+          "bodyTemplate": {
+            "type": "string",
+            "example": "<p>Bonjour {{cooperativeName}},</p>"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        },
+        "required": ["code", "channel", "language", "bodyTemplate"]
+      },
+      "UpdateNotificationTemplateDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "certification-granted",
+            "description": "Template code matching notification event"
+          },
+          "channel": {
+            "type": "string",
+            "example": "email",
+            "enum": ["email", "sms"]
+          },
+          "language": {
+            "type": "string",
+            "example": "fr-MA",
+            "enum": ["fr-MA", "ar-MA", "zgh"]
+          },
+          "subjectTemplate": {
+            "type": "string",
+            "example": "Votre certificat {{certificationNumber}} a été délivré"
+          },
+          "bodyTemplate": {
+            "type": "string",
+            "example": "<p>Bonjour {{cooperativeName}},</p>"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    }
+  }
+}

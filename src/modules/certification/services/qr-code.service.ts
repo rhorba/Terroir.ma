@@ -8,8 +8,10 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { QrCode } from '../entities/qr-code.entity';
+import { QrScanEvent } from '../entities/qr-scan-event.entity';
 import { Certification } from '../entities/certification.entity';
 import { CertificationProducer } from '../events/certification.producer';
+import { ScanStatsResponseDto } from '../dto/scan-stats-response.dto';
 
 export interface QrDownloadResult {
   buffer: Buffer;
@@ -40,6 +42,8 @@ export class QrCodeService {
     private readonly qrCodeRepo: Repository<QrCode>,
     @InjectRepository(Certification)
     private readonly certificationRepo: Repository<Certification>,
+    @InjectRepository(QrScanEvent)
+    private readonly qrScanEventRepo: Repository<QrScanEvent>,
     private readonly configService: ConfigService,
     private readonly producer: CertificationProducer,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
@@ -199,7 +203,53 @@ export class QrCodeService {
       message: 'Certification is valid and active',
     };
     await this.cacheManager.set(cacheKey, grantedResult, 300_000);
+
+    // Fire-and-forget scan event — never blocks the 200ms SLA
+    this.qrScanEventRepo
+      .save(
+        this.qrScanEventRepo.create({
+          qrCodeId: qrCode.id,
+          certificationId: qrCode.certificationId,
+          ipAddress: scannedFromIp ?? null,
+        }),
+      )
+      .catch((err: unknown) => this.logger.error({ err }, 'Failed to write QR scan event'));
+
     return grantedResult;
+  }
+
+  /**
+   * Return aggregate scan statistics for a certification's QR code.
+   * Roles: super-admin, certification-body
+   * US-058
+   */
+  async getScanStats(certificationId: string): Promise<ScanStatsResponseDto> {
+    const rows = await this.qrScanEventRepo.manager.query<
+      Array<{
+        total_scans: string;
+        last_30_days_scans: string;
+        first_scan_at: string | null;
+        last_scan_at: string | null;
+      }>
+    >(
+      `SELECT
+         COUNT(*)                                                           AS total_scans,
+         COUNT(*) FILTER (WHERE scanned_at > NOW() - INTERVAL '30 days')   AS last_30_days_scans,
+         MIN(scanned_at)                                                    AS first_scan_at,
+         MAX(scanned_at)                                                    AS last_scan_at
+       FROM certification.qr_scan_event
+       WHERE certification_id = $1`,
+      [certificationId],
+    );
+
+    const row = rows[0]!;
+    return {
+      certificationId,
+      totalScans: Number(row.total_scans),
+      last30DaysScans: Number(row.last_30_days_scans),
+      firstScanAt: row.first_scan_at ?? null,
+      lastScanAt: row.last_scan_at ?? null,
+    };
   }
 
   async findByCertificationId(certificationId: string): Promise<QrCode | null> {
