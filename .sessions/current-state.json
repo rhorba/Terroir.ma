@@ -1,68 +1,73 @@
 {
-  "timestamp": "2026-04-14T23:15:00Z",
-  "session_id": "session-2026-04-14-sprint12-retro",
+  "timestamp": "2026-04-15T00:00:00Z",
+  "session_id": "session-2026-04-15-frontend-brainstorm",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": 12,
-    "sprint_name": "v1 Hardening — QR Scan Events, ENV Validation, OpenAPI, Tests",
-    "start_date": "2026-04-14",
-    "end_date": "2026-04-27",
-    "goal": "US-058 QR scan event tracking, Joi ENV validation, Swagger/OpenAPI generation, font fallback, integration + E2E smoke tests",
-    "status": "DONE",
+    "sprint_number": "FE-S1",
+    "sprint_name": "Frontend Webapp — Scaffold",
+    "start_date": "TBD — not yet started",
+    "end_date": "TBD",
+    "goal": "Scaffold terroir-ma-web repo: pnpm workspace, api-client codegen, shadcn/ui, next-intl trilingual, Docker integration",
+    "status": "PLANNED — not yet executed",
     "story_points_planned": 13,
-    "story_points_completed": 13,
-    "velocity_pct": 100,
-    "stories": ["US-058"],
-    "design_doc": "docs/plans/2026-04-14-sprint-12/design.md",
-    "plan_doc": "docs/plans/2026-04-14-sprint-12/plan.md",
-    "progress_doc": "docs/plans/2026-04-14-sprint-12/progress.md",
-    "note": "All 22 tasks completed + full post-sprint checklist executed. Migration 017 applied. OpenAPI JSON generated. 10/10 integration suites, 8/8 E2E suites."
+    "story_points_completed": 0,
+    "velocity_pct": 0,
+    "stories": ["FE-S1"],
+    "design_doc": "docs/plans/2026-04-15-frontend-webapp/design.md",
+    "plan_doc": "docs/plans/2026-04-15-frontend-webapp/plan.md",
+    "progress_doc": "docs/plans/2026-04-15-frontend-webapp/progress.md",
+    "note": "Plan written, not yet executed. Next session: /execute"
   },
-  "active_feature": "sprint-12-complete",
+  "frontend_context": {
+    "repo_name": "terroir-ma-web",
+    "repo_path": "C:/Users/moham/justforfun/terroir-ma-web",
+    "repo_status": "NOT YET CREATED — must be initialized in FE-S1",
+    "apps": [
+      {
+        "name": "portal",
+        "path": "apps/portal",
+        "port": 3001,
+        "scope": "All 8 authenticated staff roles",
+        "status": "not created"
+      },
+      {
+        "name": "public",
+        "path": "apps/public",
+        "port": 3002,
+        "scope": "Consumer QR verify (unauthenticated)",
+        "status": "not created"
+      }
+    ],
+    "shared_packages": [
+      {
+        "name": "@terroir/api-client",
+        "path": "packages/api-client",
+        "purpose": "openapi-ts generated types + configured openapi-fetch client",
+        "status": "not created"
+      }
+    ]
+  },
+  "active_feature": "frontend-webapp-FE-S1",
+  "active_feature_batch": 0,
+  "active_feature_task": 0,
+  "active_feature_total_tasks": 17,
   "modules_status": {
     "cooperative": {
       "entities": true,
       "controllers": true,
-      "tests_passing": true,
-      "endpoints": [
-        "POST /cooperatives (cooperative-admin)",
-        "GET /cooperatives/:id",
-        "PUT /cooperatives/:id (cooperative-admin)",
-        "PATCH /cooperatives/:id/verify (super-admin)",
-        "PUT /cooperatives/:id/deactivate (super-admin)",
-        "POST /cooperatives/:id/members (cooperative-admin)",
-        "GET /cooperatives/:id/members",
-        "PATCH /cooperatives/:id/members/:memberId (cooperative-admin)",
-        "POST /cooperatives/:id/farms (cooperative-admin)",
-        "GET /cooperatives/:id/farms"
-      ]
+      "tests_passing": true
     },
     "product": {
       "entities": true,
       "controllers": true,
-      "tests_passing": true,
-      "endpoints": [
-        "POST /products/:id/documents (cooperative-admin) — multipart upload → MinIO",
-        "GET /products/:id/documents",
-        "GET /products/:id/documents/:docId/download → StreamableFile",
-        "POST /lab-tests/:id/report (lab-technician) — PDF only, 20MB max",
-        "GET /lab-tests/:id/report → StreamableFile",
-        "POST /labs (super-admin)",
-        "GET /labs (super-admin, certification-body)",
-        "GET /labs/:id",
-        "POST /labs/:id/accredit (super-admin)",
-        "POST /labs/:id/revoke (super-admin)"
-      ]
+      "tests_passing": true
     },
     "certification": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
       "redis_qr_cache": true,
-      "qr_scan_event_tracking": true,
-      "new_endpoints_sprint12": [
-        "GET /certifications/:id/scan-stats (super-admin, certification-body)"
-      ]
+      "qr_scan_event_tracking": true
     },
     "notification": {
       "entities": true,
@@ -88,23 +93,17 @@
     "minio": {
       "added": true,
       "docker_service": "terroir-minio",
-      "ports": "9000 (API), 9001 (console)",
-      "volume": "terroir_minio_data",
-      "bucket": "terroir-uploads",
-      "env_vars": ["MINIO_ENDPOINT", "MINIO_PORT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY", "MINIO_BUCKET", "MINIO_USE_SSL"]
+      "ports": "9000 (API), 9001 (console)"
     },
     "env_validation": {
       "added": true,
       "file": "src/config/env.validation.ts",
-      "library": "joi",
-      "required_vars": ["DATABASE_URL", "REDIS_HOST", "KAFKA_BROKERS", "QR_HMAC_SECRET", "KEYCLOAK_URL", "KEYCLOAK_REALM", "KEYCLOAK_CLIENT_ID", "KEYCLOAK_JWKS_URI", "MINIO_ENDPOINT", "MINIO_ACCESS_KEY", "MINIO_SECRET_KEY"],
-      "note": "App refuses to start with descriptive multi-error message on missing required vars"
+      "library": "joi"
     },
     "openapi": {
       "added": true,
       "swagger_ui": "/api-docs (non-production only)",
       "export_script": "src/scripts/export-openapi.ts",
-      "npm_script": "export:openapi",
       "output": "docs/api/openapi.json"
     }
   },
@@ -114,27 +113,12 @@
     "chain_steps_total": 12,
     "qr_verification_working": true,
     "qr_redis_cache_wired": true,
-    "qr_scan_event_tracking": true,
-    "qr_download_png_svg": true,
-    "qr_trilingual_verification": true,
-    "event_ledger": true,
-    "pdf_certificate": true,
-    "certification_stats": true,
-    "certification_analytics": true
+    "qr_scan_event_tracking": true
   },
   "migration_status": {
     "migration_count": 17,
     "last_migration": "1700000000017-AddQrScanEvent",
-    "last_migration_applied": "2026-04-14",
-    "schema_drift": "RESOLVED",
-    "pending_run": false,
     "all_migrations_applied": true
-  },
-  "font_assets": {
-    "amiri_regular": "assets/fonts/Amiri-Regular.ttf",
-    "dejavusans": "assets/fonts/DejaVuSans.ttf",
-    "status": "present (pre-existing from Apr 12)",
-    "fallback": "Helvetica (if missing)"
   },
   "test_status": {
     "unit": {
@@ -147,54 +131,53 @@
       "suites": 10,
       "total": 29,
       "passing": 29,
-      "failures": 0,
-      "new_this_sprint": [
-        "test/integration/common/system-settings.integration.ts",
-        "test/integration/common/audit-log.integration.ts",
-        "test/integration/certification/qr-scan-event.integration.ts",
-        "test/integration/notification/notification-preference.integration.ts"
-      ]
+      "failures": 0
     },
     "e2e": {
       "suites": 8,
       "total": 35,
       "passing": 35,
-      "failures": 0,
-      "new_this_sprint": [
-        "test/e2e/smoke/cooperative-onboarding.e2e.ts",
-        "test/e2e/smoke/certification-grant.e2e.ts",
-        "test/e2e/smoke/qr-verify.e2e.ts"
-      ]
+      "failures": 0
     }
+  },
+  "backlog_status": {
+    "total_stories": 90,
+    "done_stories": 86,
+    "todo_stories": 4,
+    "remaining_deferred": ["US-053 (13 SP, QR offline)", "US-027 (13 SP, ONSSA lab)"],
+    "frontend_sprints_total": 10,
+    "frontend_sp_total": 136,
+    "frontend_sprints_done": 0,
+    "note": "v1 backend complete. Frontend brainstorm + FE-S1 plan complete. Ready to execute."
   },
   "blockers": [],
   "next_actions": [
-    "Sprint 12 CLOSED + retro complete — 13/13 SP (100%), 386 unit, 29 integration, 35 E2E",
-    "v1 feature development COMPLETE — all planned stories delivered",
-    "Housekeeping done: US-058 marked Done in backlog, VELOCITY-TRACKER Sprint 12 row added",
-    "Sprint 12 retro saved: .sessions/sprint-logs/sprint-12-retro.md",
-    "Phase 2 planning — recommended scope for next session:",
-    "  /brainstorm phase-2-monitoring — Prometheus/Grafana, Jaeger, health endpoint enhancements",
-    "  /brainstorm phase-2-performance — k6/Artillery load tests, Redis cache tuning",
-    "  /brainstorm phase-2-security — OWASP ZAP scan, dependency audit, secrets rotation",
-    "  /brainstorm phase-2-deployment — Kubernetes manifests, Helm charts, multi-stage Dockerfile",
-    "  US-053: QR offline verification (13 SP, Medium) — if still in scope",
-    "  US-027: ONSSA lab integration (13 SP, Low) — Phase 2",
-    "Standing practices to adopt:",
-    "  Sync .env from .env.example at the start of every sprint",
-    "  Run smoke tests against live app before committing new E2E files"
+    "Run /execute to start FE-S1 (17 tasks, 13 SP)",
+    "FE-S1 creates terroir-ma-web repo at C:/Users/moham/justforfun/terroir-ma-web",
+    "FE-S1 Batch 1: pnpm workspace init + @terroir/api-client + generate-api.sh",
+    "FE-S1 Batch 2: apps/portal scaffold + next-intl (fr/ar/zgh)",
+    "FE-S1 Batch 3: apps/public scaffold + QR verify Server Component",
+    "FE-S1 Batch 4: shadcn/ui in both apps + Tailwind RTL config",
+    "FE-S1 Batch 5: Dockerfiles + add terroir-portal/terroir-public to docker-compose.yml",
+    "FE-S1 Batch 6: GitHub Actions CI + tsconfig + final smoke verification",
+    "After FE-S1: /plan for FE-S2 (next-auth + Keycloak + role guard middleware)"
   ],
-  "decisions_made_this_sprint": [
-    "QrScanEvent: append-only, fire-and-forget .save().catch() — never blocks verifyQrCode() response",
-    "QrScanEvent.ipAddress: must use explicit type:'varchar' in @Column — TypeORM can't infer from string|null union",
-    "getScanStats(): raw SQL with COUNT + FILTER (last30Days) — clean aggregation without ORM gymnastics",
-    "Joi ENV validation: abortEarly:false — shows ALL missing vars in one startup error",
-    "OpenAPI export script: NestFactory.create(AppModule) triggers full bootstrap including Joi validation",
-    "MINIO_ENDPOINT/MINIO_ACCESS_KEY/MINIO_SECRET_KEY added to .env (were missing, blocking export:openapi)",
-    "Font fallback: existsSync guard + WARN log + Helvetica — PDF endpoints work even without font assets",
-    "Test app helper (createTestApp) does NOT set global prefix or ResponseInterceptor — smoke tests use bare paths",
-    "CooperativeStatus after verify is 'active' (not 'verified') — smoke test fixed to match domain enum"
+  "decisions_made_this_session": [
+    "Frontend: separate repo terroir-ma-web (not monorepo with backend)",
+    "Two Next.js 14 App Router apps: apps/portal (staff) + apps/public (QR verify)",
+    "UI: shadcn/ui + Tailwind CSS with logical properties for RTL",
+    "i18n: next-intl with locale-prefixed routes /fr/ /ar/ /zgh/",
+    "API client: openapi-fetch (openapi-ts codegen from docs/api/openapi.json) + TanStack Query",
+    "Auth: next-auth v5 with Keycloak provider, role guard in middleware from realm_access.roles JWT claim",
+    "Deployment: Docker multi-stage, portal on port 3001, public on port 3002, added to terroir-ma docker-compose.yml",
+    "Phase 2 backend brainstorms (monitoring, performance, security, deployment) deferred — not yet planned",
+    "YAGNI order: FE-S1 → FE-S2 → FE-S8 (public QR verify early) → FE-S4 (cooperative-admin) → rest"
   ],
+  "files_created_this_session": [
+    "docs/plans/2026-04-15-frontend-webapp/design.md",
+    "docs/plans/2026-04-15-frontend-webapp/plan.md"
+  ],
+  "files_modified_this_session": [],
   "velocity_history": {
     "sprint_1": { "planned": 89, "completed": 89, "pct": 100, "note": "scaffold — atypical" },
     "sprint_2": { "planned": 30, "completed": 30, "pct": 100 },
@@ -207,50 +190,7 @@
     "sprint_9": { "planned": 22, "completed": 22, "pct": 100 },
     "sprint_10": { "planned": 24, "completed": 24, "pct": 100 },
     "sprint_11": { "planned": 24, "completed": 24, "pct": 100 },
-    "sprint_12": { "planned": 13, "completed": 13, "pct": 100, "note": "v1 hardening sprint. All 22 tasks + post-sprint checklist." },
+    "sprint_12": { "planned": 13, "completed": 13, "pct": 100, "note": "v1 hardening sprint" },
     "rolling_avg_sp2_sp12": 22.0
-  },
-  "backlog_status": {
-    "total_stories": 90,
-    "done_stories": 86,
-    "todo_stories": 4,
-    "done_sp_approx": 342,
-    "remaining_deferred": ["US-053 (13 SP, QR offline)", "US-027 (13 SP, ONSSA lab)"],
-    "note": "US-058 Done this sprint. v1 feature development effectively complete."
-  },
-  "files_created_this_sprint": [
-    "src/database/migrations/1700000000017-AddQrScanEvent.ts",
-    "src/modules/certification/entities/qr-scan-event.entity.ts",
-    "src/modules/certification/dto/scan-stats-response.dto.ts",
-    "src/config/env.validation.ts",
-    "src/scripts/export-openapi.ts",
-    "assets/fonts/.gitkeep",
-    "scripts/download-fonts.sh",
-    "test/integration/common/system-settings.integration.ts",
-    "test/integration/common/audit-log.integration.ts",
-    "test/integration/certification/qr-scan-event.integration.ts",
-    "test/integration/notification/notification-preference.integration.ts",
-    "test/e2e/smoke/cooperative-onboarding.e2e.ts",
-    "test/e2e/smoke/certification-grant.e2e.ts",
-    "test/e2e/smoke/qr-verify.e2e.ts",
-    "docs/plans/2026-04-14-sprint-12/design.md",
-    "docs/plans/2026-04-14-sprint-12/plan.md",
-    "docs/plans/2026-04-14-sprint-12/progress.md",
-    "docs/api/openapi.json"
-  ],
-  "files_modified_this_sprint": [
-    "src/modules/certification/services/qr-code.service.ts",
-    "src/modules/certification/controllers/certification.controller.ts",
-    "src/modules/certification/certification.module.ts",
-    "src/modules/certification/services/certification-pdf.service.ts",
-    "src/modules/certification/services/export-document-pdf.service.ts",
-    "src/health/health.controller.ts",
-    "src/app.module.ts",
-    "src/main.ts",
-    "package.json",
-    "test/unit/certification/qr-code.service.spec.ts",
-    "test/integration/notification/notification.service.integration.ts",
-    "test/integration/notification/notification-preference.integration.ts",
-    ".env"
-  ]
+  }
 }
