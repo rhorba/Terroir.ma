@@ -242,6 +242,7 @@ jobs:
     needs: [build]
     permissions:
       security-events: write
+      contents: read
 
     steps:
       - name: Checkout
