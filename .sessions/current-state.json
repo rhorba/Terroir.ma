@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-04-15T00:00:00Z",
-  "session_id": "session-2026-04-15-frontend-brainstorm",
+  "timestamp": "2026-04-15T12:00:00Z",
+  "session_id": "session-2026-04-15-ci-fixes",
   "project_phase": "feature-development",
   "current_sprint": {
     "sprint_number": "FE-S1",
@@ -74,8 +74,8 @@
       "controllers": true,
       "tests_passing": true,
       "known_gaps": [
-        "notification-template.service.ts lines 45-59 (seedFromFiles loop body — requires live filesystem fixtures)",
-        "notification.service.ts lines 78-79, 128-129 (fs.existsSync/readFileSync file fallback — requires .hbs file on disk)"
+        "notification-template.service.ts lines 39-53, 104-107 (seedFromFiles loop body — requires live filesystem fixtures)",
+        "notification.service.ts lines 194-195, 244-245 (fs fallback — requires .hbs file on disk)"
       ]
     },
     "common": {
@@ -123,9 +123,10 @@
   "test_status": {
     "unit": {
       "suites": 36,
-      "total": 386,
-      "passing": 386,
-      "failures": 0
+      "total": 391,
+      "passing": 391,
+      "failures": 0,
+      "note": "391 after adding 5 listener tests this session (was 386)"
     },
     "integration": {
       "suites": 10,
@@ -140,6 +141,12 @@
       "failures": 0
     }
   },
+  "ci_pipeline_status": {
+    "format_check": "FIXED — prettier --write applied to 22 files",
+    "branch_coverage": "FIXED — 79.83% → ≥80% (notification.listener.ts 0% → 100% branch)",
+    "last_passing_commit": "e05b6c1",
+    "pipeline_url": "https://github.com/rhorba/Terroir.ma/actions"
+  },
   "backlog_status": {
     "total_stories": 90,
     "done_stories": 86,
@@ -148,7 +155,7 @@
     "frontend_sprints_total": 10,
     "frontend_sp_total": 136,
     "frontend_sprints_done": 0,
-    "note": "v1 backend complete. Frontend brainstorm + FE-S1 plan complete. Ready to execute."
+    "note": "v1 backend complete. Frontend brainstorm + FE-S1 plan complete. CI pipeline green."
   },
   "blockers": [],
   "next_actions": [
@@ -170,14 +177,39 @@
     "API client: openapi-fetch (openapi-ts codegen from docs/api/openapi.json) + TanStack Query",
     "Auth: next-auth v5 with Keycloak provider, role guard in middleware from realm_access.roles JWT claim",
     "Deployment: Docker multi-stage, portal on port 3001, public on port 3002, added to terroir-ma docker-compose.yml",
-    "Phase 2 backend brainstorms (monitoring, performance, security, deployment) deferred — not yet planned",
-    "YAGNI order: FE-S1 → FE-S2 → FE-S8 (public QR verify early) → FE-S4 (cooperative-admin) → rest"
+    "CI fix: prettier --write on 22 files (format:check was failing)",
+    "CI fix: added handleCooperativeDeactivated + handleInspectorAssigned tests to close branch coverage gap (79.83% → ≥80%)",
+    "null reason branch in handleCooperativeDeactivated falls back to 'Non spécifié' — now explicitly tested"
   ],
   "files_created_this_session": [
     "docs/plans/2026-04-15-frontend-webapp/design.md",
     "docs/plans/2026-04-15-frontend-webapp/plan.md"
   ],
-  "files_modified_this_session": [],
+  "files_modified_this_session": [
+    "test/unit/notification/notification.listener.spec.ts",
+    "src/common/filters/http-exception.filter.ts",
+    "src/common/guards/roles.guard.ts",
+    "src/common/interceptors/correlation-id.interceptor.ts",
+    "src/common/interceptors/logging.interceptor.ts",
+    "src/common/interceptors/response.interceptor.ts",
+    "src/common/pipes/validation.pipe.ts",
+    "src/config/database.config.ts",
+    "src/modules/cooperative/dto/map-farm.dto.ts",
+    "src/modules/notification/services/email.service.ts",
+    "src/modules/product/controllers/harvest.controller.ts",
+    "src/modules/product/dto/create-batch.dto.ts",
+    "src/modules/product/dto/create-product.dto.ts",
+    "src/modules/product/services/harvest.service.ts",
+    "test/e2e/auth-flow.e2e.ts",
+    "test/e2e/helpers/auth.helper.ts",
+    "test/e2e/helpers/seed.helper.ts",
+    "test/e2e/qr-verification.e2e.ts",
+    "test/factories/lab-test.factory.ts",
+    "test/factories/notification.factory.ts",
+    "test/fixtures/certification-types.fixture.ts",
+    "test/integration/helpers/test-db.setup.ts",
+    "test/unit/common/morocco-validators.spec.ts"
+  ],
   "velocity_history": {
     "sprint_1": { "planned": 89, "completed": 89, "pct": 100, "note": "scaffold — atypical" },
     "sprint_2": { "planned": 30, "completed": 30, "pct": 100 },
