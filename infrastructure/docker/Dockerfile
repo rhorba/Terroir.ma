@@ -33,8 +33,9 @@ WORKDIR /app
 # Copy manifests for production install
 COPY package*.json ./
 
-# Install only production dependencies
-RUN npm ci --omit=dev
+# Install only production dependencies (--ignore-scripts prevents husky
+# prepare hook from running when devDependencies are absent)
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy compiled output from builder
 COPY --from=builder /app/dist ./dist
