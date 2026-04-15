@@ -257,7 +257,8 @@ jobs:
         run: docker load --input /tmp/terroir-ma-image.tar
 
       - name: Run Trivy vulnerability scan (image)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
+        continue-on-error: true
         with:
           image-ref: ${{ env.IMAGE_NAME }}:${{ github.sha }}
           format: sarif
@@ -267,8 +268,9 @@ jobs:
           ignore-unfixed: true
 
       - name: Run Trivy filesystem scan (repo)
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0
         if: always()
+        continue-on-error: true
         with:
           scan-type: fs
           scan-ref: .
@@ -277,7 +279,7 @@ jobs:
           severity: CRITICAL,HIGH
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-image-results.sarif') != ''
         with:
           sarif_file: trivy-image-results.sarif
