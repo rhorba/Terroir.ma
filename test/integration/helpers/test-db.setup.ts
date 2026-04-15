@@ -38,8 +38,6 @@ export async function resetSequences(dataSource: DataSource, schema: string): Pr
   );
 
   for (const { sequence_name } of sequences) {
-    await dataSource.query(
-      `ALTER SEQUENCE "${schema}"."${sequence_name}" RESTART WITH 1`,
-    );
+    await dataSource.query(`ALTER SEQUENCE "${schema}"."${sequence_name}" RESTART WITH 1`);
   }
 }

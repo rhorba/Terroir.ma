@@ -48,8 +48,9 @@ describe('QR Verification (e2e)', () => {
     });
 
     it('should return 404 for non-existent UUID with no sig', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/verify/ffffffff-ffff-ffff-ffff-ffffffffffff');
+      const res = await request(app.getHttpServer()).get(
+        '/verify/ffffffff-ffff-ffff-ffff-ffffffffffff',
+      );
 
       expect([403, 404]).toContain(res.status);
     });

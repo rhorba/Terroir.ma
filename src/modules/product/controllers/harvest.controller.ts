@@ -15,10 +15,7 @@ import { LogHarvestDto } from '../dto/log-harvest.dto';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
-import {
-  CurrentUser,
-  CurrentUserPayload,
-} from '../../../common/decorators/current-user.decorator';
+import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
 import { Harvest } from '../entities/harvest.entity';
 
 @ApiTags('harvests')
@@ -54,7 +51,9 @@ export class HarvestController {
   }
 
   @Get('cooperative/:cooperativeId')
-  @ApiOperation({ summary: 'List all harvests for a cooperative, optionally filtered by campaign year' })
+  @ApiOperation({
+    summary: 'List all harvests for a cooperative, optionally filtered by campaign year',
+  })
   @ApiQuery({ name: 'campaignYear', required: false, example: '2025/2026' })
   async findByCooperative(
     @Param('cooperativeId') cooperativeId: string,

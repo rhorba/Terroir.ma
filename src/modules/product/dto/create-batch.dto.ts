@@ -17,7 +17,10 @@ export class CreateBatchDto {
   @Length(2, 50)
   productTypeCode: string;
 
-  @ApiProperty({ example: ['uuid-1', 'uuid-2'], description: 'Harvest IDs to group into this batch' })
+  @ApiProperty({
+    example: ['uuid-1', 'uuid-2'],
+    description: 'Harvest IDs to group into this batch',
+  })
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1)

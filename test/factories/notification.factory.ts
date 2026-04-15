@@ -13,7 +13,7 @@ export function buildSendNotificationOptions(
     context: {
       certificationNumber: `TERROIR-AOP-MRR-2025-${String(faker.number.int({ min: 1, max: 999 })).padStart(3, '0')}`,
       cooperativeName: `Coopérative ${faker.company.name()}`,
-      productName: faker.helpers.arrayElement(['Huile d\'Argan', 'Safran', 'Dattes Medjoul']),
+      productName: faker.helpers.arrayElement(["Huile d'Argan", 'Safran', 'Dattes Medjoul']),
       grantedAt: faker.date.recent().toISOString(),
     },
     triggerEventId: faker.string.uuid(),

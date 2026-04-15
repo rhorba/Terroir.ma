@@ -2,9 +2,13 @@
  * Fixture data for certification type seed in integration tests.
  */
 export const CERTIFICATION_TYPE_FIXTURES = [
-  { code: 'AOP', labelFr: 'Appellation d\'Origine Protégée', labelAr: 'تسمية المنشأ المحمية' },
-  { code: 'IGP', labelFr: 'Indication Géographique Protégée', labelAr: 'الإشارة الجغرافية المحمية' },
-  { code: 'LA',  labelFr: 'Label Agricole', labelAr: 'الملصق الفلاحي' },
+  { code: 'AOP', labelFr: "Appellation d'Origine Protégée", labelAr: 'تسمية المنشأ المحمية' },
+  {
+    code: 'IGP',
+    labelFr: 'Indication Géographique Protégée',
+    labelAr: 'الإشارة الجغرافية المحمية',
+  },
+  { code: 'LA', labelFr: 'Label Agricole', labelAr: 'الملصق الفلاحي' },
 ];
 
 export const MOROCCO_REGION_FIXTURES = [

@@ -35,11 +35,7 @@ export class HarvestService {
    * Campaign year is always derived from harvestDate (Oct–Sep boundary).
    * Publishes product.harvest.logged Kafka event.
    */
-  async logHarvest(
-    dto: LogHarvestDto,
-    cooperativeId: string,
-    createdBy: string,
-  ): Promise<Harvest> {
+  async logHarvest(dto: LogHarvestDto, cooperativeId: string, createdBy: string): Promise<Harvest> {
     const campaignYear = HarvestService.computeCampaignYear(dto.harvestDate);
     const harvest = this.harvestRepo.create({
       ...dto,
@@ -68,11 +64,9 @@ export class HarvestService {
     return harvest;
   }
 
-  async findByCooperative(
-    cooperativeId: string,
-    campaignYear?: string,
-  ): Promise<Harvest[]> {
-    const query = this.harvestRepo.createQueryBuilder('harvest')
+  async findByCooperative(cooperativeId: string, campaignYear?: string): Promise<Harvest[]> {
+    const query = this.harvestRepo
+      .createQueryBuilder('harvest')
       .where('harvest.cooperative_id = :cooperativeId', { cooperativeId });
 
     if (campaignYear) {

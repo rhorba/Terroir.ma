@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationListener } from '../../../src/modules/notification/listeners/notification.listener';
 import { NotificationService } from '../../../src/modules/notification/services/notification.service';
-import type { CertificationDecisionGrantedEvent } from '../../../src/common/interfaces/events/certification.events';
+import type {
+  CertificationDecisionGrantedEvent,
+  InspectionInspectorAssignedEvent,
+} from '../../../src/common/interfaces/events/certification.events';
+import type { CooperativeDeactivatedEvent } from '../../../src/common/interfaces/events/cooperative.events';
 
 const mockNotificationService = {
   send: jest.fn().mockResolvedValue(undefined),
@@ -135,6 +139,107 @@ describe('NotificationListener', () => {
           templateCode: 'inspection-scheduled',
         }),
       );
+    });
+  });
+
+  describe('handleCooperativeDeactivated()', () => {
+    const makeDeactivatedEvent = (
+      reason: string | null = 'Non-conformité SDOQ',
+    ): CooperativeDeactivatedEvent =>
+      ({
+        eventId: 'evt-deact-001',
+        correlationId: 'corr-deact-001',
+        timestamp: new Date().toISOString(),
+        version: 1,
+        source: 'cooperative',
+        cooperativeId: 'coop-001',
+        cooperativeName: 'Coopérative Argan Essaouira',
+        ice: '001234567000012',
+        regionCode: 'SFI',
+        deactivatedBy: 'super-admin-001',
+        reason,
+      }) as unknown as CooperativeDeactivatedEvent;
+
+    it('sends cooperative-deactivated notification with provided reason', async () => {
+      const event = makeDeactivatedEvent('Non-conformité SDOQ');
+
+      await listener.handleCooperativeDeactivated(event, {} as never);
+
+      expect(mockNotificationService.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recipientId: 'coop-001',
+          channel: 'email',
+          templateCode: 'cooperative-deactivated',
+          language: 'fr-MA',
+          context: expect.objectContaining({ reason: 'Non-conformité SDOQ' }),
+        }),
+      );
+    });
+
+    it('falls back to default reason text when reason is null', async () => {
+      const event = makeDeactivatedEvent(null);
+
+      await listener.handleCooperativeDeactivated(event, {} as never);
+
+      expect(mockNotificationService.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          context: expect.objectContaining({ reason: 'Non spécifié' }),
+        }),
+      );
+    });
+
+    it('swallows errors without rethrowing', async () => {
+      const event = makeDeactivatedEvent();
+      mockNotificationService.send.mockRejectedValueOnce(new Error('SMTP down'));
+
+      await expect(
+        listener.handleCooperativeDeactivated(event, {} as never),
+      ).resolves.toBeUndefined();
+    });
+  });
+
+  describe('handleInspectorAssigned()', () => {
+    const makeInspectorAssignedEvent = (): InspectionInspectorAssignedEvent =>
+      ({
+        eventId: 'evt-assign-001',
+        correlationId: 'corr-assign-001',
+        timestamp: new Date().toISOString(),
+        version: 1,
+        source: 'certification',
+        inspectionId: 'insp-001',
+        certificationId: 'cert-001',
+        cooperativeId: 'coop-001',
+        inspectorId: 'inspector-001',
+        inspectorName: 'Hassan Benali',
+        scheduledDate: '2026-05-01',
+        assignedBy: 'cert-body-001',
+      }) as unknown as InspectionInspectorAssignedEvent;
+
+    it('sends inspection-assigned notification to inspector', async () => {
+      const event = makeInspectorAssignedEvent();
+
+      await listener.handleInspectorAssigned(event, {} as never);
+
+      expect(mockNotificationService.send).toHaveBeenCalledWith(
+        expect.objectContaining({
+          recipientId: 'inspector-001',
+          channel: 'email',
+          templateCode: 'inspection-assigned',
+          language: 'fr-MA',
+          context: expect.objectContaining({
+            inspectorName: 'Hassan Benali',
+            scheduledDate: '2026-05-01',
+            certificationId: 'cert-001',
+          }),
+        }),
+      );
+    });
+
+    it('swallows errors without rethrowing', async () => {
+      const event = makeInspectorAssignedEvent();
+      mockNotificationService.send.mockRejectedValueOnce(new Error('SMTP down'));
+
+      await expect(listener.handleInspectorAssigned(event, {} as never)).resolves.toBeUndefined();
     });
   });
 });

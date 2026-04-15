@@ -33,10 +33,10 @@ describe('Morocco Validators', () => {
     });
 
     it('should reject invalid CIN formats', () => {
-      expect(isValidCIN('1234567')).toBe(false);    // no letters
-      expect(isValidCIN('ABC1234')).toBe(false);   // 3 letters
-      expect(isValidCIN('A1234')).toBe(false);     // too few digits
-      expect(isValidCIN('A1234567')).toBe(false);  // too many digits
+      expect(isValidCIN('1234567')).toBe(false); // no letters
+      expect(isValidCIN('ABC1234')).toBe(false); // 3 letters
+      expect(isValidCIN('A1234')).toBe(false); // too few digits
+      expect(isValidCIN('A1234567')).toBe(false); // too many digits
       expect(isValidCIN('')).toBe(false);
     });
   });
@@ -48,9 +48,9 @@ describe('Morocco Validators', () => {
     });
 
     it('should reject invalid ICE', () => {
-      expect(isValidICE('12345678901234')).toBe(false);   // 14 digits
+      expect(isValidICE('12345678901234')).toBe(false); // 14 digits
       expect(isValidICE('1234567890123456')).toBe(false); // 16 digits
-      expect(isValidICE('12345678901234A')).toBe(false);  // has letter
+      expect(isValidICE('12345678901234A')).toBe(false); // has letter
     });
   });
 
@@ -62,10 +62,10 @@ describe('Morocco Validators', () => {
     });
 
     it('should reject invalid formats', () => {
-      expect(isValidPhone('0612345678')).toBe(false);      // missing country code
-      expect(isValidPhone('+33612345678')).toBe(false);    // French number
-      expect(isValidPhone('+2121234567')).toBe(false);     // 8 digits after 212
-      expect(isValidPhone('+21212345678')).toBe(false);    // landline with 0
+      expect(isValidPhone('0612345678')).toBe(false); // missing country code
+      expect(isValidPhone('+33612345678')).toBe(false); // French number
+      expect(isValidPhone('+2121234567')).toBe(false); // 8 digits after 212
+      expect(isValidPhone('+21212345678')).toBe(false); // landline with 0
     });
   });
 
@@ -76,9 +76,9 @@ describe('Morocco Validators', () => {
     });
 
     it('should reject invalid IF', () => {
-      expect(isValidIF('123456')).toBe(false);   // 6 digits
+      expect(isValidIF('123456')).toBe(false); // 6 digits
       expect(isValidIF('123456789')).toBe(false); // 9 digits
-      expect(isValidIF('12A4567')).toBe(false);   // has letter
+      expect(isValidIF('12A4567')).toBe(false); // has letter
     });
   });
 });

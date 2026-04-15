@@ -4,7 +4,12 @@
  * which accepts unsigned tokens with the correct payload structure.
  */
 
-import { buildJwtPayload, buildCooperativeAdminJwt, buildCertificationBodyJwt, buildInspectorJwt } from '../../factories/user.factory';
+import {
+  buildJwtPayload,
+  buildCooperativeAdminJwt,
+  buildCertificationBodyJwt,
+  buildInspectorJwt,
+} from '../../factories/user.factory';
 import { buildMockJwt } from './../../helpers/app.helper';
 
 export type Role =

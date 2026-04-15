@@ -22,14 +22,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const message =
-      exception instanceof HttpException
-        ? exception.message
-        : 'An unexpected error occurred';
+      exception instanceof HttpException ? exception.message : 'An unexpected error occurred';
 
     const errorCode = this.getErrorCode(exception);
 
@@ -58,11 +54,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private getErrorCode(exception: unknown): string {
     if (exception instanceof HttpException) {
       const exResponse = exception.getResponse();
-      if (
-        typeof exResponse === 'object' &&
-        exResponse !== null &&
-        'code' in exResponse
-      ) {
+      if (typeof exResponse === 'object' && exResponse !== null && 'code' in exResponse) {
         return (exResponse as { code: string }).code;
       }
       return exception.constructor.name.replace('Exception', '').toUpperCase();

@@ -28,17 +28,11 @@ describe('Auth Flow (e2e)', () => {
 
   describe('Unauthenticated access', () => {
     it('should return 401 for POST /certifications/request without token', async () => {
-      await request(app.getHttpServer())
-        .post('/certifications/request')
-        .send({})
-        .expect(401);
+      await request(app.getHttpServer()).post('/certifications/request').send({}).expect(401);
     });
 
     it('should return 401 for POST /inspections without token', async () => {
-      await request(app.getHttpServer())
-        .post('/inspections')
-        .send({})
-        .expect(401);
+      await request(app.getHttpServer()).post('/inspections').send({}).expect(401);
     });
 
     it('should return 401 for PATCH /certifications/:id/grant without token', async () => {
@@ -84,8 +78,9 @@ describe('Auth Flow (e2e)', () => {
     });
 
     it('GET /verify/:uuid should be accessible without auth', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/verify/00000000-0000-0000-0000-000000000000');
+      const res = await request(app.getHttpServer()).get(
+        '/verify/00000000-0000-0000-0000-000000000000',
+      );
 
       expect(res.status).not.toBe(401);
     });

@@ -22,10 +22,7 @@ export class EmailService {
       secure: false, // Mailpit dev SMTP — no TLS
     });
 
-    this.defaultFrom = this.config.get<string>(
-      'SMTP_FROM',
-      'Terroir.ma <noreply@terroir.ma>',
-    );
+    this.defaultFrom = this.config.get<string>('SMTP_FROM', 'Terroir.ma <noreply@terroir.ma>');
   }
 
   async send(opts: SendEmailOptions): Promise<void> {

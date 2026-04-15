@@ -11,8 +11,7 @@ import { ApiResponse } from '../interfaces/api-response.interface';
 export class ResponseInterceptor<T> implements NestInterceptor<T, ApiResponse<T>> {
   intercept(context: ExecutionContext, next: CallHandler<T>): Observable<ApiResponse<T>> {
     const request = context.switchToHttp().getRequest<Request>();
-    const correlationId =
-      (request.headers['x-correlation-id'] as string) ?? 'unknown';
+    const correlationId = (request.headers['x-correlation-id'] as string) ?? 'unknown';
 
     return next.handle().pipe(
       map((data) => ({

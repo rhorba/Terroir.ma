@@ -20,7 +20,12 @@ export async function seedE2EData(app: INestApplication): Promise<void> {
   await seedRows(dataSource, 'cooperative', 'cooperative', COOPERATIVE_FIXTURES);
 
   // Notification templates
-  await seedRows(dataSource, 'notification', 'notification_template', NOTIFICATION_TEMPLATE_FIXTURES);
+  await seedRows(
+    dataSource,
+    'notification',
+    'notification_template',
+    NOTIFICATION_TEMPLATE_FIXTURES,
+  );
 }
 
 /**
