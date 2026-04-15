@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 /**
  * Product supporting document uploaded to MinIO.
@@ -10,6 +10,7 @@ export class ProductDocument {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index('idx_product_document_product_id')
   @Column({ name: 'product_id', type: 'uuid' })
   productId: string;
 

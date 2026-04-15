@@ -13,7 +13,7 @@ concurrency:
 env:
   NODE_VERSION: '20'
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: terroir-ma
 
 jobs:
   # ──────────────────────────────────────────────

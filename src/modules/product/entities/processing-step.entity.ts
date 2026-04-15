@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index } from 'typeorm';
 
 export enum ProcessingStepType {
   SORTING = 'SORTING',
@@ -21,6 +21,7 @@ export class ProcessingStep {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index('idx_processing_step_batch_id')
   @Column({ name: 'batch_id', type: 'uuid' })
   batchId: string;
 

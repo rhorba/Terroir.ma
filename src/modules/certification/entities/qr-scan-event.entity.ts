@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
 
 /**
  * Append-only log of every valid QR code scan.
@@ -11,12 +11,15 @@ export class QrScanEvent {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Index('idx_qr_scan_event_qr_code_id')
   @Column({ name: 'qr_code_id', type: 'uuid' })
   qrCodeId: string;
 
+  @Index('idx_qr_scan_event_certification_id')
   @Column({ name: 'certification_id', type: 'uuid' })
   certificationId: string;
 
+  @Index('idx_qr_scan_event_scanned_at')
   @Column({
     name: 'scanned_at',
     type: 'timestamptz',

@@ -10,7 +10,7 @@ export class NotificationPreference {
   @PrimaryColumn({ name: 'user_id', type: 'uuid' })
   userId: string;
 
-  @Column({ type: 'simple-array', default: 'email' })
+  @Column({ type: 'text', array: true, default: '{email}' })
   channels: string[];
 
   @Column({ type: 'varchar', length: 5, default: 'fr' })
