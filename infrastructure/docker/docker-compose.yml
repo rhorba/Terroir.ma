@@ -263,3 +263,50 @@ services:
       start_period: 10s
       retries: 3
     restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 10. Terroir Portal (staff UI — Next.js 14)
+  # ─────────────────────────────────────────────
+  terroir-portal:
+    build:
+      context: ../../terroir-ma-web/apps/portal
+      dockerfile: Dockerfile
+    container_name: terroir-portal
+    profiles: [app, full]
+    ports:
+      - '3001:3000'
+    environment:
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-changeme-portal-secret}
+      KEYCLOAK_CLIENT_ID: terroir-portal
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_PORTAL_SECRET:-changeme}
+      KEYCLOAK_ISSUER: http://terroir-keycloak:8080/realms/terroir
+      NEXT_PUBLIC_API_URL: http://terroir-api:3000
+    depends_on:
+      terroir-api:
+        condition: service_healthy
+      terroir-keycloak:
+        condition: service_healthy
+    networks:
+      - terroir-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 11. Terroir Public (QR verify — Next.js 14)
+  # ─────────────────────────────────────────────
+  terroir-public:
+    build:
+      context: ../../terroir-ma-web/apps/public
+      dockerfile: Dockerfile
+    container_name: terroir-public
+    profiles: [app, full]
+    ports:
+      - '3002:3000'
+    environment:
+      NEXT_PUBLIC_API_URL: http://terroir-api:3000
+    depends_on:
+      terroir-api:
+        condition: service_healthy
+    networks:
+      - terroir-network
+    restart: unless-stopped
