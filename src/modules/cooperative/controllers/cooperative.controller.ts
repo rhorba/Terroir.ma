@@ -21,6 +21,7 @@ import { UpdateMemberDto } from '../dto/update-member.dto';
 import { MapFarmDto } from '../dto/map-farm.dto';
 import { DeactivateCooperativeDto } from '../dto/deactivate-cooperative.dto';
 import { Member } from '../entities/member.entity';
+import { Farm } from '../entities/farm.entity';
 import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
@@ -132,6 +133,23 @@ export class CooperativeController {
     @Headers('x-correlation-id') correlationId: string,
   ): Promise<Cooperative> {
     return this.cooperativeService.verify(id, user.sub, correlationId ?? user.sub);
+  }
+
+  /** List farms for a cooperative */
+  @Get(':id/farms')
+  @UseGuards(RolesGuard)
+  @Roles('cooperative-admin', 'super-admin')
+  @ApiOperation({ summary: 'List all farms for a cooperative' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async getFarms(
+    @Param('id') id: string,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ): Promise<{ data: Farm[]; total: number; page: number; limit: number }> {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, parseInt(limit, 10) || 20);
+    return this.cooperativeService.getFarms(id, pageNum, limitNum);
   }
 
   /** Map a farm to the cooperative */

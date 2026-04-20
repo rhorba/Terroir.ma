@@ -242,6 +242,23 @@ export class CooperativeService {
   }
 
   /**
+   * List all farms for a cooperative (paginated).
+   */
+  async getFarms(
+    cooperativeId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: Farm[]; total: number; page: number; limit: number }> {
+    const [data, total] = await this.farmRepo.findAndCount({
+      where: { cooperativeId },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit };
+  }
+
+  /**
    * Map a farm to a cooperative with GPS coordinates.
    */
   async mapFarm(cooperativeId: string, dto: MapFarmDto, createdBy: string): Promise<void> {
