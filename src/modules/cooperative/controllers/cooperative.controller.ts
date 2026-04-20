@@ -25,7 +25,7 @@ import { JwtAuthGuard } from '../../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../../common/guards/roles.guard';
 import { Roles } from '../../../common/decorators/roles.decorator';
 import { CurrentUser, CurrentUserPayload } from '../../../common/decorators/current-user.decorator';
-import { Cooperative } from '../entities/cooperative.entity';
+import { Cooperative, CooperativeStatus } from '../entities/cooperative.entity';
 
 /**
  * Cooperative module HTTP controller.
@@ -49,6 +49,28 @@ export class CooperativeController {
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<Cooperative> {
     return this.cooperativeService.register(dto, user.sub);
+  }
+
+  /** US-004/006: List all cooperatives with optional status filter (super-admin) */
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles('super-admin')
+  @ApiOperation({
+    summary: 'US-004/006: List all cooperatives with optional status filter (super-admin)',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'active', 'suspended', 'revoked'],
+  })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  async findAll(
+    @Query('status') status?: CooperativeStatus,
+    @Query('page') page = '1',
+    @Query('limit') limit = '20',
+  ): Promise<{ data: Cooperative[]; total: number; page: number; limit: number }> {
+    return this.cooperativeService.findAll(status, +page, +limit);
   }
 
   /** Get a cooperative by ID */

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Cooperative } from '../entities/cooperative.entity';
+import { Cooperative, CooperativeStatus } from '../entities/cooperative.entity';
 import { Member } from '../entities/member.entity';
 import { Farm } from '../entities/farm.entity';
 import { CreateCooperativeDto } from '../dto/create-cooperative.dto';
@@ -61,6 +61,22 @@ export class CooperativeService {
     await this.producer.publishRegistrationSubmitted(saved, createdBy);
 
     return saved;
+  }
+
+  /** List all cooperatives, optionally filtered by status (super-admin). */
+  async findAll(
+    status?: CooperativeStatus,
+    page = 1,
+    limit = 20,
+  ): Promise<{ data: Cooperative[]; total: number; page: number; limit: number }> {
+    const where = status ? { status } : {};
+    const [data, total] = await this.cooperativeRepo.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit };
   }
 
   /**
