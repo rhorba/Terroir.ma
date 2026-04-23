@@ -1,50 +1,42 @@
 {
-  "timestamp": "2026-04-23T16:00:00Z",
-  "session_id": "session-2026-04-23-FE-S6-complete",
+  "timestamp": "2026-04-23T22:30:00Z",
+  "session_id": "session-2026-04-23-FE-S7-S8-S9-complete",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": "FE-S6",
-    "sprint_name": "Lab-Technician Portal — Test Queue, Result Submission, PDF Upload, Submit Test",
+    "sprint_number": "FE-S9",
+    "sprint_name": "Consumer QR Public App + i18n Polish",
     "start_date": "2026-04-23",
     "end_date": "2026-04-23",
-    "goal": "Build all lab-technician pages under (lab-technician)/lab-technician/ — dashboard, queue list, test detail + result form, PDF upload, submit-new-test form",
+    "goal": "Fix public QR verify page (URL, typed response, richer display) and remove hardcoded /fr/ locale from all 7 portal sidebar layouts",
     "status": "COMPLETED",
-    "story_points_planned": 13,
-    "story_points_completed": 13,
+    "story_points_planned": 8,
+    "story_points_completed": 8,
     "velocity_pct": 100,
-    "stories": ["FE-S6"],
-    "plan_doc": "docs/plans/2026-04-23-FE-S6-lab-technician-portal/plan.md",
-    "progress_doc": "docs/plans/2026-04-23-FE-S6-lab-technician-portal/plan.md",
-    "note": "All 13 tasks completed. 5 batches. 9 files created/modified. 3 new portal routes (35 total). 0 typecheck errors. next build green. Commit aafd5b7 pushed to GitHub."
+    "stories": ["FE-S9"],
+    "plan_doc": "docs/plans/2026-04-23-FE-S9-consumer-qr-i18n-polish/plan.md",
+    "progress_doc": "docs/plans/2026-04-23-FE-S9-consumer-qr-i18n-polish/progress.md",
+    "note": "All 13 tasks completed. 12 files modified. Commit 239ef36 pushed to terroir-ma-web. Backend 391/391 unit tests passing."
   },
   "frontend_context": {
     "repo_name": "terroir-ma-web",
     "repo_path": "C:/Users/moham/justforfun/terroir-ma-web",
     "github_url": "https://github.com/rhorba/terroir-ma-web",
-    "repo_status": "pushed — FE-S6 commit aafd5b7 on origin/main",
+    "repo_status": "pushed — FE-S9 commit 239ef36 on origin/main",
     "apps": [
       {
         "name": "portal",
         "path": "apps/portal",
         "port": 3001,
         "scope": "All 8 authenticated staff roles",
-        "status": "FE-S6 complete — 35 routes, lab-technician portal fully implemented",
-        "routes_count": 35
+        "status": "FE-S9 complete — 42 routes, all 7 role sidebar layouts use params.locale (no more hardcoded /fr/)",
+        "routes_count": 42
       },
       {
         "name": "public",
         "path": "apps/public",
         "port": 3002,
         "scope": "Consumer QR verify (unauthenticated)",
-        "status": "scaffolded — QR verify Server Component at [locale]/verify/[uuid], builds ✅"
-      }
-    ],
-    "shared_packages": [
-      {
-        "name": "@terroir/api-client",
-        "path": "packages/api-client",
-        "purpose": "openapi-ts generated types + configured openapi-fetch client",
-        "status": "updated — CooperativeStatus + cooperativeControllerFindAll added manually; full codegen in FE-S8"
+        "status": "FE-S9 complete — typed fetch (api-public.ts), richer verify page, correct /api/v1/verify/:uuid?lang= path, status badge, validFrom/validUntil"
       }
     ],
     "shared_admin_components": [
@@ -55,124 +47,52 @@
       "apps/portal/src/components/admin/confirm-modal.tsx — client-side confirm dialog"
     ],
     "api_server_helper": "apps/portal/src/lib/api-server.ts — apiFetch<T>(path, init) with Bearer token from getAccessToken()",
+    "api_public_helper": "apps/public/src/lib/api-public.ts — fetchVerification(uuid, lang) with QrVerificationData + VerifyCertification types (no auth)",
     "auth_helpers": {
       "getAccessToken": "apps/portal/src/lib/auth-utils.ts — returns Keycloak access token from session",
       "getRoles": "apps/portal/src/lib/auth-utils.ts — returns realm roles array",
-      "getCooperativeId": "apps/portal/src/lib/auth-utils.ts — returns cooperative_id from Keycloak JWT claim (added FE-S4)"
+      "getCooperativeId": "apps/portal/src/lib/auth-utils.ts — returns cooperative_id from Keycloak JWT claim"
     },
-    "inspector_sections": {
-      "dashboard": "inspector/page.tsx — RSC, 4 stat cards (total/planifiées/en cours/terminées), try/catch fallback",
-      "inspections": {
-        "list": "inspector/inspections/page.tsx — RSC, paginated GET /inspections/my, StatusBadge, conformity result",
-        "detail": "inspector/inspections/[id]/page.tsx — RSC, stat cards, farmIds list, existing report, conditional ReportForm",
-        "reportForm": "inspector/inspections/[id]/report-form.tsx — client form, radio passed/failed, 3 textareas, useTransition",
-        "actions": "inspector/inspections/actions.ts — fileReport SA, PATCH /api/v1/inspections/:id/report"
-      },
-      "batches": {
-        "detail": "inspector/batches/[id]/page.tsx — RSC, Promise.all(batch + steps), amber numbered timeline"
-      },
-      "products": {
-        "detail": "inspector/products/[id]/page.tsx — RSC, 4 stat cards, optional description"
-      }
+    "completed_portals": {
+      "super_admin": "cooperatives, labs, specifications, settings, audit-log",
+      "cooperative_admin": "members, farms, products, batches — list + detail + create",
+      "cooperative_member": "dashboard, harvests (list + new), batches (list + new)",
+      "inspector": "dashboard, inspections (list + detail + report form), batches/[id], products/[id]",
+      "lab_technician": "dashboard, queue (list + detail + result form + PDF upload), submit test",
+      "certification_body": "dashboard (4 stat cards), certifications list (pending, paginated), certification detail (grant/deny/revoke forms)",
+      "customs_agent": "export-documents (scaffolded — FE-S10 target)"
     },
-    "cooperative_admin_sections": {
-      "dashboard": "cooperative-admin/page.tsx — RSC, 4 stat cards (members/farms/products/batches), safeCount fallback",
-      "members": {
-        "list": "cooperative-admin/members/page.tsx — RSC, paginated GET /cooperatives/:id/members",
-        "create": "cooperative-admin/members/new/page.tsx — client form, useTransition",
-        "actions": "cooperative-admin/members/actions.ts — addMember SA"
-      },
-      "farms": {
-        "list": "cooperative-admin/farms/page.tsx — RSC, paginated GET /cooperatives/:id/farms (new endpoint)",
-        "create": "cooperative-admin/farms/new/page.tsx — client form, 12 Morocco regions, GPS optional",
-        "actions": "cooperative-admin/farms/actions.ts — mapFarm SA"
-      },
-      "products": {
-        "list": "cooperative-admin/products/page.tsx — RSC, read-only GET /products/cooperative/:id"
-      },
-      "batches": {
-        "list": "cooperative-admin/batches/page.tsx — RSC, GET /batches/cooperative/:id, batchNumber fallback",
-        "detail": "cooperative-admin/batches/[id]/page.tsx — RSC, Promise.all(batch + processing-steps), numbered timeline"
-      }
-    },
-    "super_admin_sections": {
-      "cooperatives": "super-admin/cooperatives/ (5 files) — list tabbed, detail, verify/reject",
-      "labs": "super-admin/labs/ (5 files) — list, new, detail, accredit/revoke",
-      "specifications": "super-admin/specifications/ (5 files) — list, new, edit+deactivate",
-      "settings": "super-admin/settings/ (3 files) — 3 settings forms + audit log"
-    },
-    "auth_files": [
-      "apps/portal/src/auth.ts — NextAuth config with cooperative_id extracted from Keycloak JWT",
-      "apps/portal/src/app/api/auth/[...nextauth]/route.ts — NextAuth route handler",
-      "apps/portal/src/types/next-auth.d.ts — Session.user.cooperativeId + JWT.cooperativeId typed",
-      "apps/portal/src/middleware.ts — auth() + intl + role guard for 7 roles",
-      "apps/portal/src/lib/auth-utils.ts — getAccessToken() + getRoles() + getCooperativeId()",
-      "apps/portal/src/components/providers.tsx — SessionProvider + QueryClientProvider",
-      "apps/portal/src/app/[locale]/login/page.tsx — Keycloak redirect sign-in",
-      "apps/portal/src/app/[locale]/unauthorized/page.tsx — 403 page"
-    ],
+    "portal_routes_count": 42,
     "known_issues": [
-      "jose@6 CompressionStream/DecompressionStream Edge Runtime warnings on build — benign, deferred to FE-S9",
-      "Sidebar nav links hardcoded to /fr/ locale — next-intl useRouter migration in FE-S9",
-      "QR verify page uses fetch() directly — typed client migration in FE-S8 after codegen",
-      "api-client paths/components/operations not exported from types.gen.ts — pre-existing, full codegen in FE-S8",
+      "jose@6 CompressionStream/DecompressionStream Edge Runtime warnings on build — benign, known Next.js + jose@6 issue",
       "cooperative_id in session requires Keycloak custom claim configured — works in prod, returns null in dev without Keycloak"
     ],
     "windows_fixes": [
-      "postcss.config.js (CJS) instead of .mjs — ESM Windows path bug",
-      "next/font/google removed — ERR_UNSUPPORTED_ESM_URL_SCHEME on Windows",
-      "output: 'standalone' conditioned on NEXT_OUTPUT env — Windows symlink EPERM",
-      "shadcn v4 globals.css rewritten for Tailwind v3 (HSL vars instead of oklch/@import)",
-      "button.tsx replaced — shadcn v4 uses @base-ui/react, replaced with plain HTML button"
+      "postcss.config.js (CJS) instead of .mjs",
+      "next/font/google removed",
+      "output: standalone conditioned on NEXT_OUTPUT env",
+      "shadcn v4 globals.css rewritten for Tailwind v3",
+      "button.tsx replaced with plain HTML button"
     ]
   },
-  "active_feature": "frontend-webapp-FE-S7",
-  "active_feature_batch": 0,
-  "active_feature_task": 0,
-  "active_feature_total_tasks": 0,
+  "active_feature": "FE-S9-complete",
+  "active_feature_batch": 4,
+  "active_feature_task": 13,
+  "active_feature_total_tasks": 13,
   "modules_status": {
-    "cooperative": {
-      "entities": true,
-      "controllers": true,
-      "tests_passing": true,
-      "findAll_endpoint": true,
-      "getFarms_endpoint": true
-    },
-    "product": {
-      "entities": true,
-      "controllers": true,
-      "tests_passing": true
-    },
-    "certification": {
-      "entities": true,
-      "controllers": true,
-      "tests_passing": true,
-      "redis_qr_cache": true,
-      "qr_scan_event_tracking": true
-    },
-    "notification": {
-      "entities": true,
-      "controllers": true,
-      "tests_passing": true
-    },
+    "cooperative": { "entities": true, "controllers": true, "tests_passing": true, "findAll_endpoint": true, "getFarms_endpoint": true },
+    "product": { "entities": true, "controllers": true, "tests_passing": true },
+    "certification": { "entities": true, "controllers": true, "tests_passing": true, "redis_qr_cache": true, "qr_scan_event_tracking": true },
+    "notification": { "entities": true, "controllers": true, "tests_passing": true },
     "common": {
-      "user_controller": true,
-      "admin_controller": true,
-      "minio_service": true,
-      "dashboard_service": true,
-      "audit_log_service": true,
-      "audit_interceptor": true,
-      "system_settings_service": true,
-      "env_validation": true
+      "user_controller": true, "admin_controller": true, "minio_service": true,
+      "dashboard_service": true, "audit_log_service": true, "audit_interceptor": true,
+      "system_settings_service": true, "env_validation": true
     }
   },
   "infrastructure": {
     "minio": { "added": true },
-    "openapi": {
-      "added": true,
-      "export_script": "src/scripts/export-openapi.ts",
-      "output": "docs/api/openapi.json"
-    },
+    "openapi": { "added": true, "export_script": "src/scripts/export-openapi.ts", "output": "docs/api/openapi.json" },
     "github": {
       "terroir_ma": "https://github.com/rhorba/terroir-ma",
       "terroir_ma_web": "https://github.com/rhorba/terroir-ma-web",
@@ -196,52 +116,44 @@
     "e2e": { "suites": 8, "total": 35, "passing": 35, "failures": 0 }
   },
   "ci_pipeline_status": {
-    "backend": "GREEN — last passing commit d8e5a6a (feat: add GET /cooperatives)",
-    "frontend_ci": "CI workflow live on terroir-ma-web GitHub — FE-S5 commit 75936cc pushed"
+    "backend": "GREEN — 391 unit + 29 integration + 35 e2e tests all passing",
+    "frontend": "GREEN — portal 42 routes + public 4 routes, typecheck lint build all green"
   },
   "backlog_status": {
     "total_stories": 90,
-    "done_stories": 88,
-    "todo_stories": 2,
+    "done_stories": 91,
+    "todo_stories": 1,
     "frontend_sprints_total": 10,
     "frontend_sp_total": 136,
-    "frontend_sprints_done": 6,
-    "frontend_sp_done": 78,
-    "note": "FE-S1 through FE-S6 complete. Backend v1 done. Next: FE-S7 (certification-body portal)."
+    "frontend_sprints_done": 9,
+    "frontend_sp_done": 121,
+    "sp_remaining": 15,
+    "note": "FE-S1 through FE-S9 complete. One sprint left: FE-S10 (customs-agent portal + E2E tests + Docker prod build, 15 SP)."
   },
   "blockers": [],
   "next_actions": [
-    "Run /plan for FE-S7 (certification-body portal — pending requests list, grant/deny decisions, certificate view, 13 SP)",
-    "FE-S7 scope: all pages under (certification-body)/certification-body/ route group — requests list, request detail + grant/deny forms, certificate view"
+    "Run /plan for FE-S10 (final sprint: customs-agent export-documents portal + full E2E test suite + Docker production build, 15 SP)",
+    "FE-S10 scope: (customs-agent)/customs-agent/export-documents list + detail + clearance action, E2E tests for key user flows, docker-compose prod + Dockerfile optimizations"
   ],
   "decisions_made_this_session": [
-    "FE-S6 ResultForm: dynamic fields from labTestParameters — numeric inputs for quantitative params, select for enum params (values array)",
-    "canSubmitResult guard: status === 'submitted' || 'in_progress' AND !result — prevents double-filing",
-    "PDF upload uses server action proxy (uploadReport) with raw fetch + getAccessToken — avoids exposing Bearer token to client",
-    "UploadForm always shown when reportFileName is null (regardless of test status) — PDF can be uploaded anytime",
-    "productType lookup: GET /product-types?limit=100 then find by code — no by-code endpoint exists on backend",
-    "FE-S5 ReportForm radio uses value='true'/'false' strings — FormData.get() cast to boolean via === 'true' comparison",
-    "Inspector batches/products are read-only deep-links from inspection detail — no list pages for inspector"
+    "FE-S7: Cert-body dashboard — pending count from GET /certifications/pending?limit=1 meta.total; granted/denied/revoked from summing GET /certifications/analytics byRegion array",
+    "FE-S7: deny-form.tsx and action-buttons.tsx created ahead of schedule during Batch 3 to unblock typecheck checkpoint",
+    "FE-S8: CreateBatchForm uses Set<string> selectedIds; selectedTotal computed by filter+reduce; controlled totalQuantityKg input auto-fills",
+    "FE-S8: getCooperativeId() null-checked in every RSC — graceful fallback message rather than crash in dev",
+    "FE-S9: api-public.ts placed in apps/public/src/lib/ instead of creating packages/api-client — simpler, sufficient for one consumer",
+    "FE-S9: Backend /api/v1/verify/:uuid?lang= handles server-side i18n of statusDisplay + message — frontend just renders them",
+    "FE-S9: All 7 role layouts accept params: { locale: string } and build NAV hrefs + redirects dynamically — RSC-compatible, no client hook needed"
   ],
   "velocity_history": {
-    "sprint_1": { "planned": 89, "completed": 89, "pct": 100, "note": "scaffold — atypical" },
-    "sprint_2": { "planned": 30, "completed": 30, "pct": 100 },
-    "sprint_3": { "planned": 21, "completed": 21, "pct": 100 },
-    "sprint_4": { "planned": 21, "completed": 21, "pct": 100 },
-    "sprint_5": { "planned": 23, "completed": 22, "pct": 96 },
-    "sprint_6": { "planned": 22, "completed": 21, "pct": 95 },
-    "sprint_7": { "planned": 20, "completed": 20, "pct": 100 },
-    "sprint_8": { "planned": 24, "completed": 24, "pct": 100 },
-    "sprint_9": { "planned": 22, "completed": 22, "pct": 100 },
-    "sprint_10": { "planned": 24, "completed": 24, "pct": 100 },
-    "sprint_11": { "planned": 24, "completed": 24, "pct": 100 },
-    "sprint_12": { "planned": 13, "completed": 13, "pct": 100, "note": "v1 hardening sprint" },
-    "FE-S1": { "planned": 13, "completed": 13, "pct": 100, "note": "frontend scaffold — all 17 tasks" },
-    "FE-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "auth + role guard — all 12 tasks, 27 files" },
-    "FE-S3": { "planned": 13, "completed": 13, "pct": 100, "note": "super-admin portal — all 13 tasks, 33 files, 22 routes" },
-    "FE-S4": { "planned": 13, "completed": 13, "pct": 100, "note": "cooperative-admin portal — all 13 tasks, 16 files, 8 new routes (30 total)" },
-    "FE-S5": { "planned": 13, "completed": 13, "pct": 100, "note": "inspector portal — all 13 tasks, 8 files, 7 new routes (32 total)" },
-    "FE-S6": { "planned": 13, "completed": 13, "pct": 100, "note": "lab-technician portal — all 13 tasks, 9 files, 3 new routes (35 total)" },
-    "rolling_avg_FE-S1_FE-S6": 13.0
+    "FE-S1": { "planned": 13, "completed": 13, "pct": 100, "note": "frontend scaffold" },
+    "FE-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "auth + role guard" },
+    "FE-S3": { "planned": 13, "completed": 13, "pct": 100, "note": "super-admin portal — 22 routes" },
+    "FE-S4": { "planned": 13, "completed": 13, "pct": 100, "note": "cooperative-admin portal — 30 routes total" },
+    "FE-S5": { "planned": 13, "completed": 13, "pct": 100, "note": "inspector portal — 32 routes total" },
+    "FE-S6": { "planned": 13, "completed": 13, "pct": 100, "note": "lab-technician portal — 35 routes total" },
+    "FE-S7": { "planned": 13, "completed": 13, "pct": 100, "note": "certification-body portal — 38 routes total" },
+    "FE-S8": { "planned": 13, "completed": 13, "pct": 100, "note": "cooperative-member portal — 42 routes total" },
+    "FE-S9": { "planned": 8, "completed": 8, "pct": 100, "note": "QR verify + i18n polish — 42 routes, 12 files" },
+    "rolling_avg_FE": 11.4
   }
 }
