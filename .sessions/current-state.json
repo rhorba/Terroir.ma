@@ -1,35 +1,35 @@
 {
-  "timestamp": "2026-04-20T23:59:00Z",
-  "session_id": "session-2026-04-20-FE-S4-execute",
+  "timestamp": "2026-04-23T16:00:00Z",
+  "session_id": "session-2026-04-23-FE-S6-complete",
   "project_phase": "feature-development",
   "current_sprint": {
-    "sprint_number": "FE-S4",
-    "sprint_name": "Cooperative-Admin Portal — Members, Farms, Products, Batches",
-    "start_date": "2026-04-20",
-    "end_date": "2026-04-20",
-    "goal": "Build all cooperative-admin sections: member management, farm mapping, product list, batch list + detail under (cooperative-admin)/cooperative-admin/ route group",
+    "sprint_number": "FE-S6",
+    "sprint_name": "Lab-Technician Portal — Test Queue, Result Submission, PDF Upload, Submit Test",
+    "start_date": "2026-04-23",
+    "end_date": "2026-04-23",
+    "goal": "Build all lab-technician pages under (lab-technician)/lab-technician/ — dashboard, queue list, test detail + result form, PDF upload, submit-new-test form",
     "status": "COMPLETED",
     "story_points_planned": 13,
     "story_points_completed": 13,
     "velocity_pct": 100,
-    "stories": ["FE-S4"],
-    "plan_doc": "docs/plans/2026-04-20-FE-S4-cooperative-admin/plan.md",
-    "progress_doc": "docs/plans/2026-04-20-FE-S4-cooperative-admin/progress.md",
-    "note": "All 13 tasks completed. 5 batches. 14 frontend files created/modified + 2 backend files patched. 8 new portal routes (30 total). 0 typecheck errors. 0 lint warnings. next build green. Backend unit tests 391/391."
+    "stories": ["FE-S6"],
+    "plan_doc": "docs/plans/2026-04-23-FE-S6-lab-technician-portal/plan.md",
+    "progress_doc": "docs/plans/2026-04-23-FE-S6-lab-technician-portal/plan.md",
+    "note": "All 13 tasks completed. 5 batches. 9 files created/modified. 3 new portal routes (35 total). 0 typecheck errors. next build green. Commit aafd5b7 pushed to GitHub."
   },
   "frontend_context": {
     "repo_name": "terroir-ma-web",
     "repo_path": "C:/Users/moham/justforfun/terroir-ma-web",
     "github_url": "https://github.com/rhorba/terroir-ma-web",
-    "repo_status": "local — needs push after FE-S4",
+    "repo_status": "pushed — FE-S6 commit aafd5b7 on origin/main",
     "apps": [
       {
         "name": "portal",
         "path": "apps/portal",
         "port": 3001,
         "scope": "All 8 authenticated staff roles",
-        "status": "FE-S4 complete — 30 routes, cooperative-admin portal fully implemented",
-        "routes_count": 30
+        "status": "FE-S6 complete — 35 routes, lab-technician portal fully implemented",
+        "routes_count": 35
       },
       {
         "name": "public",
@@ -59,6 +59,21 @@
       "getAccessToken": "apps/portal/src/lib/auth-utils.ts — returns Keycloak access token from session",
       "getRoles": "apps/portal/src/lib/auth-utils.ts — returns realm roles array",
       "getCooperativeId": "apps/portal/src/lib/auth-utils.ts — returns cooperative_id from Keycloak JWT claim (added FE-S4)"
+    },
+    "inspector_sections": {
+      "dashboard": "inspector/page.tsx — RSC, 4 stat cards (total/planifiées/en cours/terminées), try/catch fallback",
+      "inspections": {
+        "list": "inspector/inspections/page.tsx — RSC, paginated GET /inspections/my, StatusBadge, conformity result",
+        "detail": "inspector/inspections/[id]/page.tsx — RSC, stat cards, farmIds list, existing report, conditional ReportForm",
+        "reportForm": "inspector/inspections/[id]/report-form.tsx — client form, radio passed/failed, 3 textareas, useTransition",
+        "actions": "inspector/inspections/actions.ts — fileReport SA, PATCH /api/v1/inspections/:id/report"
+      },
+      "batches": {
+        "detail": "inspector/batches/[id]/page.tsx — RSC, Promise.all(batch + steps), amber numbered timeline"
+      },
+      "products": {
+        "detail": "inspector/products/[id]/page.tsx — RSC, 4 stat cards, optional description"
+      }
     },
     "cooperative_admin_sections": {
       "dashboard": "cooperative-admin/page.tsx — RSC, 4 stat cards (members/farms/products/batches), safeCount fallback",
@@ -111,7 +126,7 @@
       "button.tsx replaced — shadcn v4 uses @base-ui/react, replaced with plain HTML button"
     ]
   },
-  "active_feature": "frontend-webapp-FE-S5",
+  "active_feature": "frontend-webapp-FE-S7",
   "active_feature_batch": 0,
   "active_feature_task": 0,
   "active_feature_total_tasks": 0,
@@ -182,32 +197,31 @@
   },
   "ci_pipeline_status": {
     "backend": "GREEN — last passing commit d8e5a6a (feat: add GET /cooperatives)",
-    "frontend_ci": "CI workflow live on terroir-ma-web GitHub — needs push after FE-S4"
+    "frontend_ci": "CI workflow live on terroir-ma-web GitHub — FE-S5 commit 75936cc pushed"
   },
   "backlog_status": {
     "total_stories": 90,
-    "done_stories": 87,
-    "todo_stories": 3,
+    "done_stories": 88,
+    "todo_stories": 2,
     "frontend_sprints_total": 10,
     "frontend_sp_total": 136,
-    "frontend_sprints_done": 4,
-    "frontend_sp_done": 52,
-    "note": "FE-S1 + FE-S2 + FE-S3 + FE-S4 complete. Backend v1 done. Next: FE-S5 (inspector portal)."
+    "frontend_sprints_done": 6,
+    "frontend_sp_done": 78,
+    "note": "FE-S1 through FE-S6 complete. Backend v1 done. Next: FE-S7 (certification-body portal)."
   },
   "blockers": [],
   "next_actions": [
-    "Push terroir-ma-web to GitHub (git push from terroir-ma-web repo)",
-    "Run /plan for FE-S5 (inspector portal — inspection schedule, report filing, batch review, 13 SP)",
-    "FE-S5 scope: all pages under (inspector)/inspector/ route group — inspection list, inspection detail + report form, batch/product read views"
+    "Run /plan for FE-S7 (certification-body portal — pending requests list, grant/deny decisions, certificate view, 13 SP)",
+    "FE-S7 scope: all pages under (certification-body)/certification-body/ route group — requests list, request detail + grant/deny forms, certificate view"
   ],
   "decisions_made_this_session": [
-    "cooperative_id extracted from Keycloak JWT profile in NextAuth jwt() callback — avoids extra API call per page",
-    "getCooperativeId() returns null (not throws) when no cooperative in session — RSC pages handle null gracefully with early return",
-    "safeCount() helper handles both paginated responses (meta.total) and array responses (length) — covers both API shapes in use",
-    "Backend getFarms() uses findAndCount with cooperativeId filter — same paginated shape as getMembers()",
-    "Layout nav kept to 5 items matching FE-S4 scope — no placeholder links for future sprints to avoid 404s",
-    "Batch detail processing chain uses ordered <ol> with numbered badges — readable linear progression of steps",
-    "Morocco region codes expanded to full names in farms/new/page.tsx — better UX than 3-letter codes alone"
+    "FE-S6 ResultForm: dynamic fields from labTestParameters — numeric inputs for quantitative params, select for enum params (values array)",
+    "canSubmitResult guard: status === 'submitted' || 'in_progress' AND !result — prevents double-filing",
+    "PDF upload uses server action proxy (uploadReport) with raw fetch + getAccessToken — avoids exposing Bearer token to client",
+    "UploadForm always shown when reportFileName is null (regardless of test status) — PDF can be uploaded anytime",
+    "productType lookup: GET /product-types?limit=100 then find by code — no by-code endpoint exists on backend",
+    "FE-S5 ReportForm radio uses value='true'/'false' strings — FormData.get() cast to boolean via === 'true' comparison",
+    "Inspector batches/products are read-only deep-links from inspection detail — no list pages for inspector"
   ],
   "velocity_history": {
     "sprint_1": { "planned": 89, "completed": 89, "pct": 100, "note": "scaffold — atypical" },
@@ -226,6 +240,8 @@
     "FE-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "auth + role guard — all 12 tasks, 27 files" },
     "FE-S3": { "planned": 13, "completed": 13, "pct": 100, "note": "super-admin portal — all 13 tasks, 33 files, 22 routes" },
     "FE-S4": { "planned": 13, "completed": 13, "pct": 100, "note": "cooperative-admin portal — all 13 tasks, 16 files, 8 new routes (30 total)" },
-    "rolling_avg_FE-S1_FE-S4": 13.0
+    "FE-S5": { "planned": 13, "completed": 13, "pct": 100, "note": "inspector portal — all 13 tasks, 8 files, 7 new routes (32 total)" },
+    "FE-S6": { "planned": 13, "completed": 13, "pct": 100, "note": "lab-technician portal — all 13 tasks, 9 files, 3 new routes (35 total)" },
+    "rolling_avg_FE-S1_FE-S6": 13.0
   }
 }
