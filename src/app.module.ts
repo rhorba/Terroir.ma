@@ -32,6 +32,8 @@ import { SystemSettingsService } from './common/services/system-settings.service
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { KafkaClientModule } from './kafka/kafka-client.module';
+import { MetricsModule } from './common/metrics/metrics.module';
+import { otelMixin } from './common/logger/pino-otel-mixin';
 
 @Module({
   imports: [
@@ -54,6 +56,7 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
             configService.get('NODE_ENV') !== 'production'
               ? { target: 'pino-pretty', options: { colorize: true } }
               : undefined,
+          customProps: () => otelMixin(),
         },
       }),
       inject: [ConfigService],
@@ -95,6 +98,9 @@ import { KafkaClientModule } from './kafka/kafka-client.module';
 
     // Kafka client (global — available to all domain modules)
     KafkaClientModule,
+
+    // Metrics (Prometheus scrape endpoint + HTTP interceptor)
+    MetricsModule,
 
     // Common entities
     TypeOrmModule.forFeature([AuditLog, SystemSetting]),

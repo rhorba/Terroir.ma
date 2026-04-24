@@ -15,6 +15,10 @@ volumes:
     name: terroir_keycloak_pgdata
   minio_data:
     name: terroir_minio_data
+  prometheus_data:
+    name: terroir_prometheus_data
+  grafana_data:
+    name: terroir_grafana_data
 
 services:
   # ─────────────────────────────────────────────
@@ -309,4 +313,84 @@ services:
         condition: service_healthy
     networks:
       - terroir-network
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 12. Prometheus
+  # ─────────────────────────────────────────────
+  terroir-prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: terroir-prometheus
+    profiles: [monitoring, full]
+    ports:
+      - '9090:9090'
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:9090/-/healthy || exit 1']
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 13. Grafana
+  # ─────────────────────────────────────────────
+  terroir-grafana:
+    image: grafana/grafana:10.4.2
+    container_name: terroir-grafana
+    profiles: [monitoring, full]
+    ports:
+      - '3100:3000'
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-terroir}
+      GF_AUTH_ANONYMOUS_ENABLED: 'false'
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    volumes:
+      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - terroir-prometheus
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:3000/api/health || exit 1']
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    restart: unless-stopped
+
+  # ─────────────────────────────────────────────
+  # 14. Jaeger (distributed tracing)
+  # ─────────────────────────────────────────────
+  terroir-jaeger:
+    image: jaegertracing/all-in-one:1.57
+    container_name: terroir-jaeger
+    profiles: [monitoring, full]
+    environment:
+      COLLECTOR_OTLP_ENABLED: 'true'
+    ports:
+      - '16686:16686' # Jaeger UI
+      - '4317:4317' # OTLP gRPC receiver
+      - '4318:4318' # OTLP HTTP receiver
+    networks:
+      - terroir-network
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -q --spider http://localhost:16686 || exit 1']
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
     restart: unless-stopped
