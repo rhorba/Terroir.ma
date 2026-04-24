@@ -1,108 +1,47 @@
 {
-  "timestamp": "2026-04-24T22:00:00Z",
-  "session_id": "session-2026-04-24-FE-S10-complete-v1-done",
-  "project_phase": "feature-development",
+  "timestamp": "2026-04-24T23:59:00Z",
+  "session_id": "session-2026-04-24-P2-S1-S2-observability",
+  "project_phase": "phase-2-observability",
   "current_sprint": {
-    "sprint_number": "FE-S10",
-    "sprint_name": "Customs-Agent Portal + E2E Tests + Docker Prod Build",
-    "start_date": "2026-04-24",
-    "end_date": "2026-04-24",
-    "goal": "Complete customs-agent export-documents portal (list + detail + clearance), Playwright E2E smoke tests, pnpm-monorepo Dockerfile fixes",
-    "status": "COMPLETED",
-    "story_points_planned": 15,
-    "story_points_completed": 15,
-    "velocity_pct": 100,
-    "stories": ["US-062", "US-063", "US-068", "FE-S10-E2E", "FE-S10-Docker"],
-    "plan_doc": "docs/plans/2026-04-24-FE-S10-customs-agent-e2e-docker/plan.md",
-    "progress_doc": "docs/plans/2026-04-24-FE-S10-customs-agent-e2e-docker/progress.md",
-    "note": "All 15 tasks completed. 19 files changed. 4 commits pushed to terroir-ma-web. Backend 391/391 unit tests passing. v1 COMPLETE."
+    "sprint_number": "P2-S3",
+    "sprint_name": "Kafka Schema Registry + Avro",
+    "status": "NOT_STARTED",
+    "goal": "Migrate all 27 Kafka events to Avro schemas, register in Redpanda Schema Registry (BACKWARD compat), wire KafkaProducerService + KafkaConsumerService, integration-test round-trip encode/decode",
+    "story_points_planned": 18,
+    "story_points_completed": 0,
+    "stories": ["US-097", "US-098", "US-099"],
+    "plan_doc": null,
+    "progress_doc": null,
+    "note": "Start with /brainstorm to refine design, then /plan, then /execute"
   },
-  "frontend_context": {
-    "repo_name": "terroir-ma-web",
-    "repo_path": "C:/Users/moham/justforfun/terroir-ma-web",
-    "github_url": "https://github.com/rhorba/terroir-ma-web",
-    "repo_status": "NOT YET PUSHED — 4 local commits (98f4dfe, eb3a48d, bbd8a7f, 37fed48) ahead of origin/main",
-    "apps": [
-      {
-        "name": "portal",
-        "path": "apps/portal",
-        "port": 3001,
-        "scope": "All 8 authenticated staff roles",
-        "status": "FE-S10 complete — 45 routes, customs-agent export-documents list + detail + validate + generate",
-        "routes_count": 45
-      },
-      {
-        "name": "public",
-        "path": "apps/public",
-        "port": 3002,
-        "scope": "Consumer QR verify (unauthenticated)",
-        "status": "FE-S9 complete — typed fetch (api-public.ts), richer verify page, correct /api/v1/verify/:uuid?lang= path",
-        "routes_count": 4
-      }
-    ],
-    "shared_admin_components": [
-      "apps/portal/src/components/admin/status-badge.tsx — colored status pill (extended with draft/submitted/approved/rejected/expired for ExportDocument)",
-      "apps/portal/src/components/admin/action-button.tsx — form submit with pending state",
-      "apps/portal/src/components/admin/page-header.tsx — section title + action slot",
-      "apps/portal/src/components/admin/data-table.tsx — generic table wrapper",
-      "apps/portal/src/components/admin/confirm-modal.tsx — client-side confirm dialog"
-    ],
-    "api_server_helper": "apps/portal/src/lib/api-server.ts — apiFetch<T>(path, init) with Bearer token from getAccessToken()",
-    "api_public_helper": "apps/public/src/lib/api-public.ts — fetchVerification(uuid, lang) with QrVerificationData + VerifyCertification types (no auth)",
-    "api_proxy_routes": [
-      "apps/portal/src/app/api/generate-export-doc/route.ts — POST proxy to /api/v1/export-documents with server-side Bearer token"
-    ],
-    "auth_helpers": {
-      "getAccessToken": "apps/portal/src/lib/auth-utils.ts — returns Keycloak access token from session",
-      "getRoles": "apps/portal/src/lib/auth-utils.ts — returns realm roles array",
-      "getCooperativeId": "apps/portal/src/lib/auth-utils.ts — returns cooperative_id from Keycloak JWT claim"
+  "last_completed_sprints": [
+    {
+      "sprint_number": "P2-S1",
+      "sprint_name": "Prometheus + Grafana Monitoring",
+      "status": "COMPLETED",
+      "story_points_planned": 11,
+      "story_points_completed": 11,
+      "velocity_pct": 100,
+      "stories": ["US-091", "US-092", "US-093"],
+      "plan_doc": "docs/plans/2026-04-24-phase2-monitoring/plan.md",
+      "progress_doc": "docs/plans/2026-04-24-phase2-monitoring/progress.md"
     },
-    "completed_portals": {
-      "super_admin": "cooperatives, labs, specifications, settings, audit-log",
-      "cooperative_admin": "members, farms, products, batches — list + detail + create",
-      "cooperative_member": "dashboard, harvests (list + new), batches (list + new)",
-      "inspector": "dashboard, inspections (list + detail + report form), batches/[id], products/[id]",
-      "lab_technician": "dashboard, queue (list + detail + result form + PDF upload), submit test",
-      "certification_body": "dashboard (4 stat cards), certifications list (pending, paginated), certification detail (grant/deny/revoke forms)",
-      "customs_agent": "dashboard (3 stat cards), export-documents list (paginated), export-document detail + validate, generate new doc form",
-      "consumer_public": "QR verify page — typed fetch, status badge, validFrom/validUntil, server-side i18n"
-    },
-    "portal_routes_count": 45,
-    "e2e_tests": {
-      "framework": "@playwright/test",
-      "config": "playwright.config.ts (workspace root)",
-      "test_dir": "apps/portal/e2e/",
-      "files": [
-        "auth.spec.ts — 4 tests: login redirect, dashboard redirect, login page, unauthorized page",
-        "qr-verify.spec.ts — 3 tests: public verify page smoke (port 3002)",
-        "export-documents.spec.ts — 4 tests: all customs-agent routes redirect unauthenticated"
-      ],
-      "run_command": "pnpm test:e2e (requires running dev servers)"
-    },
-    "docker": {
-      "portal_dockerfile": "apps/portal/Dockerfile — 3-stage, repo-root context, pnpm workspace-aware (deps/builder/runner)",
-      "public_dockerfile": "apps/public/Dockerfile — same pattern, port 3002",
-      "dockerignore": ".dockerignore — excludes node_modules, .next",
-      "compose_prod": "docker-compose.prod.yml — portal:3001 + public:3002",
-      "status": "Structurally correct; runtime not verified (Docker Desktop not running in session)"
-    },
-    "known_issues": [
-      "jose@6 CompressionStream/DecompressionStream Edge Runtime warnings on build — benign, known Next.js + jose@6 issue",
-      "cooperative_id in session requires Keycloak custom claim configured — works in prod, returns null in dev without Keycloak",
-      "Export-document dashboard counts sampled from page 1 only (limit=100) — accurate up to 100 docs; needs /stats endpoint for Phase 2"
-    ],
-    "windows_fixes": [
-      "postcss.config.js (CJS) instead of .mjs",
-      "next/font/google removed",
-      "output: standalone conditioned on NEXT_OUTPUT env",
-      "shadcn v4 globals.css rewritten for Tailwind v3",
-      "button.tsx replaced with plain HTML button"
-    ]
-  },
-  "active_feature": "FE-S10-complete",
-  "active_feature_batch": 4,
-  "active_feature_task": 15,
-  "active_feature_total_tasks": 15,
+    {
+      "sprint_number": "P2-S2",
+      "sprint_name": "Jaeger Distributed Tracing",
+      "status": "COMPLETED",
+      "story_points_planned": 13,
+      "story_points_completed": 13,
+      "velocity_pct": 100,
+      "stories": ["US-094", "US-095", "US-096"],
+      "plan_doc": "docs/plans/2026-04-24-phase2-tracing/plan.md",
+      "progress_doc": "docs/plans/2026-04-24-phase2-tracing/progress.md"
+    }
+  ],
+  "active_feature": null,
+  "active_feature_batch": null,
+  "active_feature_task": null,
+  "active_feature_total_tasks": null,
   "modules_status": {
     "cooperative": { "entities": true, "controllers": true, "tests_passing": true, "findAll_endpoint": true, "getFarms_endpoint": true },
     "product": { "entities": true, "controllers": true, "tests_passing": true },
@@ -116,8 +55,40 @@
     "common": {
       "user_controller": true, "admin_controller": true, "minio_service": true,
       "dashboard_service": true, "audit_log_service": true, "audit_interceptor": true,
-      "system_settings_service": true, "env_validation": true
+      "system_settings_service": true, "env_validation": true,
+      "metrics_module": true, "otel_mixin": true
     }
+  },
+  "observability_status": {
+    "prometheus": {
+      "added": true,
+      "scrape_config": "infrastructure/prometheus/prometheus.yml",
+      "docker_service": "terroir-prometheus",
+      "docker_port": 9090,
+      "docker_profiles": ["monitoring", "full"]
+    },
+    "grafana": {
+      "added": true,
+      "dashboard_json": "infrastructure/grafana/dashboards/terroir-api.json",
+      "panels": 6,
+      "docker_service": "terroir-grafana",
+      "docker_port_host": 3100,
+      "docker_profiles": ["monitoring", "full"],
+      "provisioned_from_repo": true
+    },
+    "jaeger": {
+      "added": true,
+      "docker_service": "terroir-jaeger",
+      "docker_port_ui": 16686,
+      "docker_port_otlp_grpc": 4317,
+      "docker_port_otlp_http": 4318,
+      "docker_profiles": ["monitoring", "full"],
+      "otel_sdk_disabled_local": true,
+      "otel_sdk_disabled_docker": false
+    },
+    "pino_trace_injection": true,
+    "otel_auto_instrumentation": ["express", "pg", "kafkajs"],
+    "start_command": "docker compose --profile monitoring up -d"
   },
   "infrastructure": {
     "minio": { "added": true },
@@ -140,54 +111,51 @@
     "all_migrations_applied": true
   },
   "test_status": {
-    "unit": { "suites": 36, "total": 391, "passing": 391, "failures": 0 },
+    "unit": { "suites": 39, "total": 400, "passing": 400, "failures": 0, "note": "+9 from P2-S1 (6) and P2-S2 (3)" },
     "integration": { "suites": 10, "total": 29, "passing": 29, "failures": 0 },
     "e2e": { "suites": 8, "total": 35, "passing": 35, "failures": 0 },
-    "playwright_e2e": { "files": 3, "total": 11, "note": "smoke tests — run against live dev servers" }
+    "playwright_e2e": { "files": 3, "total": 11, "note": "smoke tests — run against live dev servers" },
+    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking, all 400 tests pass"
   },
-  "ci_pipeline_status": {
-    "backend": "GREEN — 391 unit + 29 integration + 35 e2e tests all passing",
-    "frontend": "GREEN — portal 45 routes + public 4 routes, typecheck lint build all green"
+  "frontend_context": {
+    "repo_name": "terroir-ma-web",
+    "repo_path": "C:/Users/moham/justforfun/terroir-ma-web",
+    "github_url": "https://github.com/rhorba/terroir-ma-web",
+    "repo_status": "pushed — v1 complete, all 4 FE-S10 commits pushed",
+    "portal_routes_count": 45,
+    "status": "v1 COMPLETE — all 10 FE sprints done, 127 SP"
   },
   "backlog_status": {
-    "total_stories": 90,
+    "total_stories": 103,
     "done_stories": 88,
-    "todo_stories": 2,
-    "todo_note": "US-027 (ONSSA lab integration, 13SP) + US-053 (QR offline, 13SP) — both deferred to Phase 2, not v1 scope",
-    "frontend_sprints_total": 10,
-    "frontend_sp_total": 127,
-    "frontend_sprints_done": 10,
-    "frontend_sp_done": 127,
-    "sp_remaining": 0,
-    "note": "ALL 10 FRONTEND SPRINTS COMPLETE. v1 is DONE. Phase 2 items: Prometheus/Grafana monitoring, Jaeger tracing, Kafka Schema Registry, k6 performance tests, Kubernetes."
+    "deferred_stories": 2,
+    "phase2_todo_stories": 13,
+    "phase2_sp_total": 65,
+    "phase2_sp_done": 24,
+    "phase2_sprints_done": 2,
+    "phase2_sprints_total": 5,
+    "phase2_pct": 37,
+    "note": "P2-S1 (US-091/092/093) + P2-S2 (US-094/095/096) done. P2-S3 (US-097/098/099, 18 SP, Schema Registry) is next."
   },
   "blockers": [],
   "next_actions": [
-    "Push terroir-ma-web to origin/main (4 commits: 98f4dfe, eb3a48d, bbd8a7f, 37fed48)",
-    "Push terroir-ma to origin/main (commit eb3a48d — backend Roles patch + plan doc)",
-    "Phase 2 planning: /brainstorm for monitoring stack (Prometheus + Grafana), Jaeger tracing, Kafka Schema Registry",
-    "Verify Docker prod build: docker compose -f docker-compose.prod.yml up --build",
-    "Configure Keycloak dev fixture for authenticated Playwright E2E flows"
+    "ACTION ITEM: Run `docker compose --profile monitoring up -d` and verify Prometheus scrape target is UP (terroir-app:3000/metrics)",
+    "ACTION ITEM: Verify Grafana 6-panel dashboard renders data after generating traffic with curl",
+    "ACTION ITEM: Verify traceId appears in Pino logs with OTEL_SDK_DISABLED=false",
+    "ACTION ITEM: Investigate Jest worker teardown warning — add --forceExit to test:unit script if OTel timer can't be cleaned up",
+    "P2-S3: /plan docs/plans/2026-04-24-phase2-schema-registry/design.md → /execute (18 SP, US-097/098/099)"
   ],
   "decisions_made_this_session": [
-    "FE-S10: Backend GET /export-documents patched to include customs-agent before any UI written — unblocks list page",
-    "FE-S10: API proxy route /api/generate-export-doc attaches Bearer token server-side — client component stays auth-free",
-    "FE-S10: ValidateForm shown only when status === 'submitted' — no dead buttons for already-approved docs",
-    "FE-S10: Playwright installed at workspace root (-w) — shared by all apps, config in repo root",
-    "FE-S10: Dockerfiles use 3-stage (base/deps/builder/runner) with repo-root build context — COPY workspace manifests first for layer caching",
-    "FE-S10: E2E tests are smoke-only (unauthenticated redirects + public page renders) — authenticated flows deferred to Phase 2 (needs live Keycloak)"
+    "P2-S1: Use new Registry() per MetricsService instance (not global prom-client registry) — prevents metric name conflicts across Jest test modules",
+    "P2-S1: Cast req.route inline as { path?: string } | undefined — extending Express Request with optional route causes TypeScript conflict",
+    "P2-S2: import './tracing' must be first line of main.ts — OTel patches Node.js module hooks; late import misses instrumentation",
+    "P2-S2: OTEL_SDK_DISABLED=true in local .env.example, false in infrastructure/docker/.env.example — prevents gRPC spam in local dev without Jaeger",
+    "Epic 9 added to backlog with 13 stories (US-091–US-103, 65 SP) across 4 Phase 2 feature areas",
+    "Phase 2 sprint plan added: P2-S1→P2-S5, 5 sprints, 65 SP total"
   ],
   "velocity_history": {
-    "FE-S1":  { "planned": 13, "completed": 13, "pct": 100, "note": "frontend scaffold" },
-    "FE-S2":  { "planned": 13, "completed": 13, "pct": 100, "note": "auth + role guard" },
-    "FE-S3":  { "planned": 13, "completed": 13, "pct": 100, "note": "super-admin portal — 22 routes" },
-    "FE-S4":  { "planned": 13, "completed": 13, "pct": 100, "note": "cooperative-admin portal — 30 routes total" },
-    "FE-S5":  { "planned": 13, "completed": 13, "pct": 100, "note": "inspector portal — 32 routes total" },
-    "FE-S6":  { "planned": 13, "completed": 13, "pct": 100, "note": "lab-technician portal — 35 routes total" },
-    "FE-S7":  { "planned": 13, "completed": 13, "pct": 100, "note": "certification-body portal — 38 routes total" },
-    "FE-S8":  { "planned": 13, "completed": 13, "pct": 100, "note": "cooperative-member portal — 42 routes total" },
-    "FE-S9":  { "planned": 8,  "completed": 8,  "pct": 100, "note": "QR verify + i18n polish — 42 routes, 12 files" },
-    "FE-S10": { "planned": 15, "completed": 15, "pct": 100, "note": "customs-agent portal + E2E + Docker — 45 routes, 19 files" },
-    "rolling_avg_FE": 12.7
+    "P2-S1": { "planned": 11, "completed": 11, "pct": 100, "note": "Prometheus + Grafana monitoring" },
+    "P2-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "Jaeger OTel distributed tracing" },
+    "phase2_rolling_avg": 12.0
   }
 }
