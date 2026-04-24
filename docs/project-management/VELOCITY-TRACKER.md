@@ -25,17 +25,18 @@
 | FE-S7  | Certification-Body Portal — dashboard, pending list, grant/deny/revoke forms     | 13             | 13               | 100%       | 1-session sprint — 8 files; 3 new routes (38 total); 5 Server Actions; stats from analytics byRegion sum                                                           |
 | FE-S8  | Cooperative-Member Portal — dashboard, harvests (list+new), batches (list+new)   | 13             | 13               | 100%       | 1-session sprint — 10 files; 4 new routes (42 total); Set<string> harvest selection; auto-sum totalQuantityKg                                                      |
 | FE-S9  | Consumer QR Public App + i18n Polish — typed verify page, locale fix             | 8              | 8                | 100%       | 1-session sprint — 12 files; fixed /api/v1/verify URL bug; removed /fr/ hardcoding from all 7 layouts; status badge                                                |
+| FE-S10 | Customs-Agent Portal + E2E Playwright + Docker Prod Build                        | 15             | 15               | 100%       | 1-session sprint — 19 files; 45 portal routes; 11 Playwright smoke tests; Dockerfiles fixed for pnpm monorepo; **v1 COMPLETE**                                     |
 
 ## Rolling Average Velocity
 
 | Window                                    | Average         |
 | ----------------------------------------- | --------------- |
-| Last 1 sprint (FE-S9)                     | 8 SP            |
-| Last 3 sprints (FE-S7 → FE-S9)            | 11.3 SP/session |
-| Last 4 sprints (FE-S6 → FE-S9)            | 11.8 SP/session |
-| Last 9 sprints (FE-S1 → FE-S9)            | 11.4 SP/session |
+| Last 1 sprint (FE-S10)                    | 15 SP           |
+| Last 3 sprints (FE-S8 → FE-S10)           | 12.3 SP/session |
+| Last 4 sprints (FE-S7 → FE-S10)           | 12.5 SP/session |
+| Last 10 sprints (FE-S1 → FE-S10)          | 12.7 SP/session |
 | All-time backend (feature sprints Sp2–12) | 21.5 SP/session |
-| Frontend only (FE-S1–S9)                  | 11.4 SP/session |
+| Frontend only (FE-S1–S10)                 | 12.7 SP/session |
 
 _Sprint 1 and FE-S1 excluded from backend rolling average — scaffold sprints are not representative of feature velocity._
 _Frontend sprints tracked separately — scope differs from backend feature sprints._
@@ -44,14 +45,15 @@ _Frontend sprints tracked separately — scope differs from backend feature spri
 
 - Single-developer project
 - Backend feature velocity: **~22–24 SP per sprint** (Sp 2–11 steady state)
-- Frontend sprint velocity: **11–13 SP/sprint** (FE-S1–S8 at 13; FE-S9 at 8 — polish sprint)
-- Sprints 2–FE-S9 all single-session — `/brainstorm → /plan → /execute` workflow consistently effective
+- Frontend sprint velocity: **11–15 SP/sprint** (FE-S1–S8 at 13; FE-S9 at 8 — polish sprint; FE-S10 at 15 — final sprint)
+- Sprints 2–FE-S10 all single-session — `/brainstorm → /plan → /execute` workflow consistently effective
 - Sprint 5: 96% — TM-3 deferred due to live PostgreSQL dependency
 - Sprint 6: 95% — TM-3 deferred again (same reason)
-- Sprints 7–FE-S9: 100% each
+- Sprints 7–FE-S10: 100% each
 - FE-S5 and FE-S6 both shipped in the same session (2026-04-23) — 26 SP in one day
 - FE-S7, FE-S8, FE-S9 all shipped in one session (2026-04-23) — 34 SP in one day
-- **Frontend remaining:** ~15 SP in 1 sprint (FE-S10 — customs-agent portal + E2E + Docker prod build)
+- FE-S10 shipped 2026-04-24 — 15 SP in one day
+- **v1 COMPLETE — all 10 frontend sprints done (127 SP total, 45 portal routes)**
 
 ## Velocity Chart
 
