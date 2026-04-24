@@ -43,8 +43,8 @@ export class ExportDocumentController {
    */
   @Get()
   @UseGuards(RolesGuard)
-  @Roles('super-admin')
-  @ApiOperation({ summary: 'US-067: List all export documents (super-admin)' })
+  @Roles('super-admin', 'customs-agent')
+  @ApiOperation({ summary: 'US-067: List all export documents (super-admin, customs-agent)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async findAll(@Query() query: PaginationDto): Promise<PagedResult<ExportDocument>> {
