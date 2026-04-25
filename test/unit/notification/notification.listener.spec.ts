@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationListener } from '../../../src/modules/notification/listeners/notification.listener';
 import { NotificationService } from '../../../src/modules/notification/services/notification.service';
+import { KafkaConsumerService } from '../../../src/common/kafka/kafka-consumer.service';
 import type {
   CertificationDecisionGrantedEvent,
   InspectionInspectorAssignedEvent,
@@ -9,6 +10,10 @@ import type { CooperativeDeactivatedEvent } from '../../../src/common/interfaces
 
 const mockNotificationService = {
   send: jest.fn().mockResolvedValue(undefined),
+};
+
+const mockKafkaConsumerService = {
+  subscribe: jest.fn(),
 };
 
 const makeGrantedEvent = (): CertificationDecisionGrantedEvent =>
@@ -43,6 +48,7 @@ describe('NotificationListener', () => {
       providers: [
         NotificationListener,
         { provide: NotificationService, useValue: mockNotificationService },
+        { provide: KafkaConsumerService, useValue: mockKafkaConsumerService },
       ],
     }).compile();
 
@@ -53,11 +59,38 @@ describe('NotificationListener', () => {
     expect(listener).toBeDefined();
   });
 
+  describe('onModuleInit()', () => {
+    it('registers handlers for all 5 topics', () => {
+      listener.onModuleInit();
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledTimes(5);
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'certification.decision.granted',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'lab.test.completed',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'cooperative.cooperative.deactivated',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'certification.inspection.inspector-assigned',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'certification.inspection.scheduled',
+        expect.any(Function),
+      );
+    });
+  });
+
   describe('handleCertificationGranted()', () => {
     it('sends certification-granted notification email', async () => {
       const event = makeGrantedEvent();
 
-      await listener.handleCertificationGranted(event, {} as never);
+      await listener.handleCertificationGranted(event);
 
       expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -73,9 +106,7 @@ describe('NotificationListener', () => {
       const event = makeGrantedEvent();
       mockNotificationService.send.mockRejectedValue(new Error('SMTP down'));
 
-      await expect(
-        listener.handleCertificationGranted(event, {} as never),
-      ).resolves.toBeUndefined();
+      await expect(listener.handleCertificationGranted(event)).resolves.toBeUndefined();
     });
   });
 
@@ -101,7 +132,7 @@ describe('NotificationListener', () => {
         technician: 'tech-001',
       } as never;
 
-      await listener.handleLabTestCompleted(event, {} as never);
+      await listener.handleLabTestCompleted(event);
 
       expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -131,7 +162,7 @@ describe('NotificationListener', () => {
         farmIds: ['farm-001'],
       } as never;
 
-      await listener.handleInspectionScheduled(event, {} as never);
+      await listener.handleInspectionScheduled(event);
 
       expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -163,7 +194,7 @@ describe('NotificationListener', () => {
     it('sends cooperative-deactivated notification with provided reason', async () => {
       const event = makeDeactivatedEvent('Non-conformité SDOQ');
 
-      await listener.handleCooperativeDeactivated(event, {} as never);
+      await listener.handleCooperativeDeactivated(event);
 
       expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -179,7 +210,7 @@ describe('NotificationListener', () => {
     it('falls back to default reason text when reason is null', async () => {
       const event = makeDeactivatedEvent(null);
 
-      await listener.handleCooperativeDeactivated(event, {} as never);
+      await listener.handleCooperativeDeactivated(event);
 
       expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -192,9 +223,7 @@ describe('NotificationListener', () => {
       const event = makeDeactivatedEvent();
       mockNotificationService.send.mockRejectedValueOnce(new Error('SMTP down'));
 
-      await expect(
-        listener.handleCooperativeDeactivated(event, {} as never),
-      ).resolves.toBeUndefined();
+      await expect(listener.handleCooperativeDeactivated(event)).resolves.toBeUndefined();
     });
   });
 
@@ -218,7 +247,7 @@ describe('NotificationListener', () => {
     it('sends inspection-assigned notification to inspector', async () => {
       const event = makeInspectorAssignedEvent();
 
-      await listener.handleInspectorAssigned(event, {} as never);
+      await listener.handleInspectorAssigned(event);
 
       expect(mockNotificationService.send).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -239,7 +268,7 @@ describe('NotificationListener', () => {
       const event = makeInspectorAssignedEvent();
       mockNotificationService.send.mockRejectedValueOnce(new Error('SMTP down'));
 
-      await expect(listener.handleInspectorAssigned(event, {} as never)).resolves.toBeUndefined();
+      await expect(listener.handleInspectorAssigned(event)).resolves.toBeUndefined();
     });
   });
 });

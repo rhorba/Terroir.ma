@@ -1,5 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Cooperative } from '../entities/cooperative.entity';
 import { Farm } from '../entities/farm.entity';
@@ -9,19 +8,18 @@ import type {
   CooperativeFarmMappedEvent,
   CooperativeDeactivatedEvent,
 } from './cooperative-events';
+import { KafkaProducerService } from '../../../common/kafka/kafka-producer.service';
 
 /**
  * Publishes Kafka events for the cooperative module.
- * Topics: cooperative.registration.submitted, cooperative.farm.mapped
+ * Topics: cooperative.registration.submitted, cooperative.registration.verified,
+ *         cooperative.cooperative.deactivated, cooperative.farm.mapped
  */
 @Injectable()
 export class CooperativeProducer {
   private readonly logger = new Logger(CooperativeProducer.name);
 
-  constructor(
-    @Inject('KAFKA_CLIENT')
-    private readonly kafkaClient: ClientKafka,
-  ) {}
+  constructor(private readonly kafkaProducer: KafkaProducerService) {}
 
   /** Publish cooperative registration submitted event */
   async publishRegistrationSubmitted(
@@ -43,7 +41,7 @@ export class CooperativeProducer {
     };
 
     try {
-      await this.kafkaClient.emit('cooperative.registration.submitted', event).toPromise();
+      await this.kafkaProducer.send('cooperative.registration.submitted', event);
       this.logger.log(
         { eventId: event.eventId, cooperativeId: cooperative.id },
         'Registration submitted event published',
@@ -77,7 +75,7 @@ export class CooperativeProducer {
     };
 
     try {
-      await this.kafkaClient.emit('cooperative.registration.verified', event).toPromise();
+      await this.kafkaProducer.send('cooperative.registration.verified', event);
       this.logger.log(
         { eventId: event.eventId, cooperativeId: cooperative.id },
         'Registration verified event published',
@@ -111,7 +109,7 @@ export class CooperativeProducer {
       reason,
     };
     try {
-      await this.kafkaClient.emit('cooperative.cooperative.deactivated', event).toPromise();
+      await this.kafkaProducer.send('cooperative.cooperative.deactivated', event);
       this.logger.log(
         { eventId: event.eventId, cooperativeId: cooperative.id },
         'Cooperative deactivated event published',
@@ -142,7 +140,7 @@ export class CooperativeProducer {
     };
 
     try {
-      await this.kafkaClient.emit('cooperative.farm.mapped', event).toPromise();
+      await this.kafkaProducer.send('cooperative.farm.mapped', event);
       this.logger.log({ eventId: event.eventId, farmId: farm.id }, 'Farm mapped event published');
     } catch (error) {
       this.logger.error({ error, farmId: farm.id }, 'Failed to publish farm mapped event');

@@ -1,0 +1,21 @@
+{
+  "type": "record",
+  "name": "CertificationInspectionScheduled",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "inspectionId", "type": "string" },
+    { "name": "certificationRequestId", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "cooperativeName", "type": "string" },
+    { "name": "inspectorId", "type": "string" },
+    { "name": "inspectorName", "type": "string" },
+    { "name": "scheduledDate", "type": "string" },
+    { "name": "location", "type": "string" },
+    { "name": "farmIds", "type": { "type": "array", "items": "string" } }
+  ]
+}

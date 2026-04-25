@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "CertificationDecisionDenied",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "certificationRequestId", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "batchId", "type": "string" },
+    { "name": "deniedBy", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "deniedAt", "type": "string" }
+  ]
+}

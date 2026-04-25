@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -32,6 +32,9 @@ import { SystemSettingsService } from './common/services/system-settings.service
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { KafkaClientModule } from './kafka/kafka-client.module';
+import { KafkaModule } from './common/kafka/kafka.module';
+import { SchemaRegistryService } from './common/kafka/schema-registry.service';
+import { KafkaConsumerService } from './common/kafka/kafka-consumer.service';
 import { MetricsModule } from './common/metrics/metrics.module';
 import { otelMixin } from './common/logger/pino-otel-mixin';
 
@@ -99,6 +102,9 @@ import { otelMixin } from './common/logger/pino-otel-mixin';
     // Kafka client (global — available to all domain modules)
     KafkaClientModule,
 
+    // Kafka with Avro Schema Registry (global — replaces ClientKafka for producers, provides consumer)
+    KafkaModule,
+
     // Metrics (Prometheus scrape endpoint + HTTP interceptor)
     MetricsModule,
 
@@ -121,4 +127,14 @@ import { otelMixin } from './common/logger/pino-otel-mixin';
     { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnApplicationBootstrap {
+  constructor(
+    private readonly schemaRegistryService: SchemaRegistryService,
+    private readonly kafkaConsumerService: KafkaConsumerService,
+  ) {}
+
+  async onApplicationBootstrap(): Promise<void> {
+    await this.schemaRegistryService.registerAll();
+    await this.kafkaConsumerService.startConsuming();
+  }
+}

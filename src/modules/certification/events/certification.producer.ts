@@ -1,5 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Certification } from '../entities/certification.entity';
 import { Inspection } from '../entities/inspection.entity';
@@ -16,6 +15,7 @@ import type {
   InspectionInspectorAssignedEvent,
 } from './certification-events';
 import { CertificationType } from '../../../common/interfaces/morocco.interface';
+import { KafkaProducerService } from '../../../common/kafka/kafka-producer.service';
 
 /**
  * Publishes Kafka events for the certification module.
@@ -24,10 +24,7 @@ import { CertificationType } from '../../../common/interfaces/morocco.interface'
 export class CertificationProducer {
   private readonly logger = new Logger(CertificationProducer.name);
 
-  constructor(
-    @Inject('KAFKA_CLIENT')
-    private readonly kafkaClient: ClientKafka,
-  ) {}
+  constructor(private readonly kafkaProducer: KafkaProducerService) {}
 
   async publishCertificationRequested(
     certification: Certification,
@@ -48,7 +45,7 @@ export class CertificationProducer {
     };
 
     try {
-      await this.kafkaClient.emit('certification.request.submitted', event).toPromise();
+      await this.kafkaProducer.send('certification.request.submitted', event);
       this.logger.log(
         { eventId: event.eventId, certificationId: certification.id },
         'Certification request event published',
@@ -80,7 +77,7 @@ export class CertificationProducer {
     };
 
     try {
-      await this.kafkaClient.emit('certification.inspection.scheduled', event).toPromise();
+      await this.kafkaProducer.send('certification.inspection.scheduled', event);
       this.logger.log(
         { eventId: event.eventId, inspectionId: inspection.id },
         'Inspection scheduled event published',
@@ -122,7 +119,7 @@ export class CertificationProducer {
     };
 
     try {
-      await this.kafkaClient.emit('certification.decision.granted', event).toPromise();
+      await this.kafkaProducer.send('certification.decision.granted', event);
       this.logger.log(
         { eventId: event.eventId, certificationId: certification.id },
         'Certification granted event published',
@@ -156,7 +153,7 @@ export class CertificationProducer {
     };
 
     try {
-      await this.kafkaClient.emit('certification.decision.denied', event).toPromise();
+      await this.kafkaProducer.send('certification.decision.denied', event);
       this.logger.log(
         { eventId: event.eventId, certificationId: certification.id },
         'Certification denied event published',
@@ -190,7 +187,7 @@ export class CertificationProducer {
     };
 
     try {
-      await this.kafkaClient.emit('certification.decision.revoked', event).toPromise();
+      await this.kafkaProducer.send('certification.decision.revoked', event);
       this.logger.log(
         { eventId: event.eventId, certificationId: certification.id },
         'Certification revoked event published',
@@ -224,7 +221,7 @@ export class CertificationProducer {
     };
 
     try {
-      await this.kafkaClient.emit('qrcode.generated', event).toPromise();
+      await this.kafkaProducer.send('qrcode.generated', event);
       this.logger.log(
         { eventId: event.eventId, qrCodeId: qrCode.id },
         'QR code generated event published',
@@ -253,7 +250,7 @@ export class CertificationProducer {
       actorId,
     };
     try {
-      await this.kafkaClient.emit('certification.review.final-started', event).toPromise();
+      await this.kafkaProducer.send('certification.review.final-started', event);
       this.logger.log(
         { eventId: event.eventId, certificationId: certification.id },
         'Final review started event published',
@@ -284,7 +281,7 @@ export class CertificationProducer {
       renewedBy,
     };
     try {
-      await this.kafkaClient.emit('certification.renewed', event).toPromise();
+      await this.kafkaProducer.send('certification.renewed', event);
       this.logger.log(
         { eventId: event.eventId, oldCertificationId: oldCertification.id, newCertificationId },
         'Certification renewed event published',
@@ -318,7 +315,7 @@ export class CertificationProducer {
       assignedBy,
     };
     try {
-      await this.kafkaClient.emit('certification.inspection.inspector-assigned', event).toPromise();
+      await this.kafkaProducer.send('certification.inspection.inspector-assigned', event);
       this.logger.log(
         { eventId: event.eventId, inspectionId: inspection.id },
         'Inspector assigned event published',

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "CertificationRequestSubmitted",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "certificationRequestId", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "batchId", "type": "string" },
+    { "name": "productTypeCode", "type": "string" },
+    { "name": "certificationType", "type": "string" },
+    { "name": "requestedBy", "type": "string" }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "ProductBatchCreated",
+  "namespace": "ma.terroir.events.product",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "batchId", "type": "string" },
+    { "name": "batchNumber", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "productTypeCode", "type": "string" },
+    { "name": "harvestIds", "type": { "type": "array", "items": "string" } },
+    { "name": "totalQuantityKg", "type": "double" },
+    { "name": "processingDate", "type": "string" }
+  ]
+}

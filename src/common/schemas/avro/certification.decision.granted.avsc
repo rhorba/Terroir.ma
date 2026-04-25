@@ -1,0 +1,26 @@
+{
+  "type": "record",
+  "name": "CertificationDecisionGranted",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "certificationId", "type": "string" },
+    { "name": "certificationNumber", "type": "string" },
+    { "name": "certificationType", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "cooperativeName", "type": "string" },
+    { "name": "productName", "type": "string" },
+    { "name": "productTypeCode", "type": "string" },
+    { "name": "batchId", "type": "string" },
+    { "name": "regionCode", "type": "string" },
+    { "name": "grantedBy", "type": "string" },
+    { "name": "grantedAt", "type": "string" },
+    { "name": "validFrom", "type": "string" },
+    { "name": "validUntil", "type": "string" },
+    { "name": "qrCodeId", "type": "string" }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "QrCodeGenerated",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "qrCodeId", "type": "string" },
+    { "name": "certificationId", "type": "string" },
+    { "name": "certificationNumber", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "verificationUrl", "type": "string" },
+    { "name": "generatedAt", "type": "string" }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "CertificationDecisionRevoked",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "certificationId", "type": "string" },
+    { "name": "certificationNumber", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "revokedBy", "type": "string" },
+    { "name": "reason", "type": "string" },
+    { "name": "revokedAt", "type": "string" }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "record",
+  "name": "CooperativeRegistrationSubmitted",
+  "namespace": "ma.terroir.events.cooperative",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "cooperativeName", "type": "string" },
+    { "name": "ice", "type": "string" },
+    { "name": "regionCode", "type": "string" },
+    { "name": "presidentName", "type": "string" },
+    { "name": "presidentCin", "type": "string" }
+  ]
+}

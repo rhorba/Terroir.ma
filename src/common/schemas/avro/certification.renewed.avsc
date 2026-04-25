@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "CertificationRenewed",
+  "namespace": "ma.terroir.events.certification",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "oldCertificationId", "type": "string" },
+    { "name": "newCertificationId", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "renewedBy", "type": "string" }
+  ]
+}

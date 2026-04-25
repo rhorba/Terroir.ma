@@ -40,7 +40,7 @@ import { NotificationTemplateController } from './controllers/notification-templ
     NotificationTemplateService,
     EmailService,
     SmsService,
-    NotificationListener,
+    NotificationListener, // registers Kafka handlers via KafkaConsumerService in onModuleInit()
   ],
   exports: [],
 })

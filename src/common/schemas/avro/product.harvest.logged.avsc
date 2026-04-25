@@ -1,0 +1,20 @@
+{
+  "type": "record",
+  "name": "ProductHarvestLogged",
+  "namespace": "ma.terroir.events.product",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "harvestId", "type": "string" },
+    { "name": "farmId", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "productTypeCode", "type": "string" },
+    { "name": "quantityKg", "type": "double" },
+    { "name": "harvestDate", "type": "string" },
+    { "name": "campaignYear", "type": "string" },
+    { "name": "method", "type": "string" }
+  ]
+}

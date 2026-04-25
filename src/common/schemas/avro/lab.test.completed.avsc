@@ -1,0 +1,24 @@
+{
+  "type": "record",
+  "name": "LabTestCompleted",
+  "namespace": "ma.terroir.events.product",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "labTestId", "type": "string" },
+    { "name": "batchId", "type": "string" },
+    { "name": "batchReference", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "productTypeCode", "type": "string" },
+    { "name": "productName", "type": "string" },
+    { "name": "passed", "type": "boolean" },
+    { "name": "testValues", "type": "string" },
+    { "name": "failedParameters", "type": { "type": "array", "items": "string" } },
+    { "name": "completedAt", "type": "string" },
+    { "name": "technician", "type": "string" },
+    { "name": "labName", "type": "string" }
+  ]
+}

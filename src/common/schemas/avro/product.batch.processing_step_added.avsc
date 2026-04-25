@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "ProductBatchProcessingStepAdded",
+  "namespace": "ma.terroir.events.product",
+  "fields": [
+    { "name": "eventId", "type": "string" },
+    { "name": "correlationId", "type": "string" },
+    { "name": "timestamp", "type": "string" },
+    { "name": "version", "type": "int" },
+    { "name": "source", "type": "string" },
+    { "name": "batchId", "type": "string" },
+    { "name": "processingStepId", "type": "string" },
+    { "name": "cooperativeId", "type": "string" },
+    { "name": "stepType", "type": "string" },
+    { "name": "doneAt", "type": "string" },
+    { "name": "doneBy", "type": "string" },
+    { "name": "notes", "type": ["null", "string"], "default": null }
+  ]
+}

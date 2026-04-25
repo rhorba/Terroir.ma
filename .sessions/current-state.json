@@ -1,18 +1,18 @@
 {
-  "timestamp": "2026-04-24T23:59:00Z",
-  "session_id": "session-2026-04-24-P2-S1-S2-observability",
+  "timestamp": "2026-04-25T23:59:00Z",
+  "session_id": "session-2026-04-25-P2-S3-schema-registry-avro",
   "project_phase": "phase-2-observability",
   "current_sprint": {
-    "sprint_number": "P2-S3",
-    "sprint_name": "Kafka Schema Registry + Avro",
+    "sprint_number": "P2-S4",
+    "sprint_name": "Authenticated Playwright E2E + Consumer Migration",
     "status": "NOT_STARTED",
-    "goal": "Migrate all 27 Kafka events to Avro schemas, register in Redpanda Schema Registry (BACKWARD compat), wire KafkaProducerService + KafkaConsumerService, integration-test round-trip encode/decode",
-    "story_points_planned": 18,
+    "goal": "Migrate dormant CooperativeListener / ProductListener / CertificationListener from @EventPattern to KafkaConsumerService.subscribe(); add authenticated Playwright E2E flows",
+    "story_points_planned": 13,
     "story_points_completed": 0,
-    "stories": ["US-097", "US-098", "US-099"],
+    "stories": ["US-100", "US-101", "US-102"],
     "plan_doc": null,
     "progress_doc": null,
-    "note": "Start with /brainstorm to refine design, then /plan, then /execute"
+    "note": "Start with /brainstorm or /plan directly — design doc exists at docs/plans/2026-04-24-phase2-e2e-auth/design.md"
   },
   "last_completed_sprints": [
     {
@@ -36,6 +36,17 @@
       "stories": ["US-094", "US-095", "US-096"],
       "plan_doc": "docs/plans/2026-04-24-phase2-tracing/plan.md",
       "progress_doc": "docs/plans/2026-04-24-phase2-tracing/progress.md"
+    },
+    {
+      "sprint_number": "P2-S3",
+      "sprint_name": "Kafka Schema Registry + Avro",
+      "status": "COMPLETED",
+      "story_points_planned": 18,
+      "story_points_completed": 18,
+      "velocity_pct": 100,
+      "stories": ["US-097", "US-098", "US-099"],
+      "plan_doc": "docs/plans/2026-04-24-phase2-schema-registry/plan.md",
+      "progress_doc": "docs/plans/2026-04-24-phase2-schema-registry/progress.md"
     }
   ],
   "active_feature": null,
@@ -43,20 +54,52 @@
   "active_feature_task": null,
   "active_feature_total_tasks": null,
   "modules_status": {
-    "cooperative": { "entities": true, "controllers": true, "tests_passing": true, "findAll_endpoint": true, "getFarms_endpoint": true },
-    "product": { "entities": true, "controllers": true, "tests_passing": true },
-    "certification": {
-      "entities": true, "controllers": true, "tests_passing": true,
-      "redis_qr_cache": true, "qr_scan_event_tracking": true,
-      "export_documents": true,
-      "export_doc_customs_agent_role": true
+    "cooperative": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "findAll_endpoint": true,
+      "getFarms_endpoint": true,
+      "producer_avro": true
     },
-    "notification": { "entities": true, "controllers": true, "tests_passing": true },
+    "product": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "producer_avro": true
+    },
+    "certification": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "redis_qr_cache": true,
+      "qr_scan_event_tracking": true,
+      "export_documents": true,
+      "export_doc_customs_agent_role": true,
+      "producer_avro": true
+    },
+    "notification": {
+      "entities": true,
+      "controllers": true,
+      "tests_passing": true,
+      "kafka_consumer_active": true,
+      "note": "NotificationListener now uses KafkaConsumerService.subscribe() — Kafka notifications are live"
+    },
     "common": {
-      "user_controller": true, "admin_controller": true, "minio_service": true,
-      "dashboard_service": true, "audit_log_service": true, "audit_interceptor": true,
-      "system_settings_service": true, "env_validation": true,
-      "metrics_module": true, "otel_mixin": true
+      "user_controller": true,
+      "admin_controller": true,
+      "minio_service": true,
+      "dashboard_service": true,
+      "audit_log_service": true,
+      "audit_interceptor": true,
+      "system_settings_service": true,
+      "env_validation": true,
+      "metrics_module": true,
+      "otel_mixin": true,
+      "schema_registry_service": true,
+      "kafka_producer_service": true,
+      "kafka_consumer_service": true,
+      "kafka_module": true
     }
   },
   "observability_status": {
@@ -86,13 +129,55 @@
       "otel_sdk_disabled_local": true,
       "otel_sdk_disabled_docker": false
     },
+    "schema_registry": {
+      "added": true,
+      "package": "@kafkajs/confluent-schema-registry",
+      "avro_schemas_count": 18,
+      "avro_schemas_dir": "src/common/schemas/avro/",
+      "service": "src/common/kafka/schema-registry.service.ts",
+      "compatibility": "BACKWARD",
+      "redpanda_port_internal": 8081,
+      "redpanda_port_host": 8081,
+      "env_var": "SCHEMA_REGISTRY_URL"
+    },
     "pino_trace_injection": true,
     "otel_auto_instrumentation": ["express", "pg", "kafkajs"],
     "start_command": "docker compose --profile monitoring up -d"
   },
+  "kafka_avro_status": {
+    "schema_count": 18,
+    "subjects": [
+      "cooperative.registration.submitted-value",
+      "cooperative.registration.verified-value",
+      "cooperative.cooperative.deactivated-value",
+      "cooperative.farm.mapped-value",
+      "product.harvest.logged-value",
+      "product.batch.created-value",
+      "lab.test.submitted-value",
+      "product.batch.processing_step_added-value",
+      "lab.test.completed-value",
+      "certification.request.submitted-value",
+      "certification.inspection.scheduled-value",
+      "certification.decision.granted-value",
+      "certification.decision.denied-value",
+      "certification.decision.revoked-value",
+      "qrcode.generated-value",
+      "certification.review.final-started-value",
+      "certification.renewed-value",
+      "certification.inspection.inspector-assigned-value"
+    ],
+    "producers_migrated": ["cooperative.producer", "product.producer", "certification.producer"],
+    "consumers_migrated": ["notification.listener"],
+    "consumers_still_dormant": ["cooperative.listener", "product.listener", "certification.listener"],
+    "testValues_note": "LabTestCompletedEvent.testValues is JSON.stringified on produce (Avro schema type = string); consumer-side JSON.parse deferred to P2-S4"
+  },
   "infrastructure": {
     "minio": { "added": true },
-    "openapi": { "added": true, "export_script": "src/scripts/export-openapi.ts", "output": "docs/api/openapi.json" },
+    "openapi": {
+      "added": true,
+      "export_script": "src/scripts/export-openapi.ts",
+      "output": "docs/api/openapi.json"
+    },
     "github": {
       "terroir_ma": "https://github.com/rhorba/terroir-ma",
       "terroir_ma_web": "https://github.com/rhorba/terroir-ma-web",
@@ -100,10 +185,11 @@
     }
   },
   "certification_chain_status": {
-    "kafka_events_defined": 27,
+    "kafka_events_defined": 18,
     "chain_steps_implemented": 12,
     "chain_steps_total": 12,
-    "qr_verification_working": true
+    "qr_verification_working": true,
+    "avro_wire_format": true
   },
   "migration_status": {
     "migration_count": 17,
@@ -111,11 +197,23 @@
     "all_migrations_applied": true
   },
   "test_status": {
-    "unit": { "suites": 39, "total": 400, "passing": 400, "failures": 0, "note": "+9 from P2-S1 (6) and P2-S2 (3)" },
-    "integration": { "suites": 10, "total": 29, "passing": 29, "failures": 0 },
+    "unit": {
+      "suites": 45,
+      "total": 432,
+      "passing": 432,
+      "failures": 0,
+      "note": "+32 from P2-S3 (schema-registry×7, kafka-producer×5, kafka-consumer×7, cooperative-producer×4, product-producer×4, certification-producer×4, notification-listener×1)"
+    },
+    "integration": {
+      "suites": 10,
+      "total": 29,
+      "passing": 29,
+      "failures": 0,
+      "note": "avro-roundtrip.integration.ts added but requires Docker — not counted until Docker run"
+    },
     "e2e": { "suites": 8, "total": 35, "passing": 35, "failures": 0 },
     "playwright_e2e": { "files": 3, "total": 11, "note": "smoke tests — run against live dev servers" },
-    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking, all 400 tests pass"
+    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking, all 432 tests pass"
   },
   "frontend_context": {
     "repo_name": "terroir-ma-web",
@@ -127,35 +225,35 @@
   },
   "backlog_status": {
     "total_stories": 103,
-    "done_stories": 88,
+    "done_stories": 91,
     "deferred_stories": 2,
-    "phase2_todo_stories": 13,
+    "phase2_todo_stories": 10,
     "phase2_sp_total": 65,
-    "phase2_sp_done": 24,
-    "phase2_sprints_done": 2,
+    "phase2_sp_done": 42,
+    "phase2_sprints_done": 3,
     "phase2_sprints_total": 5,
-    "phase2_pct": 37,
-    "note": "P2-S1 (US-091/092/093) + P2-S2 (US-094/095/096) done. P2-S3 (US-097/098/099, 18 SP, Schema Registry) is next."
+    "phase2_pct": 65,
+    "note": "P2-S1 (US-091/092/093) + P2-S2 (US-094/095/096) + P2-S3 (US-097/098/099, 18 SP) done. P2-S4 (US-100/101/102, 13 SP) is next."
   },
   "blockers": [],
   "next_actions": [
-    "ACTION ITEM: Run `docker compose --profile monitoring up -d` and verify Prometheus scrape target is UP (terroir-app:3000/metrics)",
-    "ACTION ITEM: Verify Grafana 6-panel dashboard renders data after generating traffic with curl",
-    "ACTION ITEM: Verify traceId appears in Pino logs with OTEL_SDK_DISABLED=false",
-    "ACTION ITEM: Investigate Jest worker teardown warning — add --forceExit to test:unit script if OTel timer can't be cleaned up",
-    "P2-S3: /plan docs/plans/2026-04-24-phase2-schema-registry/design.md → /execute (18 SP, US-097/098/099)"
+    "Run avro round-trip integration test: docker compose --profile core up -d redpanda && npm run test:integration -- --testPathPattern=avro-roundtrip",
+    "Verify schema registration at runtime: curl http://localhost:8081/subjects (should return 18 subjects)",
+    "P2-S4: Migrate CooperativeListener, ProductListener, CertificationListener from dormant @EventPattern to KafkaConsumerService",
+    "P2-S4: JSON.parse testValues in ProductListener.handleLabTestCompleted()",
+    "P2-S4 or P2-S5: Authenticated Playwright E2E flows (design doc: docs/plans/2026-04-24-phase2-e2e-auth/design.md)"
   ],
   "decisions_made_this_session": [
-    "P2-S1: Use new Registry() per MetricsService instance (not global prom-client registry) — prevents metric name conflicts across Jest test modules",
-    "P2-S1: Cast req.route inline as { path?: string } | undefined — extending Express Request with optional route causes TypeScript conflict",
-    "P2-S2: import './tracing' must be first line of main.ts — OTel patches Node.js module hooks; late import misses instrumentation",
-    "P2-S2: OTEL_SDK_DISABLED=true in local .env.example, false in infrastructure/docker/.env.example — prevents gRPC spam in local dev without Jaeger",
-    "Epic 9 added to backlog with 13 stories (US-091–US-103, 65 SP) across 4 Phase 2 feature areas",
-    "Phase 2 sprint plan added: P2-S1→P2-S5, 5 sprints, 65 SP total"
+    "P2-S3: 18 actual event topics produced in code (design doc said 27 — aspirational); plan and schemas match reality",
+    "P2-S3: NotificationListener @EventPattern was entirely dormant — no connectMicroservice() in main.ts; fixed by migrating to KafkaConsumerService.subscribe()",
+    "P2-S3: testValues field stays Record<string, number|string> in TypeScript interface; JSON.stringified to string on produce (Avro wire type); JSON.parse on consume deferred to P2-S4",
+    "P2-S3: KafkaClientModule left in place — CooperativeListener/ProductListener/CertificationListener still dormant with @EventPattern; they will be migrated in P2-S4",
+    "P2-S3: Avro integration test uses Testcontainers GenericContainer with redpandadata/redpanda:v23.3.5 pinned image"
   ],
   "velocity_history": {
     "P2-S1": { "planned": 11, "completed": 11, "pct": 100, "note": "Prometheus + Grafana monitoring" },
     "P2-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "Jaeger OTel distributed tracing" },
-    "phase2_rolling_avg": 12.0
+    "P2-S3": { "planned": 18, "completed": 18, "pct": 100, "note": "Kafka Schema Registry + Avro — 18 schemas, 3 producers migrated, NotificationListener fixed" },
+    "phase2_rolling_avg": 14.0
   }
 }

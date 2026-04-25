@@ -55,6 +55,9 @@ export const envValidationSchema = Joi.object({
 
   // Redpanda Admin (optional)
   REDPANDA_ADMIN_URL: Joi.string().uri().optional(),
+
+  // Redpanda Schema Registry
+  SCHEMA_REGISTRY_URL: Joi.string().uri().required(),
 }).options({ allowUnknown: true });
 
 export function validateEnv(config: Record<string, unknown>): Record<string, unknown> {

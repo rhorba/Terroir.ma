@@ -1,5 +1,4 @@
-import { Injectable, Inject, Logger } from '@nestjs/common';
-import { ClientKafka } from '@nestjs/microservices';
+import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { Harvest } from '../entities/harvest.entity';
 import { ProductionBatch } from '../entities/production-batch.entity';
@@ -13,19 +12,18 @@ import type {
   LabTestSubmittedEvent,
   LabTestCompletedEvent,
 } from './product-events';
+import { KafkaProducerService } from '../../../common/kafka/kafka-producer.service';
 
 /**
  * Publishes Kafka events for the product module.
- * Topics: product.harvest.logged, product.batch.created, lab.test.submitted
+ * Topics: product.harvest.logged, product.batch.created, lab.test.submitted,
+ *         product.batch.processing_step_added, lab.test.completed
  */
 @Injectable()
 export class ProductProducer {
   private readonly logger = new Logger(ProductProducer.name);
 
-  constructor(
-    @Inject('KAFKA_CLIENT')
-    private readonly kafkaClient: ClientKafka,
-  ) {}
+  constructor(private readonly kafkaProducer: KafkaProducerService) {}
 
   async publishHarvestLogged(harvest: Harvest, correlationId: string): Promise<void> {
     const event: ProductHarvestLoggedEvent = {
@@ -45,7 +43,7 @@ export class ProductProducer {
     };
 
     try {
-      await this.kafkaClient.emit('product.harvest.logged', event).toPromise();
+      await this.kafkaProducer.send('product.harvest.logged', event);
       this.logger.log(
         { eventId: event.eventId, harvestId: harvest.id },
         'Harvest logged event published',
@@ -72,7 +70,7 @@ export class ProductProducer {
     };
 
     try {
-      await this.kafkaClient.emit('product.batch.created', event).toPromise();
+      await this.kafkaProducer.send('product.batch.created', event);
       this.logger.log(
         { eventId: event.eventId, batchId: batch.id },
         'Batch created event published',
@@ -103,7 +101,7 @@ export class ProductProducer {
     };
 
     try {
-      await this.kafkaClient.emit('lab.test.submitted', event).toPromise();
+      await this.kafkaProducer.send('lab.test.submitted', event);
       this.logger.log(
         { eventId: event.eventId, labTestId: labTest.id },
         'Lab test submitted event published',
@@ -134,7 +132,7 @@ export class ProductProducer {
     };
 
     try {
-      await this.kafkaClient.emit('product.batch.processing_step_added', event).toPromise();
+      await this.kafkaProducer.send('product.batch.processing_step_added', event);
       this.logger.log(
         { eventId: event.eventId, batchId: step.batchId },
         'Processing step event published',
@@ -169,7 +167,7 @@ export class ProductProducer {
       productTypeCode: labTest.productTypeCode,
       productName: labTest.productTypeCode,
       passed: result.passed,
-      testValues: result.testValues,
+      testValues: JSON.stringify(result.testValues) as unknown as Record<string, number | string>,
       failedParameters: result.failedParameters,
       completedAt: result.completedAt.toISOString(),
       technician: result.technicianName,
@@ -177,7 +175,7 @@ export class ProductProducer {
     };
 
     try {
-      await this.kafkaClient.emit('lab.test.completed', event).toPromise();
+      await this.kafkaProducer.send('lab.test.completed', event);
       this.logger.log(
         { eventId: event.eventId, labTestId: labTest.id, passed: result.passed },
         'Lab test completed event published',
