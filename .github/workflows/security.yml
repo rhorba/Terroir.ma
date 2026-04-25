@@ -1,0 +1,134 @@
+name: Security Scan (OWASP ZAP)
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 4 * * 1' # Weekly — Monday 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  zap-scan:
+    name: OWASP ZAP Passive Scan
+    runs-on: ubuntu-latest
+
+    services:
+      postgresql:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: terroir
+          POSTGRES_PASSWORD: terroir_pass
+          POSTGRES_DB: terroir_db
+        options: >-
+          --health-cmd "pg_isready -U terroir -d terroir_db"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          NODE_ENV: test
+        run: npm run migration:run
+
+      - name: Start API
+        env:
+          NODE_ENV: production
+          PORT: 3000
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-jwt-secret-not-used-for-auth
+          KEYCLOAK_REALM_URL: http://localhost:8080/realms/terroir-ma
+          KAFKA_BROKERS: localhost:9092
+          OTEL_SDK_DISABLED: 'true'
+        run: npm run start &
+
+      - name: Wait for API readiness
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/health; then
+              echo "API ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Export OpenAPI spec
+        env:
+          NODE_ENV: test
+          PORT: 3000
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-jwt-secret
+          KEYCLOAK_REALM_URL: http://localhost:8080/realms/terroir-ma
+          KAFKA_BROKERS: localhost:9092
+          OTEL_SDK_DISABLED: 'true'
+        run: npm run export:openapi
+
+      - name: Create reports directory
+        run: mkdir -p docs/security
+
+      - name: Run ZAP passive scan
+        run: |
+          docker run --rm \
+            --network host \
+            -v "${{ github.workspace }}/docs/api:/zap/wrk:ro" \
+            -v "${{ github.workspace }}/infrastructure/zap/rules.tsv:/home/zap/.ZAP_D/rules.tsv:ro" \
+            -v "${{ github.workspace }}/docs/security:/zap/wrk/reports:rw" \
+            zaproxy/zap-stable:latest \
+            zap-api-scan.py \
+              -t /zap/wrk/openapi.json \
+              -f openapi \
+              -r reports/zap-report.html \
+              -J reports/zap-report.json \
+              -c /home/zap/.ZAP_D/rules.tsv \
+              -I \
+              -l WARN
+
+      - name: Upload ZAP report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-security-report
+          path: docs/security/
+          retention-days: 30
+
+      - name: Check for High/Critical alerts
+        run: |
+          if [ -f docs/security/zap-report.json ]; then
+            HIGH=$(jq '[.site[].alerts[] | select(.riskdesc | startswith("High") or startswith("Critical"))] | length' docs/security/zap-report.json 2>/dev/null || echo 0)
+            if [ "$HIGH" -gt 0 ]; then
+              echo "::error::ZAP found $HIGH High/Critical alert(s). Review docs/security/zap-report.html"
+              exit 1
+            fi
+            echo "No High/Critical alerts found."
+          fi

@@ -30,6 +30,12 @@
     "migration:check": "ts-node -r tsconfig-paths/register node_modules/typeorm/cli.js migration:generate src/database/migrations/SchemaDriftCheck -d src/database/data-source.ts --check",
     "fonts:download": "node scripts/download-fonts.js",
     "export:openapi": "ts-node -r tsconfig-paths/register src/scripts/export-openapi.ts",
+    "security:scan": "docker compose -f infrastructure/docker/docker-compose.test.yml --profile zap run --rm zap-scan",
+    "security:scan:ci": "docker compose -f infrastructure/docker/docker-compose.test.yml --profile zap run --rm --env ZAP_TARGET=http://terroir-app:3000 zap-scan",
+    "perf:smoke": "k6 run test/performance/smoke.k6.js",
+    "perf:qr": "k6 run test/performance/qr-verify.k6.js",
+    "perf:list": "k6 run test/performance/certification-list.k6.js",
+    "perf:all": "npm run perf:smoke && npm run perf:qr && npm run perf:list",
     "prepare": "husky"
   },
   "dependencies": {

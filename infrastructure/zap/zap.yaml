@@ -1,0 +1,37 @@
+env:
+  contexts:
+    - name: Terroir API
+      urls:
+        - http://localhost:3000
+      includePaths:
+        - http://localhost:3000/api/v1.*
+        - http://localhost:3000/health
+        - http://localhost:3000/ready
+      excludePaths:
+        - http://localhost:3000/metrics
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+
+jobs:
+  - type: openapi
+    parameters:
+      apiFile: /zap/wrk/openapi.json
+      targetUrl: http://localhost:3000
+
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 60
+
+  - type: report
+    parameters:
+      template: traditional-html
+      reportDir: /zap/wrk/reports/
+      reportFile: zap-report.html
+
+  - type: report
+    parameters:
+      template: json-summary
+      reportDir: /zap/wrk/reports/
+      reportFile: zap-report.json

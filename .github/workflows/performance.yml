@@ -1,0 +1,207 @@
+name: Performance Tests (k6)
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 5 * * 1' # Weekly — Monday 05:00 UTC (after security scan)
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Which tests to run'
+        required: false
+        default: 'smoke'
+        type: choice
+        options: [smoke, full]
+
+jobs:
+  smoke:
+    name: Smoke Test (k6)
+    runs-on: ubuntu-latest
+
+    services:
+      postgresql:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: terroir
+          POSTGRES_PASSWORD: terroir_pass
+          POSTGRES_DB: terroir_db
+        options: >-
+          --health-cmd "pg_isready -U terroir -d terroir_db"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          NODE_ENV: test
+        run: npm run migration:run
+
+      - name: Start API
+        env:
+          NODE_ENV: production
+          PORT: 3000
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-jwt-secret
+          KEYCLOAK_REALM_URL: http://localhost:8080/realms/terroir-ma
+          KAFKA_BROKERS: localhost:9092
+          OTEL_SDK_DISABLED: 'true'
+        run: npm run start &
+
+      - name: Wait for API readiness
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/health; then
+              echo "API ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run k6 smoke test
+        run: k6 run test/performance/smoke.k6.js
+
+  load:
+    name: Load Tests (k6)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.test_suite == 'full')
+
+    services:
+      postgresql:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_USER: terroir
+          POSTGRES_PASSWORD: terroir_pass
+          POSTGRES_DB: terroir_db
+        options: >-
+          --health-cmd "pg_isready -U terroir -d terroir_db"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Run database migrations
+        env:
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          NODE_ENV: test
+        run: npm run migration:run
+
+      - name: Start API
+        env:
+          NODE_ENV: production
+          PORT: 3000
+          DATABASE_URL: postgresql://terroir:terroir_pass@localhost:5432/terroir_db
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-jwt-secret
+          KEYCLOAK_REALM_URL: http://localhost:8080/realms/terroir-ma
+          KAFKA_BROKERS: localhost:9092
+          OTEL_SDK_DISABLED: 'true'
+        run: npm run start &
+
+      - name: Wait for API readiness
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:3000/health; then
+              echo "API ready"
+              break
+            fi
+            echo "Waiting... ($i/30)"
+            sleep 2
+          done
+
+      - name: Run k6 QR verify load test
+        env:
+          QR_TOKEN: ${{ secrets.CI_QR_TOKEN }}
+        run: k6 run --env BASE_URL=http://localhost:3000 test/performance/qr-verify.k6.js
+
+      - name: Run k6 certification list load test
+        run: k6 run --env BASE_URL=http://localhost:3000 test/performance/certification-list.k6.js
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-performance-results
+          path: |
+            summary.json
+          retention-days: 30

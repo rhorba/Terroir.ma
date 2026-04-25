@@ -193,15 +193,15 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 ## Epic 9: Phase 2 — Observability & Quality
 
-> Instrument the platform with Prometheus metrics, distributed tracing, Avro schema validation, and authenticated Playwright E2E tests.
+> Instrument the platform with Prometheus metrics, distributed tracing, Avro schema validation, authenticated Playwright E2E tests, OWASP ZAP security scanning, and k6 performance baselines.
 
 ### 9a — Prometheus + Grafana Monitoring
 
 | Story ID | User Story                                                                                                                                                               | Priority | Status | Points |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------ |
-| US-091   | As a DevOps engineer, I want a global `HttpMetricsInterceptor` that records request duration and count per route so that Prometheus has structured HTTP performance data | High     | Todo   | 5      |
-| US-092   | As a DevOps engineer, I want Prometheus and Grafana added to the Docker monitoring profile so that the observability stack starts with one command                       | Medium   | Todo   | 3      |
-| US-093   | As a super-admin, I want a provisioned Grafana dashboard showing request rate, P95/P99 latency, and 4xx/5xx error rate so that I can monitor API health at a glance      | Medium   | Todo   | 3      |
+| US-091   | As a DevOps engineer, I want a global `HttpMetricsInterceptor` that records request duration and count per route so that Prometheus has structured HTTP performance data | High     | Done   | 5      |
+| US-092   | As a DevOps engineer, I want Prometheus and Grafana added to the Docker monitoring profile so that the observability stack starts with one command                       | Medium   | Done   | 3      |
+| US-093   | As a super-admin, I want a provisioned Grafana dashboard showing request rate, P95/P99 latency, and 4xx/5xx error rate so that I can monitor API health at a glance      | Medium   | Done   | 3      |
 
 **9a Total Points:** 11
 
@@ -209,9 +209,9 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 | Story ID | User Story                                                                                                                                                               | Priority | Status | Points |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------ |
-| US-094   | As a DevOps engineer, I want OpenTelemetry auto-instrumentation for HTTP, KafkaJS, and TypeORM spans so that the full certification chain is traceable end-to-end        | High     | Todo   | 8      |
-| US-095   | As a DevOps engineer, I want `traceId` and `spanId` injected into every Pino log line so that logs and Jaeger traces are correlated by trace ID                          | Medium   | Todo   | 3      |
-| US-096   | As a DevOps engineer, I want a Jaeger all-in-one service in the Docker monitoring profile so that distributed traces are viewable in the UI without extra infrastructure | Medium   | Todo   | 2      |
+| US-094   | As a DevOps engineer, I want OpenTelemetry auto-instrumentation for HTTP, KafkaJS, and TypeORM spans so that the full certification chain is traceable end-to-end        | High     | Done   | 8      |
+| US-095   | As a DevOps engineer, I want `traceId` and `spanId` injected into every Pino log line so that logs and Jaeger traces are correlated by trace ID                          | Medium   | Done   | 3      |
+| US-096   | As a DevOps engineer, I want a Jaeger all-in-one service in the Docker monitoring profile so that distributed traces are viewable in the UI without extra infrastructure | Medium   | Done   | 2      |
 
 **9b Total Points:** 13
 
@@ -219,9 +219,9 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 | Story ID | User Story                                                                                                                                                                                                              | Priority | Status | Points |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------ |
-| US-097   | As a DevOps engineer, I want all 27 Kafka events defined as Avro schemas and registered in Redpanda Schema Registry with BACKWARD compatibility so that schema evolution is enforced at the registry level              | High     | Todo   | 8      |
-| US-098   | As a DevOps engineer, I want the `KafkaProducerService` to encode all messages as Avro via `SchemaRegistryService` so that every published event is schema-validated before sending                                     | High     | Todo   | 5      |
-| US-099   | As a DevOps engineer, I want the `KafkaConsumerService` to decode Avro messages via `SchemaRegistryService` and integration-tested against a live Redpanda Schema Registry so that consumer deserialization is verified | High     | Todo   | 5      |
+| US-097   | As a DevOps engineer, I want all 27 Kafka events defined as Avro schemas and registered in Redpanda Schema Registry with BACKWARD compatibility so that schema evolution is enforced at the registry level              | High     | Done   | 8      |
+| US-098   | As a DevOps engineer, I want the `KafkaProducerService` to encode all messages as Avro via `SchemaRegistryService` so that every published event is schema-validated before sending                                     | High     | Done   | 5      |
+| US-099   | As a DevOps engineer, I want the `KafkaConsumerService` to decode Avro messages via `SchemaRegistryService` and integration-tested against a live Redpanda Schema Registry so that consumer deserialization is verified | High     | Done   | 5      |
 
 **9c Total Points:** 18
 
@@ -229,34 +229,43 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 | Story ID | User Story                                                                                                                                                                                                                    | Priority | Status | Points |
 | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------ |
-| US-100   | As a QA engineer, I want a Keycloak test realm with 8 role-specific test users and a Playwright `global-setup.ts` that authenticates each role and saves storage state so that no test needs to repeat the login flow         | High     | Todo   | 5      |
-| US-101   | As a QA engineer, I want a `certification-chain.spec.ts` covering the full 12-step chain (inspector report → lab results → certification-body grant) so that end-to-end regressions across the chain are caught automatically | High     | Todo   | 8      |
-| US-102   | As a QA engineer, I want authenticated E2E tests for customs-agent export document validation and super-admin cooperative management so that the two highest-stakes financial/legal flows are covered                         | High     | Todo   | 5      |
-| US-103   | As a QA engineer, I want authenticated dashboard + list smoke tests for cooperative-admin, cooperative-member, inspector, and lab-technician so that all 8 staff role portals are covered by at least one authenticated test  | Medium   | Todo   | 5      |
+| US-100   | As a QA engineer, I want a Keycloak test realm with 8 role-specific test users and a Playwright `global-setup.ts` that authenticates each role and saves storage state so that no test needs to repeat the login flow         | High     | Done   | 5      |
+| US-101   | As a QA engineer, I want a `certification-chain.spec.ts` covering the full 12-step chain (inspector report → lab results → certification-body grant) so that end-to-end regressions across the chain are caught automatically | High     | Done   | 8      |
+| US-102   | As a QA engineer, I want authenticated E2E tests for customs-agent export document validation and super-admin cooperative management so that the two highest-stakes financial/legal flows are covered                         | High     | Done   | 5      |
+| US-103   | As a QA engineer, I want authenticated dashboard + list smoke tests for cooperative-admin, cooperative-member, inspector, and lab-technician so that all 8 staff role portals are covered by at least one authenticated test  | Medium   | Done   | 5      |
 
 **9d Total Points:** 23
 
-**Epic 9 Total Points:** 65
+### 9e — Security Scanning & Performance Baselines
+
+| Story ID | User Story                                                                                                                                                                                   | Priority | Status | Points |
+| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------ |
+| US-104   | As a DevOps engineer, I want an OWASP ZAP passive scan running in CI against the exported OpenAPI spec so that High/Critical security regressions fail the build automatically               | High     | Done   | 5      |
+| US-105   | As a DevOps engineer, I want k6 load tests with thresholds (QR verify p95 < 200ms, certification list p95 < 500ms) running in CI so that performance regressions are caught before they ship | High     | Done   | 5      |
+
+**9e Total Points:** 10
+
+**Epic 9 Total Points:** 75
 
 ---
 
 ## Backlog Summary
 
-| Epic                                      | Stories | Total Points | Done   | In Progress | Todo   |
-| ----------------------------------------- | ------- | ------------ | ------ | ----------- | ------ |
-| Epic 1: Cooperative Onboarding            | 10      | 36           | 10     | 0           | 0      |
-| Epic 2: Product Registry                  | 10      | 42           | 10     | 0           | 0      |
-| Epic 3: Lab Testing                       | 10      | 47           | 9      | 0           | 1      |
-| Epic 4: Certification Workflow            | 20      | 80           | 20     | 0           | 0      |
-| Epic 5: QR Code & Verification            | 10      | 51           | 9      | 0           | 1      |
-| Epic 6: Export Documentation              | 10      | 34           | 10     | 0           | 0      |
-| Epic 7: Notifications                     | 10      | 46           | 10     | 0           | 0      |
-| Epic 8: Admin & Reporting                 | 10      | 53           | 10     | 0           | 0      |
-| Epic 9: Phase 2 — Observability & Quality | 13      | 65           | 0      | 0           | 13     |
-| **Total**                                 | **103** | **454**      | **88** | **0**       | **15** |
+| Epic                                      | Stories | Total Points | Done    | In Progress | Todo  |
+| ----------------------------------------- | ------- | ------------ | ------- | ----------- | ----- |
+| Epic 1: Cooperative Onboarding            | 10      | 36           | 10      | 0           | 0     |
+| Epic 2: Product Registry                  | 10      | 42           | 10      | 0           | 0     |
+| Epic 3: Lab Testing                       | 10      | 47           | 9       | 0           | 1     |
+| Epic 4: Certification Workflow            | 20      | 80           | 20      | 0           | 0     |
+| Epic 5: QR Code & Verification            | 10      | 51           | 9       | 0           | 1     |
+| Epic 6: Export Documentation              | 10      | 34           | 10      | 0           | 0     |
+| Epic 7: Notifications                     | 10      | 46           | 10      | 0           | 0     |
+| Epic 8: Admin & Reporting                 | 10      | 53           | 10      | 0           | 0     |
+| Epic 9: Phase 2 — Observability & Quality | 15      | 75           | 15      | 0           | 0     |
+| **Total**                                 | **105** | **464**      | **103** | **0**       | **2** |
 
 > v1 deferred (2): US-027 (ONSSA lab integration, 13 SP), US-053 (QR offline verify, 13 SP) — both Phase 2 scope.
-> Phase 2 todo (13): US-091 – US-103.
+> Phase 2 complete: US-091 – US-105 (all 15 stories Done).
 
 ---
 
@@ -264,12 +273,12 @@ This backlog covers all epics and user stories for Terroir.ma v1. Stories are or
 
 Rolling average velocity (FE sprints 1–10): **12.7 SP**. Phase 2 sprints are infrastructure-heavy; estimates reflect that. Schema Registry sprint (P2-S3) is intentionally over average — 27-event migration is a single cohesive change that should not be split mid-schema.
 
-| Sprint | Name                                 | Stories                | SP  | Goal                                                                                                                             |
-| ------ | ------------------------------------ | ---------------------- | --- | -------------------------------------------------------------------------------------------------------------------------------- |
-| P2-S1  | Prometheus + Grafana                 | US-091, US-092, US-093 | 11  | `/metrics` endpoint live, Grafana dashboard provisioned, monitoring profile starts with `docker compose --profile monitoring up` |
-| P2-S2  | Jaeger Distributed Tracing           | US-094, US-095, US-096 | 13  | OTel auto-instrumentation active, `traceId` in every Pino log, Jaeger UI shows HTTP→Kafka→DB spans for a certification grant     |
-| P2-S3  | Kafka Schema Registry + Avro         | US-097, US-098, US-099 | 18  | All 27 events migrated to Avro, Schema Registry enforces BACKWARD compat, integration test proves round-trip encode/decode       |
-| P2-S4  | E2E Auth Setup + Certification Chain | US-100, US-101         | 13  | Keycloak test realm seeded, 8 role auth states stored, full 12-step certification chain passes in CI                             |
-| P2-S5  | E2E Critical Paths + Role Smokes     | US-102, US-103         | 10  | Customs-agent + super-admin critical paths covered, all 8 staff role portals have at least one authenticated test                |
+| Sprint | Name                                      | Stories                        | SP  | Status  | Goal                                                                                                                             |
+| ------ | ----------------------------------------- | ------------------------------ | --- | ------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| P2-S1  | Prometheus + Grafana                      | US-091, US-092, US-093         | 11  | ✅ Done | `/metrics` endpoint live, Grafana dashboard provisioned, monitoring profile starts with `docker compose --profile monitoring up` |
+| P2-S2  | Jaeger Distributed Tracing                | US-094, US-095, US-096         | 13  | ✅ Done | OTel auto-instrumentation active, `traceId` in every Pino log, Jaeger UI shows HTTP→Kafka→DB spans for a certification grant     |
+| P2-S3  | Kafka Schema Registry + Avro              | US-097, US-098, US-099         | 18  | ✅ Done | All 27 events migrated to Avro, Schema Registry enforces BACKWARD compat, integration test proves round-trip encode/decode       |
+| P2-S4  | Consumer Migration + Authenticated E2E    | US-100, US-101, US-102, US-103 | 23  | ✅ Done | Kafka consumers migrated to `OnModuleInit`, Keycloak test realm seeded, all 8 role portals covered by authenticated Playwright   |
+| P2-S5  | Security Scanning + Performance Baselines | US-104, US-105                 | 10  | ✅ Done | OWASP ZAP passive scan in CI (High/Critical = build fail), k6 load tests with p95 thresholds (QR < 200ms, list < 500ms)          |
 
-**Phase 2 Total:** 5 sprints · 65 SP · 13 stories
+**Phase 2 Total:** 5 sprints · 75 SP · 15 stories · **All Done ✅**

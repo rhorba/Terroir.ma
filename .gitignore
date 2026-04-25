@@ -65,3 +65,7 @@ migrations/*.js.map
 
 # Font assets (binary — download via npm run fonts:download)
 assets/fonts/*.ttf
+
+# Security scan reports (generated — open in browser locally)
+docs/security/zap-report.html
+docs/security/zap-report.json

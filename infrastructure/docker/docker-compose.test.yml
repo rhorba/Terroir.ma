@@ -1,4 +1,4 @@
-version: "3.9"
+version: '3.9'
 
 # Terroir.ma — Test infrastructure
 # Ephemeral containers for integration and e2e tests.
@@ -13,7 +13,6 @@ networks:
     name: terroir-test-network
 
 services:
-
   # ─────────────────────────────────────────────
   # PostgreSQL + PostGIS (test instance)
   # ─────────────────────────────────────────────
@@ -21,7 +20,7 @@ services:
     image: postgis/postgis:16-3.4
     container_name: terroir-postgresql-test
     ports:
-      - "5434:5432"   # Shifted: avoid conflict with dev stack on 5432
+      - '5434:5432' # Shifted: avoid conflict with dev stack on 5432
     environment:
       POSTGRES_USER: terroir_test
       POSTGRES_PASSWORD: terroir_test_pass
@@ -31,12 +30,12 @@ services:
     networks:
       - terroir-test-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U terroir_test -d terroir_test_db"]
+      test: ['CMD-SHELL', 'pg_isready -U terroir_test -d terroir_test_db']
       interval: 5s
       timeout: 3s
       start_period: 10s
       retries: 10
-    restart: "no"
+    restart: 'no'
 
   # ─────────────────────────────────────────────
   # Redis (test instance)
@@ -45,18 +44,18 @@ services:
     image: redis:7-alpine
     container_name: terroir-redis-test
     ports:
-      - "6380:6379"   # Shifted: avoid conflict with dev stack on 6379
+      - '6380:6379' # Shifted: avoid conflict with dev stack on 6379
     tmpfs:
       - /data:rw,size=128m
     networks:
       - terroir-test-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       start_period: 5s
       retries: 5
-    restart: "no"
+    restart: 'no'
 
   # ─────────────────────────────────────────────
   # Redpanda (test instance — single broker)
@@ -65,9 +64,9 @@ services:
     image: redpandadata/redpanda:latest
     container_name: terroir-redpanda-test
     ports:
-      - "19093:19092"   # Shifted: avoid conflict with dev stack on 19092
-      - "8082:8081"     # Schema Registry (shifted)
-      - "9645:9644"     # Admin API (shifted)
+      - '19093:19092' # Shifted: avoid conflict with dev stack on 19092
+      - '8082:8081' # Schema Registry (shifted)
+      - '9645:9644' # Admin API (shifted)
     command:
       - redpanda
       - start
@@ -88,12 +87,12 @@ services:
     networks:
       - terroir-test-network
     healthcheck:
-      test: ["CMD-SHELL", "rpk cluster health || exit 1"]
+      test: ['CMD-SHELL', 'rpk cluster health || exit 1']
       interval: 10s
       timeout: 8s
       start_period: 20s
       retries: 8
-    restart: "no"
+    restart: 'no'
 
   # ─────────────────────────────────────────────
   # Keycloak (test instance — dev mode, no DB)
@@ -102,21 +101,52 @@ services:
     image: quay.io/keycloak/keycloak:24.0
     container_name: terroir-keycloak-test
     ports:
-      - "8444:8080"   # Shifted: avoid conflict with dev stack on 8443
+      - '8444:8080' # Shifted: avoid conflict with dev stack on 8443
     command: start-dev --import-realm
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_DB: dev-mem   # In-memory H2 for tests — no external DB needed
-      KC_HEALTH_ENABLED: "true"
+      KC_DB: dev-mem # In-memory H2 for tests — no external DB needed
+      KC_HEALTH_ENABLED: 'true'
     volumes:
       - ./infrastructure/keycloak:/opt/keycloak/data/import:ro
     networks:
       - terroir-test-network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      test: ['CMD-SHELL', 'curl -f http://localhost:8080/health/ready || exit 1']
       interval: 15s
       timeout: 8s
       start_period: 45s
       retries: 8
-    restart: "no"
+    restart: 'no'
+
+  # ─────────────────────────────────────────────
+  # OWASP ZAP — passive API security scan (one-shot)
+  # Run via: npm run security:scan  (requires API on localhost:3000)
+  # ─────────────────────────────────────────────
+  zap-scan:
+    image: zaproxy/zap-stable:latest
+    container_name: terroir-zap-scan
+    network_mode: host # reaches localhost:3000 on Linux; see README for Mac/Windows
+    volumes:
+      - ../../docs/api:/zap/wrk:ro
+      - ../../infrastructure/zap/rules.tsv:/home/zap/.ZAP_D/rules.tsv:ro
+      - ../../docs/security:/zap/wrk/reports:rw
+    command:
+      - zap-api-scan.py
+      - -t
+      - /zap/wrk/openapi.json
+      - -f
+      - openapi
+      - -r
+      - reports/zap-report.html
+      - -J
+      - reports/zap-report.json
+      - -c
+      - /home/zap/.ZAP_D/rules.tsv
+      - -I
+      - -l
+      - WARN
+    profiles:
+      - zap
+    restart: 'no'

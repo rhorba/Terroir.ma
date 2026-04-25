@@ -1,18 +1,17 @@
 {
   "timestamp": "2026-04-25T23:59:00Z",
-  "session_id": "session-2026-04-25-P2-S4-consumer-migration-e2e",
+  "session_id": "session-2026-04-25-P2-S5-security-performance",
   "project_phase": "phase-2-observability",
   "current_sprint": {
     "sprint_number": "P2-S5",
-    "sprint_name": "OWASP ZAP Security Scanning + Performance Testing",
-    "status": "NOT_STARTED",
-    "goal": "Security scanning with OWASP ZAP and performance testing with k6/Artillery — final Phase 2 sprint",
+    "sprint_name": "OWASP ZAP Security Scanning + k6 Performance Testing",
+    "status": "COMPLETED",
+    "goal": "OWASP ZAP passive scan in CI (High/Critical = build fail), k6 load tests with p95 thresholds (QR < 200ms, list < 500ms)",
     "story_points_planned": 10,
-    "story_points_completed": 0,
-    "stories": ["US-103", "US-104"],
-    "plan_doc": null,
-    "progress_doc": null,
-    "note": "Start with /brainstorm or /plan directly — check PRODUCT-BACKLOG.md for US-103/104 details"
+    "story_points_completed": 10,
+    "stories": ["US-104", "US-105"],
+    "plan_doc": "docs/plans/2026-04-25-p2-s5-security-performance/plan.md",
+    "progress_doc": "docs/plans/2026-04-25-p2-s5-security-performance/progress.md"
   },
   "last_completed_sprints": [
     {
@@ -52,12 +51,23 @@
       "sprint_number": "P2-S4",
       "sprint_name": "Consumer Migration + Authenticated Playwright E2E",
       "status": "COMPLETED",
-      "story_points_planned": 13,
-      "story_points_completed": 13,
+      "story_points_planned": 23,
+      "story_points_completed": 23,
       "velocity_pct": 100,
-      "stories": ["US-100", "US-101", "US-102"],
+      "stories": ["US-100", "US-101", "US-102", "US-103"],
       "plan_doc": "docs/plans/2026-04-25-p2-s4-consumer-migration-e2e/plan.md",
       "progress_doc": "docs/plans/2026-04-25-p2-s4-consumer-migration-e2e/progress.md"
+    },
+    {
+      "sprint_number": "P2-S5",
+      "sprint_name": "OWASP ZAP Security Scanning + k6 Performance Testing",
+      "status": "COMPLETED",
+      "story_points_planned": 10,
+      "story_points_completed": 10,
+      "velocity_pct": 100,
+      "stories": ["US-104", "US-105"],
+      "plan_doc": "docs/plans/2026-04-25-p2-s5-security-performance/plan.md",
+      "progress_doc": "docs/plans/2026-04-25-p2-s5-security-performance/progress.md"
     }
   ],
   "active_feature": null,
@@ -140,9 +150,7 @@
       "docker_port_ui": 16686,
       "docker_port_otlp_grpc": 4317,
       "docker_port_otlp_http": 4318,
-      "docker_profiles": ["monitoring", "full"],
-      "otel_sdk_disabled_local": true,
-      "otel_sdk_disabled_docker": false
+      "docker_profiles": ["monitoring", "full"]
     },
     "schema_registry": {
       "added": true,
@@ -151,36 +159,47 @@
       "avro_schemas_dir": "src/common/schemas/avro/",
       "service": "src/common/kafka/schema-registry.service.ts",
       "compatibility": "BACKWARD",
-      "redpanda_port_internal": 8081,
-      "redpanda_port_host": 8081,
       "env_var": "SCHEMA_REGISTRY_URL"
     },
     "pino_trace_injection": true,
-    "otel_auto_instrumentation": ["express", "pg", "kafkajs"],
-    "start_command": "docker compose --profile monitoring up -d"
+    "otel_auto_instrumentation": ["express", "pg", "kafkajs"]
+  },
+  "security_status": {
+    "owasp_zap": {
+      "added": true,
+      "docker_image": "zaproxy/zap-stable:latest",
+      "scan_type": "passive (zap-api-scan.py)",
+      "spec_input": "docs/api/openapi.json",
+      "reports_dir": "docs/security/",
+      "suppression_rules": "infrastructure/zap/rules.tsv",
+      "zap_yaml": "infrastructure/zap/zap.yaml",
+      "readme": "infrastructure/zap/README.md",
+      "docker_compose_service": "zap-scan (profile: zap)",
+      "npm_scripts": ["security:scan", "security:scan:ci"],
+      "ci_workflow": ".github/workflows/security.yml",
+      "ci_trigger": "push:main + weekly Monday 04:00 UTC",
+      "ci_policy": "High/Critical alerts fail the build"
+    }
+  },
+  "performance_status": {
+    "k6": {
+      "added": true,
+      "scripts_dir": "test/performance/",
+      "scripts": [
+        "smoke.k6.js (1 VU, 1 iter, no auth — CI-safe liveness check)",
+        "qr-verify.k6.js (50 VU, 2min load, p95 < 200ms — domain SLA)",
+        "certification-list.k6.js (30 VU, 2min load, p95 < 500ms)"
+      ],
+      "readme": "test/performance/README.md",
+      "npm_scripts": ["perf:smoke", "perf:qr", "perf:list", "perf:all"],
+      "ci_workflow": ".github/workflows/performance.yml",
+      "ci_trigger_smoke": "push:main (every push)",
+      "ci_trigger_load": "weekly Monday 05:00 UTC + workflow_dispatch(full)",
+      "domain_sla": "QR verify p95 < 200ms (Redis-cached path)"
+    }
   },
   "kafka_avro_status": {
     "schema_count": 18,
-    "subjects": [
-      "cooperative.registration.submitted-value",
-      "cooperative.registration.verified-value",
-      "cooperative.cooperative.deactivated-value",
-      "cooperative.farm.mapped-value",
-      "product.harvest.logged-value",
-      "product.batch.created-value",
-      "lab.test.submitted-value",
-      "product.batch.processing_step_added-value",
-      "lab.test.completed-value",
-      "certification.request.submitted-value",
-      "certification.inspection.scheduled-value",
-      "certification.decision.granted-value",
-      "certification.decision.denied-value",
-      "certification.decision.revoked-value",
-      "qrcode.generated-value",
-      "certification.review.final-started-value",
-      "certification.renewed-value",
-      "certification.inspection.inspector-assigned-value"
-    ],
     "producers_migrated": ["cooperative.producer", "product.producer", "certification.producer"],
     "consumers_migrated": [
       "notification.listener",
@@ -189,20 +208,7 @@
       "certification.listener"
     ],
     "consumers_still_dormant": [],
-    "testValues_note": "LabTestCompletedEvent.testValues: producer JSON.stringifies (Avro wire type = string); consumer JSON.parses before persisting to JSONB — DONE in P2-S4"
-  },
-  "infrastructure": {
-    "minio": { "added": true },
-    "openapi": {
-      "added": true,
-      "export_script": "src/scripts/export-openapi.ts",
-      "output": "docs/api/openapi.json"
-    },
-    "github": {
-      "terroir_ma": "https://github.com/rhorba/terroir-ma",
-      "terroir_ma_web": "https://github.com/rhorba/terroir-ma-web",
-      "gh_cli_installed": true
-    }
+    "testValues_note": "LabTestCompletedEvent.testValues: producer JSON.stringifies (Avro wire type = string); consumer JSON.parses before persisting to JSONB"
   },
   "certification_chain_status": {
     "kafka_events_defined": 18,
@@ -221,88 +227,65 @@
       "suites": 45,
       "total": 436,
       "passing": 436,
-      "failures": 0,
-      "note": "+4 from P2-S4 (cooperative-listener onModuleInit×1, product-listener onModuleInit×1 + testValues-parse×1, certification-listener onModuleInit-4-topics×1)"
+      "failures": 0
     },
     "integration": {
       "suites": 10,
       "total": 29,
       "passing": 29,
       "failures": 0,
-      "note": "avro-roundtrip.integration.ts added but requires Docker — not counted until Docker run"
+      "note": "avro-roundtrip.integration.ts requires Docker — not counted until Docker run"
     },
     "e2e": { "suites": 8, "total": 35, "passing": 35, "failures": 0 },
     "playwright_e2e": {
       "files": 10,
       "total_approx": 28,
-      "note": "8 new role-authenticated spec files + upgraded qr-verify; requires live KC + portal + dev-server — not counted in CI until P2-S5 wires up e2e.yml"
+      "note": "8 role-authenticated spec files + upgraded qr-verify; requires live KC + portal + dev-server"
     },
-    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking, all 436 tests pass"
-  },
-  "playwright_e2e_status": {
-    "infrastructure": "complete",
-    "global_setup": "apps/portal/e2e/global-setup.ts",
-    "global_teardown": "apps/portal/e2e/global-teardown.ts",
-    "auth_dir": "apps/portal/e2e/.auth/ (gitignored)",
-    "spec_files": [
-      "certification-chain.spec.ts",
-      "customs-agent.spec.ts",
-      "super-admin.spec.ts",
-      "cooperative-admin.spec.ts",
-      "cooperative-member.spec.ts",
-      "inspector.spec.ts",
-      "lab-technician.spec.ts",
-      "qr-verify.spec.ts (upgraded)",
-      "auth.spec.ts (existing)",
-      "export-documents.spec.ts (existing)"
-    ],
-    "ci_workflow": ".github/workflows/e2e.yml",
-    "keycloak_test_users": 7,
-    "keycloak_client": "terroir-portal (confidential, redirect localhost:3001)",
-    "keycloak_realm": "terroir-ma",
-    "env_fixed": ".env.example KEYCLOAK_ISSUER → http://localhost:8080/realms/terroir-ma"
+    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking"
   },
   "frontend_context": {
     "repo_name": "terroir-ma-web",
     "repo_path": "C:/Users/moham/justforfun/terroir-ma-web",
-    "github_url": "https://github.com/rhorba/terroir-ma-web",
-    "repo_status": "pushed — v1 complete, all 4 FE-S10 commits pushed",
-    "portal_routes_count": 45,
     "status": "v1 COMPLETE — all 10 FE sprints done, 127 SP; P2-S4 Playwright E2E added"
   },
   "backlog_status": {
-    "total_stories": 103,
-    "done_stories": 94,
+    "total_stories": 105,
+    "done_stories": 103,
     "deferred_stories": 2,
-    "phase2_todo_stories": 7,
-    "phase2_sp_total": 65,
-    "phase2_sp_done": 55,
-    "phase2_sprints_done": 4,
+    "phase2_todo_stories": 0,
+    "phase2_sp_total": 75,
+    "phase2_sp_done": 75,
+    "phase2_sprints_done": 5,
     "phase2_sprints_total": 5,
-    "phase2_pct": 85,
-    "note": "P2-S1 (11 SP) + P2-S2 (13 SP) + P2-S3 (18 SP) + P2-S4 (13 SP) done. P2-S5 (US-103/104, ~10 SP) is the final Phase 2 sprint."
+    "phase2_pct": 100,
+    "note": "Phase 2 COMPLETE — all 5 sprints done, 75 SP, 15 stories."
   },
   "blockers": [],
   "next_actions": [
-    "P2-S5: /plan for OWASP ZAP security scanning + k6/Artillery performance testing",
+    "Phase 2 is COMPLETE — consider Phase 3 planning: microservice extraction, Kubernetes, contract testing (Pact)",
     "Run Playwright E2E against live stack: ensure KC + portal running, then pnpm test:e2e",
-    "Run avro round-trip integration test: docker compose --profile core up -d redpanda && npm run test:integration -- --testPathPattern=avro-roundtrip",
-    "Verify schema registration at runtime: curl http://localhost:8081/subjects (should return 18 subjects)"
+    "Run avro round-trip integration test: docker compose --profile core up -d && npm run test:integration -- --testPathPattern=avro-roundtrip",
+    "Run ZAP scan locally: npm run export:openapi && npm run security:scan",
+    "Run k6 smoke locally: npm run perf:smoke"
   ],
   "decisions_made_this_session": [
-    "P2-S4: Listener spec updates pulled forward to Batch 1 — typecheck gate required removing {} as never second args before verification could pass",
-    "P2-S4: All 4 Kafka listeners now live — CooperativeListener, ProductListener, CertificationListener, NotificationListener all use KafkaConsumerService.subscribe()",
-    "P2-S4: JSON.parse(data.testValues as unknown as string) added in ProductListener — Avro wire type is string, consumer parses before persisting to JSONB",
-    "P2-S4: terroir-portal confidential Keycloak client added — existing web-portal client had no localhost:3001 redirect; .env.example CLIENT_ID and ISSUER fixed",
-    "P2-S4: Browser-based Playwright auth — no directAccessGrantsEnabled needed; flow is button click → KC form fill → redirect back → storageState saved",
-    "P2-S4: Smoke assertions only for critical-path specs — full journey tests (submit inspection → grant cert) deferred until live backend + seeded chain data",
-    "P2-S4: CI e2e.yml uses KEYCLOAK_ISSUER=http://localhost:8444/realms/terroir-ma (test KC port 8444)"
+    "P2-S5: ZAP passive mode only — zap-api-scan.py with openapi.json as input; no active injection",
+    "P2-S5: 10 suppression rules in rules.tsv for JSON API false positives",
+    "P2-S5: ZAP Docker service uses network_mode: host for Linux CI; Mac/Windows workaround documented",
+    "P2-S5: k6 smoke (1 VU, 1 iter) runs on every push; load tests (50 VU) run weekly only",
+    "P2-S5: QR verify threshold p95 < 200ms is a hard domain SLA — enforced as failing threshold in k6",
+    "P2-S5: k6 installed via apt in CI — avoids Docker-in-Docker complexity",
+    "P2-S5: curl retry loop (30 x 2s) for API readiness in CI — no wait-on dependency needed",
+    "P2-S5: PRODUCT-BACKLOG.md — US-091–103 marked Done; US-104/105 added; Epic 9 total 65→75 SP; Phase 2 complete"
   ],
   "velocity_history": {
-    "P2-S1": { "planned": 11, "completed": 11, "pct": 100, "note": "Prometheus + Grafana monitoring" },
-    "P2-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "Jaeger OTel distributed tracing" },
-    "P2-S3": { "planned": 18, "completed": 18, "pct": 100, "note": "Kafka Schema Registry + Avro — 18 schemas, 3 producers migrated, NotificationListener fixed" },
-    "P2-S4": { "planned": 13, "completed": 13, "pct": 100, "note": "Consumer migration (3 listeners) + Playwright E2E infrastructure + 8 spec files" },
-    "phase2_rolling_avg": 13.75
+    "P2-S1": { "planned": 11, "completed": 11, "pct": 100 },
+    "P2-S2": { "planned": 13, "completed": 13, "pct": 100 },
+    "P2-S3": { "planned": 18, "completed": 18, "pct": 100 },
+    "P2-S4": { "planned": 23, "completed": 23, "pct": 100 },
+    "P2-S5": { "planned": 10, "completed": 10, "pct": 100 },
+    "phase2_rolling_avg": 14.6,
+    "phase2_total": 75
   }
 }
