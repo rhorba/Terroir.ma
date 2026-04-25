@@ -1,18 +1,18 @@
-import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, Payload, Ctx, KafkaContext } from '@nestjs/microservices';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProductionBatch } from '../entities/production-batch.entity';
 import { LabTest } from '../entities/lab-test.entity';
 import { LabTestResult } from '../entities/lab-test-result.entity';
 import type { LabTestCompletedEvent } from '../events/product-events';
+import { KafkaConsumerService } from '../../../common/kafka/kafka-consumer.service';
 
 /**
  * Product module Kafka listener.
  * Handles lab.test.completed events to update batch status.
  */
-@Controller()
-export class ProductListener {
+@Injectable()
+export class ProductListener implements OnModuleInit {
   private readonly logger = new Logger(ProductListener.name);
 
   constructor(
@@ -22,40 +22,41 @@ export class ProductListener {
     private readonly labTestRepo: Repository<LabTest>,
     @InjectRepository(LabTestResult)
     private readonly labTestResultRepo: Repository<LabTestResult>,
+    private readonly kafkaConsumerService: KafkaConsumerService,
   ) {}
+
+  onModuleInit(): void {
+    this.kafkaConsumerService.subscribe('lab.test.completed', (p) =>
+      this.handleLabTestCompleted(p as LabTestCompletedEvent),
+    );
+  }
 
   /**
    * Update batch status when a lab test is completed externally (e.g., from a lab portal).
+   * testValues arrives as a JSON string on the Avro wire — JSON.parse before persisting to JSONB.
    */
-  @EventPattern('lab.test.completed')
-  async handleLabTestCompleted(
-    @Payload() data: LabTestCompletedEvent,
-    @Ctx() _context: KafkaContext,
-  ): Promise<void> {
+  async handleLabTestCompleted(data: LabTestCompletedEvent): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, labTestId: data.labTestId, passed: data.passed },
       'Lab test completed event received',
     );
 
     try {
-      // Update lab test status
       await this.labTestRepo.update({ id: data.labTestId }, { status: 'completed' });
 
-      // Save result record
       const result = this.labTestResultRepo.create({
         labTestId: data.labTestId,
         batchId: data.batchId,
         productTypeCode: data.productTypeCode,
         passed: data.passed,
-        testValues: data.testValues,
+        testValues: JSON.parse(data.testValues as unknown as string),
         failedParameters: data.failedParameters,
         technicianName: data.technician,
-        technicianId: data.correlationId, // Use correlationId as proxy for technician id when external
+        technicianId: data.correlationId,
         completedAt: new Date(data.completedAt),
       });
       await this.labTestResultRepo.save(result);
 
-      // Update batch status
       await this.batchRepo.update(
         { id: data.batchId },
         { status: data.passed ? 'lab_passed' : 'lab_failed' },
@@ -70,8 +71,6 @@ export class ProductListener {
         { error, labTestId: data.labTestId },
         'Failed to process lab test completed event',
       );
-    } finally {
-      // ack handled automatically by NestJS Kafka transport
     }
   }
 }

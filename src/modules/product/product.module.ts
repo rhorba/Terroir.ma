@@ -56,7 +56,6 @@ import { MinioService } from '../../common/services/minio.service';
     LabTestController,
     LabController,
     ProductDocumentController,
-    ProductListener,
   ],
   providers: [
     ProductService,
@@ -68,6 +67,7 @@ import { MinioService } from '../../common/services/minio.service';
     ProductDocumentService,
     ProcessingStepService,
     ProductProducer,
+    ProductListener,
     MinioService,
   ],
   exports: [],

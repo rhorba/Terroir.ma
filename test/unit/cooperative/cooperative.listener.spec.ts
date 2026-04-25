@@ -2,11 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CooperativeListener } from '../../../src/modules/cooperative/listeners/cooperative.listener';
 import { Cooperative } from '../../../src/modules/cooperative/entities/cooperative.entity';
+import { KafkaConsumerService } from '../../../src/common/kafka/kafka-consumer.service';
 import type { CooperativeRegistrationVerifiedEvent } from '../../../src/common/interfaces/events/cooperative.events';
 
 const makeRepo = () => ({
   update: jest.fn().mockResolvedValue(undefined),
 });
+
+const mockKafkaConsumerService = { subscribe: jest.fn() };
 
 const makeEvent = (): CooperativeRegistrationVerifiedEvent =>
   ({
@@ -35,6 +38,7 @@ describe('CooperativeListener', () => {
       providers: [
         CooperativeListener,
         { provide: getRepositoryToken(Cooperative), useValue: cooperativeRepo },
+        { provide: KafkaConsumerService, useValue: mockKafkaConsumerService },
       ],
     }).compile();
 
@@ -45,11 +49,21 @@ describe('CooperativeListener', () => {
     expect(listener).toBeDefined();
   });
 
+  describe('onModuleInit()', () => {
+    it('registers cooperative.registration.verified handler', () => {
+      listener.onModuleInit();
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'cooperative.registration.verified',
+        expect.any(Function),
+      );
+    });
+  });
+
   describe('handleRegistrationVerified()', () => {
     it('updates cooperative status to active when verification event received', async () => {
       const event = makeEvent();
 
-      await listener.handleRegistrationVerified(event, {} as never);
+      await listener.handleRegistrationVerified(event);
 
       expect(cooperativeRepo.update).toHaveBeenCalledWith(
         { id: 'coop-001' },
@@ -64,9 +78,7 @@ describe('CooperativeListener', () => {
       const event = makeEvent();
       cooperativeRepo.update.mockRejectedValue(new Error('DB error'));
 
-      await expect(
-        listener.handleRegistrationVerified(event, {} as never),
-      ).resolves.toBeUndefined();
+      await expect(listener.handleRegistrationVerified(event)).resolves.toBeUndefined();
     });
   });
 });

@@ -16,8 +16,8 @@ import { CooperativeListener } from './listeners/cooperative.listener';
  */
 @Module({
   imports: [TypeOrmModule.forFeature([Cooperative, Member, Farm])],
-  controllers: [CooperativeController, CooperativeListener],
-  providers: [CooperativeService, CooperativeProducer],
+  controllers: [CooperativeController],
+  providers: [CooperativeService, CooperativeProducer, CooperativeListener],
   exports: [],
 })
 export class CooperativeModule {}

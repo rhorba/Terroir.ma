@@ -1,31 +1,34 @@
-import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, Payload, Ctx, KafkaContext } from '@nestjs/microservices';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cooperative } from '../entities/cooperative.entity';
 import type { CooperativeRegistrationVerifiedEvent } from '../events/cooperative-events';
+import { KafkaConsumerService } from '../../../common/kafka/kafka-consumer.service';
 
 /**
  * Listens for Kafka events that affect the cooperative module.
  * Topic: cooperative.registration.verified
  */
-@Controller()
-export class CooperativeListener {
+@Injectable()
+export class CooperativeListener implements OnModuleInit {
   private readonly logger = new Logger(CooperativeListener.name);
 
   constructor(
     @InjectRepository(Cooperative)
     private readonly cooperativeRepo: Repository<Cooperative>,
+    private readonly kafkaConsumerService: KafkaConsumerService,
   ) {}
+
+  onModuleInit(): void {
+    this.kafkaConsumerService.subscribe('cooperative.registration.verified', (p) =>
+      this.handleRegistrationVerified(p as CooperativeRegistrationVerifiedEvent),
+    );
+  }
 
   /**
    * Handle verification events — update cooperative status to 'active'.
    */
-  @EventPattern('cooperative.registration.verified')
-  async handleRegistrationVerified(
-    @Payload() data: CooperativeRegistrationVerifiedEvent,
-    @Ctx() _context: KafkaContext,
-  ): Promise<void> {
+  async handleRegistrationVerified(data: CooperativeRegistrationVerifiedEvent): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, cooperativeId: data.cooperativeId },
       'Cooperative registration verified event received',
@@ -49,8 +52,6 @@ export class CooperativeListener {
         { error, cooperativeId: data.cooperativeId },
         'Failed to update cooperative status',
       );
-    } finally {
-      // ack handled automatically by NestJS Kafka transport
     }
   }
 }

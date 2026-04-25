@@ -140,7 +140,110 @@
       }
     ]
   },
+  "users": [
+    {
+      "username": "test-super-admin",
+      "email": "test-super-admin@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "SuperAdmin",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["super-admin"],
+      "requiredActions": []
+    },
+    {
+      "username": "test-cooperative-admin",
+      "email": "test-cooperative-admin@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "CoopAdmin",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["cooperative-admin"],
+      "requiredActions": [],
+      "attributes": { "cooperative_id": ["00000000-0000-0000-0000-000000000001"] }
+    },
+    {
+      "username": "test-cooperative-member",
+      "email": "test-cooperative-member@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "CoopMember",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["cooperative-member"],
+      "requiredActions": [],
+      "attributes": { "cooperative_id": ["00000000-0000-0000-0000-000000000001"] }
+    },
+    {
+      "username": "test-lab-technician",
+      "email": "test-lab-technician@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "LabTech",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["lab-technician"],
+      "requiredActions": []
+    },
+    {
+      "username": "test-inspector",
+      "email": "test-inspector@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Inspector",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["inspector"],
+      "requiredActions": []
+    },
+    {
+      "username": "test-certification-body",
+      "email": "test-certification-body@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "CertBody",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["certification-body"],
+      "requiredActions": []
+    },
+    {
+      "username": "test-customs-agent",
+      "email": "test-customs-agent@terroir.ma",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "CustomsAgent",
+      "credentials": [{ "type": "password", "value": "Test1234!", "temporary": false }],
+      "realmRoles": ["customs-agent"],
+      "requiredActions": []
+    }
+  ],
   "clients": [
+    {
+      "clientId": "terroir-portal",
+      "name": "Terroir.ma Portal (Next.js)",
+      "description": "Next.js portal application — NextAuth v5 Authorization Code + PKCE",
+      "enabled": true,
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "secret": "terroir-portal-secret",
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "redirectUris": [
+        "http://localhost:3001/*",
+        "http://localhost:3001/api/auth/callback/keycloak"
+      ],
+      "webOrigins": ["http://localhost:3001"],
+      "protocol": "openid-connect",
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["openid", "profile", "email", "roles"],
+      "optionalClientScopes": ["offline_access"]
+    },
     {
       "clientId": "web-portal",
       "name": "Terroir.ma Web Portal",

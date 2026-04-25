@@ -1,18 +1,18 @@
 {
   "timestamp": "2026-04-25T23:59:00Z",
-  "session_id": "session-2026-04-25-P2-S3-schema-registry-avro",
+  "session_id": "session-2026-04-25-P2-S4-consumer-migration-e2e",
   "project_phase": "phase-2-observability",
   "current_sprint": {
-    "sprint_number": "P2-S4",
-    "sprint_name": "Authenticated Playwright E2E + Consumer Migration",
+    "sprint_number": "P2-S5",
+    "sprint_name": "OWASP ZAP Security Scanning + Performance Testing",
     "status": "NOT_STARTED",
-    "goal": "Migrate dormant CooperativeListener / ProductListener / CertificationListener from @EventPattern to KafkaConsumerService.subscribe(); add authenticated Playwright E2E flows",
-    "story_points_planned": 13,
+    "goal": "Security scanning with OWASP ZAP and performance testing with k6/Artillery — final Phase 2 sprint",
+    "story_points_planned": 10,
     "story_points_completed": 0,
-    "stories": ["US-100", "US-101", "US-102"],
+    "stories": ["US-103", "US-104"],
     "plan_doc": null,
     "progress_doc": null,
-    "note": "Start with /brainstorm or /plan directly — design doc exists at docs/plans/2026-04-24-phase2-e2e-auth/design.md"
+    "note": "Start with /brainstorm or /plan directly — check PRODUCT-BACKLOG.md for US-103/104 details"
   },
   "last_completed_sprints": [
     {
@@ -47,6 +47,17 @@
       "stories": ["US-097", "US-098", "US-099"],
       "plan_doc": "docs/plans/2026-04-24-phase2-schema-registry/plan.md",
       "progress_doc": "docs/plans/2026-04-24-phase2-schema-registry/progress.md"
+    },
+    {
+      "sprint_number": "P2-S4",
+      "sprint_name": "Consumer Migration + Authenticated Playwright E2E",
+      "status": "COMPLETED",
+      "story_points_planned": 13,
+      "story_points_completed": 13,
+      "velocity_pct": 100,
+      "stories": ["US-100", "US-101", "US-102"],
+      "plan_doc": "docs/plans/2026-04-25-p2-s4-consumer-migration-e2e/plan.md",
+      "progress_doc": "docs/plans/2026-04-25-p2-s4-consumer-migration-e2e/progress.md"
     }
   ],
   "active_feature": null,
@@ -60,13 +71,16 @@
       "tests_passing": true,
       "findAll_endpoint": true,
       "getFarms_endpoint": true,
-      "producer_avro": true
+      "producer_avro": true,
+      "kafka_consumer_active": true
     },
     "product": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
-      "producer_avro": true
+      "producer_avro": true,
+      "kafka_consumer_active": true,
+      "testValues_json_parse": true
     },
     "certification": {
       "entities": true,
@@ -76,14 +90,15 @@
       "qr_scan_event_tracking": true,
       "export_documents": true,
       "export_doc_customs_agent_role": true,
-      "producer_avro": true
+      "producer_avro": true,
+      "kafka_consumer_active": true
     },
     "notification": {
       "entities": true,
       "controllers": true,
       "tests_passing": true,
       "kafka_consumer_active": true,
-      "note": "NotificationListener now uses KafkaConsumerService.subscribe() — Kafka notifications are live"
+      "note": "NotificationListener uses KafkaConsumerService.subscribe() — Kafka notifications live since P2-S3"
     },
     "common": {
       "user_controller": true,
@@ -167,9 +182,14 @@
       "certification.inspection.inspector-assigned-value"
     ],
     "producers_migrated": ["cooperative.producer", "product.producer", "certification.producer"],
-    "consumers_migrated": ["notification.listener"],
-    "consumers_still_dormant": ["cooperative.listener", "product.listener", "certification.listener"],
-    "testValues_note": "LabTestCompletedEvent.testValues is JSON.stringified on produce (Avro schema type = string); consumer-side JSON.parse deferred to P2-S4"
+    "consumers_migrated": [
+      "notification.listener",
+      "cooperative.listener",
+      "product.listener",
+      "certification.listener"
+    ],
+    "consumers_still_dormant": [],
+    "testValues_note": "LabTestCompletedEvent.testValues: producer JSON.stringifies (Avro wire type = string); consumer JSON.parses before persisting to JSONB — DONE in P2-S4"
   },
   "infrastructure": {
     "minio": { "added": true },
@@ -199,10 +219,10 @@
   "test_status": {
     "unit": {
       "suites": 45,
-      "total": 432,
-      "passing": 432,
+      "total": 436,
+      "passing": 436,
       "failures": 0,
-      "note": "+32 from P2-S3 (schema-registry×7, kafka-producer×5, kafka-consumer×7, cooperative-producer×4, product-producer×4, certification-producer×4, notification-listener×1)"
+      "note": "+4 from P2-S4 (cooperative-listener onModuleInit×1, product-listener onModuleInit×1 + testValues-parse×1, certification-listener onModuleInit-4-topics×1)"
     },
     "integration": {
       "suites": 10,
@@ -212,8 +232,35 @@
       "note": "avro-roundtrip.integration.ts added but requires Docker — not counted until Docker run"
     },
     "e2e": { "suites": 8, "total": 35, "passing": 35, "failures": 0 },
-    "playwright_e2e": { "files": 3, "total": 11, "note": "smoke tests — run against live dev servers" },
-    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking, all 432 tests pass"
+    "playwright_e2e": {
+      "files": 10,
+      "total_approx": 28,
+      "note": "8 new role-authenticated spec files + upgraded qr-verify; requires live KC + portal + dev-server — not counted in CI until P2-S5 wires up e2e.yml"
+    },
+    "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking, all 436 tests pass"
+  },
+  "playwright_e2e_status": {
+    "infrastructure": "complete",
+    "global_setup": "apps/portal/e2e/global-setup.ts",
+    "global_teardown": "apps/portal/e2e/global-teardown.ts",
+    "auth_dir": "apps/portal/e2e/.auth/ (gitignored)",
+    "spec_files": [
+      "certification-chain.spec.ts",
+      "customs-agent.spec.ts",
+      "super-admin.spec.ts",
+      "cooperative-admin.spec.ts",
+      "cooperative-member.spec.ts",
+      "inspector.spec.ts",
+      "lab-technician.spec.ts",
+      "qr-verify.spec.ts (upgraded)",
+      "auth.spec.ts (existing)",
+      "export-documents.spec.ts (existing)"
+    ],
+    "ci_workflow": ".github/workflows/e2e.yml",
+    "keycloak_test_users": 7,
+    "keycloak_client": "terroir-portal (confidential, redirect localhost:3001)",
+    "keycloak_realm": "terroir-ma",
+    "env_fixed": ".env.example KEYCLOAK_ISSUER → http://localhost:8080/realms/terroir-ma"
   },
   "frontend_context": {
     "repo_name": "terroir-ma-web",
@@ -221,39 +268,41 @@
     "github_url": "https://github.com/rhorba/terroir-ma-web",
     "repo_status": "pushed — v1 complete, all 4 FE-S10 commits pushed",
     "portal_routes_count": 45,
-    "status": "v1 COMPLETE — all 10 FE sprints done, 127 SP"
+    "status": "v1 COMPLETE — all 10 FE sprints done, 127 SP; P2-S4 Playwright E2E added"
   },
   "backlog_status": {
     "total_stories": 103,
-    "done_stories": 91,
+    "done_stories": 94,
     "deferred_stories": 2,
-    "phase2_todo_stories": 10,
+    "phase2_todo_stories": 7,
     "phase2_sp_total": 65,
-    "phase2_sp_done": 42,
-    "phase2_sprints_done": 3,
+    "phase2_sp_done": 55,
+    "phase2_sprints_done": 4,
     "phase2_sprints_total": 5,
-    "phase2_pct": 65,
-    "note": "P2-S1 (US-091/092/093) + P2-S2 (US-094/095/096) + P2-S3 (US-097/098/099, 18 SP) done. P2-S4 (US-100/101/102, 13 SP) is next."
+    "phase2_pct": 85,
+    "note": "P2-S1 (11 SP) + P2-S2 (13 SP) + P2-S3 (18 SP) + P2-S4 (13 SP) done. P2-S5 (US-103/104, ~10 SP) is the final Phase 2 sprint."
   },
   "blockers": [],
   "next_actions": [
+    "P2-S5: /plan for OWASP ZAP security scanning + k6/Artillery performance testing",
+    "Run Playwright E2E against live stack: ensure KC + portal running, then pnpm test:e2e",
     "Run avro round-trip integration test: docker compose --profile core up -d redpanda && npm run test:integration -- --testPathPattern=avro-roundtrip",
-    "Verify schema registration at runtime: curl http://localhost:8081/subjects (should return 18 subjects)",
-    "P2-S4: Migrate CooperativeListener, ProductListener, CertificationListener from dormant @EventPattern to KafkaConsumerService",
-    "P2-S4: JSON.parse testValues in ProductListener.handleLabTestCompleted()",
-    "P2-S4 or P2-S5: Authenticated Playwright E2E flows (design doc: docs/plans/2026-04-24-phase2-e2e-auth/design.md)"
+    "Verify schema registration at runtime: curl http://localhost:8081/subjects (should return 18 subjects)"
   ],
   "decisions_made_this_session": [
-    "P2-S3: 18 actual event topics produced in code (design doc said 27 — aspirational); plan and schemas match reality",
-    "P2-S3: NotificationListener @EventPattern was entirely dormant — no connectMicroservice() in main.ts; fixed by migrating to KafkaConsumerService.subscribe()",
-    "P2-S3: testValues field stays Record<string, number|string> in TypeScript interface; JSON.stringified to string on produce (Avro wire type); JSON.parse on consume deferred to P2-S4",
-    "P2-S3: KafkaClientModule left in place — CooperativeListener/ProductListener/CertificationListener still dormant with @EventPattern; they will be migrated in P2-S4",
-    "P2-S3: Avro integration test uses Testcontainers GenericContainer with redpandadata/redpanda:v23.3.5 pinned image"
+    "P2-S4: Listener spec updates pulled forward to Batch 1 — typecheck gate required removing {} as never second args before verification could pass",
+    "P2-S4: All 4 Kafka listeners now live — CooperativeListener, ProductListener, CertificationListener, NotificationListener all use KafkaConsumerService.subscribe()",
+    "P2-S4: JSON.parse(data.testValues as unknown as string) added in ProductListener — Avro wire type is string, consumer parses before persisting to JSONB",
+    "P2-S4: terroir-portal confidential Keycloak client added — existing web-portal client had no localhost:3001 redirect; .env.example CLIENT_ID and ISSUER fixed",
+    "P2-S4: Browser-based Playwright auth — no directAccessGrantsEnabled needed; flow is button click → KC form fill → redirect back → storageState saved",
+    "P2-S4: Smoke assertions only for critical-path specs — full journey tests (submit inspection → grant cert) deferred until live backend + seeded chain data",
+    "P2-S4: CI e2e.yml uses KEYCLOAK_ISSUER=http://localhost:8444/realms/terroir-ma (test KC port 8444)"
   ],
   "velocity_history": {
     "P2-S1": { "planned": 11, "completed": 11, "pct": 100, "note": "Prometheus + Grafana monitoring" },
     "P2-S2": { "planned": 13, "completed": 13, "pct": 100, "note": "Jaeger OTel distributed tracing" },
     "P2-S3": { "planned": 18, "completed": 18, "pct": 100, "note": "Kafka Schema Registry + Avro — 18 schemas, 3 producers migrated, NotificationListener fixed" },
-    "phase2_rolling_avg": 14.0
+    "P2-S4": { "planned": 13, "completed": 13, "pct": 100, "note": "Consumer migration (3 listeners) + Playwright E2E infrastructure + 8 spec files" },
+    "phase2_rolling_avg": 13.75
   }
 }

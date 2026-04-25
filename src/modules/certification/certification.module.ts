@@ -59,7 +59,6 @@ import { ExportDocument } from './entities/export-document.entity';
     InspectionController,
     QrCodeController,
     ExportDocumentController,
-    CertificationListener,
   ],
   providers: [
     CertificationService,
@@ -69,6 +68,7 @@ import { ExportDocument } from './entities/export-document.entity';
     CertificationPdfService,
     ExportDocumentPdfService,
     CertificationProducer,
+    CertificationListener,
   ],
   exports: [],
 })

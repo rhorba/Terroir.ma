@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CertificationListener } from '../../../src/modules/certification/listeners/certification.listener';
 import { CertificationService } from '../../../src/modules/certification/services/certification.service';
+import { KafkaConsumerService } from '../../../src/common/kafka/kafka-consumer.service';
 import type { LabTestCompletedEvent } from '../../../src/common/interfaces/events/certification.events';
 import type { CooperativeRegistrationVerifiedEvent } from '../../../src/common/interfaces/events/cooperative.events';
 import type {
@@ -13,7 +14,8 @@ const mockCertificationService = {
   receiveLabResults: jest.fn(),
 };
 
-/** Helper: build a minimal event payload with a type cast for handler tests. */
+const mockKafkaConsumerService = { subscribe: jest.fn() };
+
 const makeLabTestEvent = (overrides = {}): LabTestCompletedEvent =>
   ({
     eventId: 'evt-001',
@@ -36,6 +38,7 @@ describe('CertificationListener', () => {
       providers: [
         CertificationListener,
         { provide: CertificationService, useValue: mockCertificationService },
+        { provide: KafkaConsumerService, useValue: mockKafkaConsumerService },
       ],
     }).compile();
 
@@ -46,13 +49,37 @@ describe('CertificationListener', () => {
     expect(listener).toBeDefined();
   });
 
+  describe('onModuleInit()', () => {
+    it('registers all 4 topic handlers', () => {
+      listener.onModuleInit();
+
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'lab.test.completed',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'cooperative.registration.verified',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'certification.review.final-started',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledWith(
+        'certification.renewed',
+        expect.any(Function),
+      );
+      expect(mockKafkaConsumerService.subscribe).toHaveBeenCalledTimes(4);
+    });
+  });
+
   describe('handleLabTestCompleted()', () => {
     it('calls receiveLabResults when event is not yet processed', async () => {
       const event = makeLabTestEvent();
       mockCertificationService.isEventProcessed.mockResolvedValue(false);
       mockCertificationService.receiveLabResults.mockResolvedValue(undefined);
 
-      await listener.handleLabTestCompleted(event, {} as never);
+      await listener.handleLabTestCompleted(event);
 
       expect(mockCertificationService.isEventProcessed).toHaveBeenCalledWith('evt-001');
       expect(mockCertificationService.receiveLabResults).toHaveBeenCalledWith(
@@ -67,7 +94,7 @@ describe('CertificationListener', () => {
       const event = makeLabTestEvent();
       mockCertificationService.isEventProcessed.mockResolvedValue(true);
 
-      await listener.handleLabTestCompleted(event, {} as never);
+      await listener.handleLabTestCompleted(event);
 
       expect(mockCertificationService.receiveLabResults).not.toHaveBeenCalled();
     });
@@ -76,7 +103,7 @@ describe('CertificationListener', () => {
       const event = makeLabTestEvent();
       mockCertificationService.isEventProcessed.mockRejectedValue(new Error('DB down'));
 
-      await expect(listener.handleLabTestCompleted(event, {} as never)).resolves.toBeUndefined();
+      await expect(listener.handleLabTestCompleted(event)).resolves.toBeUndefined();
     });
   });
 
@@ -96,7 +123,7 @@ describe('CertificationListener', () => {
         source: 'cooperative',
       } as unknown as CooperativeRegistrationVerifiedEvent;
 
-      await expect(listener.handleCooperativeVerified(event, {} as never)).resolves.toBeUndefined();
+      await expect(listener.handleCooperativeVerified(event)).resolves.toBeUndefined();
     });
   });
 
@@ -113,7 +140,7 @@ describe('CertificationListener', () => {
         source: 'certification',
       } as unknown as CertificationFinalReviewStartedEvent;
 
-      await expect(listener.handleFinalReviewStarted(event, {} as never)).resolves.toBeUndefined();
+      await expect(listener.handleFinalReviewStarted(event)).resolves.toBeUndefined();
     });
   });
 
@@ -131,9 +158,7 @@ describe('CertificationListener', () => {
         source: 'certification',
       } as unknown as CertificationRenewedEvent;
 
-      await expect(
-        listener.handleCertificationRenewed(event, {} as never),
-      ).resolves.toBeUndefined();
+      await expect(listener.handleCertificationRenewed(event)).resolves.toBeUndefined();
     });
   });
 });

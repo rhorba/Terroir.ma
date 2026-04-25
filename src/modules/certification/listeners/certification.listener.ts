@@ -1,5 +1,4 @@
-import { Controller, Logger } from '@nestjs/common';
-import { EventPattern, Payload, Ctx, KafkaContext } from '@nestjs/microservices';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import type {
   LabTestCompletedEvent,
   CooperativeRegistrationVerifiedEvent,
@@ -7,28 +6,44 @@ import type {
   CertificationRenewedEvent,
 } from '../../../common/interfaces/events';
 import { CertificationService } from '../services/certification.service';
+import { KafkaConsumerService } from '../../../common/kafka/kafka-consumer.service';
 
 /**
  * Certification module Kafka listener.
  * Consumer group: certification-group
- * Consumes: lab.test.completed, cooperative.registration.verified
+ * Consumes: lab.test.completed, cooperative.registration.verified,
+ *           certification.review.final-started, certification.renewed
  */
-@Controller()
-export class CertificationListener {
+@Injectable()
+export class CertificationListener implements OnModuleInit {
   private readonly logger = new Logger(CertificationListener.name);
 
-  constructor(private readonly certificationService: CertificationService) {}
+  constructor(
+    private readonly certificationService: CertificationService,
+    private readonly kafkaConsumerService: KafkaConsumerService,
+  ) {}
+
+  onModuleInit(): void {
+    this.kafkaConsumerService.subscribe('lab.test.completed', (p) =>
+      this.handleLabTestCompleted(p as LabTestCompletedEvent),
+    );
+    this.kafkaConsumerService.subscribe('cooperative.registration.verified', (p) =>
+      this.handleCooperativeVerified(p as CooperativeRegistrationVerifiedEvent),
+    );
+    this.kafkaConsumerService.subscribe('certification.review.final-started', (p) =>
+      this.handleFinalReviewStarted(p as CertificationFinalReviewStartedEvent),
+    );
+    this.kafkaConsumerService.subscribe('certification.renewed', (p) =>
+      this.handleCertificationRenewed(p as CertificationRenewedEvent),
+    );
+  }
 
   /**
    * Step 7: When a lab test is completed, advance the matching certification
    * from LAB_TESTING → LAB_RESULTS_RECEIVED.
-   * Idempotent: checks correlationId (eventId) before processing.
+   * Idempotent: checks eventId before processing.
    */
-  @EventPattern('lab.test.completed')
-  async handleLabTestCompleted(
-    @Payload() data: LabTestCompletedEvent,
-    @Ctx() _context: KafkaContext,
-  ): Promise<void> {
+  async handleLabTestCompleted(data: LabTestCompletedEvent): Promise<void> {
     try {
       if (await this.certificationService.isEventProcessed(data.eventId)) {
         this.logger.log(
@@ -55,27 +70,17 @@ export class CertificationListener {
   /**
    * When a cooperative is verified, update the local read model.
    */
-  @EventPattern('cooperative.registration.verified')
-  async handleCooperativeVerified(
-    @Payload() data: CooperativeRegistrationVerifiedEvent,
-    @Ctx() _context: KafkaContext,
-  ): Promise<void> {
+  async handleCooperativeVerified(data: CooperativeRegistrationVerifiedEvent): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, cooperativeId: data.cooperativeId },
       'Cooperative verified — certification module read model updated',
     );
-    // ack handled automatically by NestJS Kafka transport
   }
 
   /**
    * Step 8 notification hook — certification moved to final review.
-   * Notification module will handle the cooperative-admin email.
    */
-  @EventPattern('certification.review.final-started')
-  async handleFinalReviewStarted(
-    @Payload() data: CertificationFinalReviewStartedEvent,
-    @Ctx() _context: KafkaContext,
-  ): Promise<void> {
+  async handleFinalReviewStarted(data: CertificationFinalReviewStartedEvent): Promise<void> {
     this.logger.log(
       { eventId: data.eventId, certificationId: data.certificationId },
       'Certification moved to final review',
@@ -84,13 +89,8 @@ export class CertificationListener {
 
   /**
    * Step 12 notification hook — certification renewal initiated.
-   * Notification module will handle the cooperative-admin email.
    */
-  @EventPattern('certification.renewed')
-  async handleCertificationRenewed(
-    @Payload() data: CertificationRenewedEvent,
-    @Ctx() _context: KafkaContext,
-  ): Promise<void> {
+  async handleCertificationRenewed(data: CertificationRenewedEvent): Promise<void> {
     this.logger.log(
       {
         eventId: data.eventId,
