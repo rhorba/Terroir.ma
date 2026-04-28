@@ -1,0 +1,721 @@
+### Terroir.ma — All 12 User Manual Test Scenarios
+### VS Code REST Client (humao.rest-client) / IntelliJ HTTP Client
+### Base URL: http://localhost:3000
+### Auth: POST token request first, copy access_token into @token variables
+
+@baseUrl = http://localhost:3000
+@keycloakUrl = http://localhost:8080/realms/terroir-ma/protocol/openid-connect/token
+@clientId = terroir-portal
+
+### ═══════════════════════════════════════════════════════════════════════════
+### AUTH — Get tokens for each persona (run these first)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### Khalid (super-admin)
+# @name khalidAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=khalid&password=Terroir2025!
+
+@khalidToken = {{khalidAuth.response.body.$.access_token}}
+
+###
+
+### Fatima (cooperative-admin)
+# @name fatimaAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=fatima&password=Terroir2025!
+
+@fatimaToken = {{fatimaAuth.response.body.$.access_token}}
+
+###
+
+### Hassan (cooperative-member)
+# @name hassanAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=hassan&password=Terroir2025!
+
+@hassanToken = {{hassanAuth.response.body.$.access_token}}
+
+###
+
+### Dr. Amina (lab-technician)
+# @name aminaAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=amina&password=Terroir2025!
+
+@aminaToken = {{aminaAuth.response.body.$.access_token}}
+
+###
+
+### Youssef (inspector)
+# @name youssefAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=youssef&password=Terroir2025!
+
+@youssefToken = {{youssefAuth.response.body.$.access_token}}
+
+###
+
+### Omar (certification-body)
+# @name omarAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=omar&password=Terroir2025!
+
+@omarToken = {{omarAuth.response.body.$.access_token}}
+
+###
+
+### Leila (customs-agent)
+# @name leilaAuth
+POST {{keycloakUrl}}
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&client_id={{clientId}}&username=leila&password=Terroir2025!
+
+@leilaToken = {{leilaAuth.response.body.$.access_token}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 1 — SUPER-ADMIN: Platform Setup & Oversight (Khalid)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S1.1 — Platform Dashboard
+GET {{baseUrl}}/admin/dashboard
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S1.2 — List Pending Cooperatives
+GET {{baseUrl}}/cooperatives?status=pending
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S1.3 — Verify a Cooperative (replace :id with real UUID)
+@coopId = coop-uuid-001
+PATCH {{baseUrl}}/cooperatives/{{coopId}}/verify
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S1.4 — Create a Laboratory
+# @name createLab
+POST {{baseUrl}}/labs
+Authorization: Bearer {{khalidToken}}
+Content-Type: application/json
+
+{
+  "name": "Laboratoire ONSSA Agadir",
+  "onssaAccreditationNumber": "ONSSA-LAB-2025-AGD-007",
+  "city": "Agadir",
+  "region": "SOUSS_MASSA"
+}
+
+@labId = {{createLab.response.body.$.id}}
+
+###
+
+### S1.5 — Accredit the Laboratory
+POST {{baseUrl}}/labs/{{labId}}/accredit
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S1.6 — Update Campaign Settings
+PATCH {{baseUrl}}/admin/settings/campaign
+Authorization: Bearer {{khalidToken}}
+Content-Type: application/json
+
+{
+  "currentCampaignYear": "2025/2026",
+  "campaignStartMonth": 10,
+  "campaignStartDay": 1
+}
+
+###
+
+### S1.7 — View Audit Logs
+GET {{baseUrl}}/admin/audit-logs?page=1&limit=20&from=2025-11-01
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S1.8 — View Kafka DLQ Stats
+GET {{baseUrl}}/admin/kafka/dlq-stats
+Authorization: Bearer {{khalidToken}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 2 — COOPERATIVE-ADMIN: Full Cooperative Setup (Fatima)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S2.1 — View My Cooperative Profile (replace with real coop UUID from JWT)
+@myCoop = 11111111-1111-1111-1111-111111111111
+GET {{baseUrl}}/cooperatives/{{myCoop}}
+Authorization: Bearer {{fatimaToken}}
+
+###
+
+### S2.2 — Add a Member
+# @name addMember
+POST {{baseUrl}}/cooperatives/{{myCoop}}/members
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{
+  "fullName": "Hassan Oubella",
+  "fullNameAr": "حسن أوبيلة",
+  "cin": "J123456",
+  "phone": "+212662345678",
+  "email": "hassan@coop-safran.ma",
+  "role": "member"
+}
+
+###
+
+### S2.3 — Register a Farm with GPS
+# @name addFarm
+POST {{baseUrl}}/cooperatives/{{myCoop}}/farms
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{
+  "name": "Parcelle Nord Taliouine — Lot 3",
+  "areaHectares": 2.5,
+  "cropTypes": ["SAFFRON"],
+  "regionCode": "DRAA_TAFILALET",
+  "commune": "Taliouine",
+  "latitude": 30.5321,
+  "longitude": -7.9241
+}
+
+@farmId = {{addFarm.response.body.$.id}}
+
+###
+
+### S2.4 — Update Cooperative Profile
+PUT {{baseUrl}}/cooperatives/{{myCoop}}
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{
+  "email": "fatima@coop-safran-taliouine.ma",
+  "phone": "+212661234567",
+  "address": "Douar Ait Ouagane, Taliouine, 83300"
+}
+
+###
+
+### S2.5 — View My Certifications
+GET {{baseUrl}}/certifications/my
+Authorization: Bearer {{fatimaToken}}
+
+###
+
+### S2.6 — Update SMS Notification Preference
+PUT {{baseUrl}}/notifications/preferences/me
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{ "channel": "sms", "isEnabled": true }
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 3 — COOPERATIVE-MEMBER: Harvest & Batch Logging (Hassan)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S3.1 — Log a Harvest
+# @name logHarvest
+POST {{baseUrl}}/harvests
+Authorization: Bearer {{hassanToken}}
+Content-Type: application/json
+
+{
+  "farmId": "{{farmId}}",
+  "productTypeCode": "SAFFRON",
+  "quantityKg": 12.5,
+  "harvestDate": "2025-10-28",
+  "campaignYear": "2025/2026",
+  "method": "Cueillette manuelle des pistils — récolte à l'aube",
+  "metadata": {
+    "pickerCount": 8,
+    "weatherCondition": "sunny",
+    "altitudeM": 1650
+  }
+}
+
+@harvestId = {{logHarvest.response.body.$.id}}
+
+###
+
+### S3.2 — Create a Production Batch
+# @name createBatch
+POST {{baseUrl}}/batches
+Authorization: Bearer {{hassanToken}}
+Content-Type: application/json
+
+{
+  "productTypeCode": "SAFFRON",
+  "harvestIds": ["{{harvestId}}"],
+  "totalQuantityKg": 12.5,
+  "processingDate": "2025-10-29"
+}
+
+@batchId = {{createBatch.response.body.$.id}}
+
+###
+
+### S3.3a — Add DRYING Processing Step
+POST {{baseUrl}}/batches/{{batchId}}/processing-steps
+Authorization: Bearer {{hassanToken}}
+Content-Type: application/json
+
+{
+  "stepType": "DRYING",
+  "doneAt": "2025-10-29T08:00:00Z",
+  "notes": "Séchage à l'ombre pendant 3 jours — humidité ambiante 42%"
+}
+
+###
+
+### S3.3b — Add SORTING Processing Step
+POST {{baseUrl}}/batches/{{batchId}}/processing-steps
+Authorization: Bearer {{hassanToken}}
+Content-Type: application/json
+
+{
+  "stepType": "SORTING",
+  "doneAt": "2025-11-01T09:00:00Z",
+  "notes": "Tri manuel — sélection Grade 1 uniquement, couleur rouge >80%"
+}
+
+###
+
+### S3.3c — Add PACKAGING Processing Step
+POST {{baseUrl}}/batches/{{batchId}}/processing-steps
+Authorization: Bearer {{hassanToken}}
+Content-Type: application/json
+
+{
+  "stepType": "PACKAGING",
+  "doneAt": "2025-11-02T14:00:00Z",
+  "notes": "Conditionnement en sachets hermétiques 1g — ref PKG-SAF-001"
+}
+
+###
+
+### S3.4 — View Processing History
+GET {{baseUrl}}/batches/{{batchId}}/processing-steps
+Authorization: Bearer {{hassanToken}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 4 — LAB TECHNICIAN: Lab Test (Dr. Amina)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S4.1 — Submit Lab Test (by Fatima)
+# @name submitLabTest
+POST {{baseUrl}}/lab-tests
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{
+  "batchId": "{{batchId}}",
+  "laboratoryId": "{{labId}}",
+  "expectedResultDate": "2025-11-15"
+}
+
+@labTestId = {{submitLabTest.response.body.$.id}}
+
+###
+
+### S4.2 — View Assigned Tests (Dr. Amina)
+GET {{baseUrl}}/lab-tests?status=submitted
+Authorization: Bearer {{aminaToken}}
+
+###
+
+### S4.3 — Record Analysis Results (ISO 3632 — Saffron)
+# @name recordResults
+POST {{baseUrl}}/lab-tests/{{labTestId}}/results
+Authorization: Bearer {{aminaToken}}
+Content-Type: application/json
+
+{
+  "testValues": {
+    "crocin_e440": 247,
+    "safranal_e330": 34,
+    "picrocrocin_e257": 82,
+    "moisture_pct": 8.5,
+    "ash_total_pct": 5.2
+  },
+  "technicianName": "Dr. Amina Benali"
+}
+
+###
+
+### S4.5 — Get Lab Test Result
+GET {{baseUrl}}/lab-tests/{{labTestId}}/result
+Authorization: Bearer {{aminaToken}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 5 — INSPECTOR: Field Inspection (Youssef)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S5.1 — View My Assigned Inspections
+GET {{baseUrl}}/inspections/my
+Authorization: Bearer {{youssefToken}}
+
+###
+
+### S6.1 — Fatima Requests Certification (needed before inspection steps)
+# @name requestCert
+POST {{baseUrl}}/certifications/request
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{
+  "batchId": "{{batchId}}",
+  "certificationType": "IGP"
+}
+
+@certId = {{requestCert.response.body.$.id}}
+
+###
+
+### S6.2 — Start Document Review (Omar)
+POST {{baseUrl}}/certifications/{{certId}}/start-review
+Authorization: Bearer {{omarToken}}
+Content-Type: application/json
+
+{ "remarks": "Documentation complete" }
+
+###
+
+### S6.3 — Schedule Inspection (Omar)
+# @name scheduleInspection
+POST {{baseUrl}}/certifications/{{certId}}/schedule-inspection
+Authorization: Bearer {{omarToken}}
+Content-Type: application/json
+
+{
+  "certificationId": "{{certId}}",
+  "inspectorId": "youssef-user-uuid",
+  "scheduledDate": "2025-11-20",
+  "farmIds": ["{{farmId}}"]
+}
+
+###
+
+### S5.2 — Start Field Visit (Youssef)
+POST {{baseUrl}}/certifications/{{certId}}/start-inspection
+Authorization: Bearer {{youssefToken}}
+Content-Type: application/json
+
+{}
+
+###
+
+### S5.3 — Complete Inspection (via certification endpoint)
+POST {{baseUrl}}/certifications/{{certId}}/complete-inspection
+Authorization: Bearer {{youssefToken}}
+Content-Type: application/json
+
+{
+  "passed": true,
+  "summary": "Visite terrain effectuée le 20/11/2025. Parcelle Lot 3 conforme aux exigences IGP Drâa-Tafilalet."
+}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 6 — CERTIFICATION BODY: Full Decision Workflow (Omar)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S6.5 — Start Final Review
+POST {{baseUrl}}/certifications/{{certId}}/start-final-review
+Authorization: Bearer {{omarToken}}
+Content-Type: application/json
+
+{}
+
+###
+
+### S6.6 — Grant Certification
+# @name grantCert
+PATCH {{baseUrl}}/certifications/{{certId}}/grant
+Authorization: Bearer {{omarToken}}
+Content-Type: application/json
+
+{
+  "validFrom": "2025-11-25",
+  "validUntil": "2026-11-25"
+}
+
+###
+
+### S6.7 — Download Trilingual PDF Certificate
+GET {{baseUrl}}/certifications/{{certId}}/certificate.pdf
+Authorization: Bearer {{omarToken}}
+
+###
+
+### S6.8 — Download QR Code PNG
+GET {{baseUrl}}/qr-codes/{{certId}}/download?format=png
+Authorization: Bearer {{fatimaToken}}
+
+###
+
+### S6.9 — Certification Analytics
+GET {{baseUrl}}/certifications/analytics?from=2025-01-01&to=2026-12-31
+Authorization: Bearer {{omarToken}}
+
+###
+
+### S6.10 — Deny Certification (alternative flow, different cert)
+PATCH {{baseUrl}}/certifications/{{certId}}/deny
+Authorization: Bearer {{omarToken}}
+Content-Type: application/json
+
+{
+  "reason": "Paramètre picrocrocine en dessous du seuil minimum IGP (valeur mesurée: 62, seuil: 70)."
+}
+
+###
+
+### S6.11 — Revoke a Granted Certification
+PATCH {{baseUrl}}/certifications/{{certId}}/revoke
+Authorization: Bearer {{omarToken}}
+Content-Type: application/json
+
+{
+  "reason": "Contrôle de marché : échantillon ne correspond pas aux paramètres certifiés."
+}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 7 — CUSTOMS AGENT: Export Documentation (Leila)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S7.1 — Request Export Document (Fatima)
+# @name createExportDoc
+POST {{baseUrl}}/export-documents
+Authorization: Bearer {{fatimaToken}}
+Content-Type: application/json
+
+{
+  "certificationId": "{{certId}}",
+  "destinationCountry": "DE",
+  "hsCode": "09102000",
+  "quantityKg": 10,
+  "consigneeName": "Gewürzhaus GmbH",
+  "consigneeCountry": "DE"
+}
+
+@exportDocId = {{createExportDoc.response.body.$.id}}
+
+###
+
+### S7.2 — Leila Reviews Pending Documents
+GET {{baseUrl}}/export-documents?status=draft
+Authorization: Bearer {{leilaToken}}
+
+###
+
+### S7.3 — View Export Document Details
+GET {{baseUrl}}/export-documents/{{exportDocId}}
+Authorization: Bearer {{leilaToken}}
+
+###
+
+### S7.4 — Validate Export Clearance
+POST {{baseUrl}}/export-documents/{{exportDocId}}/validate
+Authorization: Bearer {{leilaToken}}
+
+###
+
+### S7.5 — Download Export Certificate PDF
+GET {{baseUrl}}/export-documents/{{exportDocId}}/certificate.pdf
+Authorization: Bearer {{leilaToken}}
+
+###
+
+### S7.6 — View HS Codes
+GET {{baseUrl}}/export-documents/hs-codes
+Authorization: Bearer {{leilaToken}}
+
+###
+
+### S7.7 — Export Clearances Report CSV
+GET {{baseUrl}}/export-documents/clearances-report?from=2025-11-01&to=2025-11-30&destinationCountry=DE
+Authorization: Bearer {{leilaToken}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 8 — CONSUMER: Public QR Verification (Yuki — no auth needed)
+### ═══════════════════════════════════════════════════════════════════════════
+### Replace {{hmacSignature}} with real HMAC from QR code label
+
+@hmacSignature = REPLACE_WITH_REAL_HMAC_FROM_QR_CODE
+
+### S8.2 — Verify QR Code (French — default)
+GET {{baseUrl}}/verify/{{hmacSignature}}
+
+###
+
+### S8.3 — QR Verification in Arabic
+GET {{baseUrl}}/verify/{{hmacSignature}}?lang=ar
+
+###
+
+### S8.4 — QR Verification in Tifinagh
+GET {{baseUrl}}/verify/{{hmacSignature}}?lang=zgh
+
+###
+
+### S8.5 — Fake QR returns 404
+GET {{baseUrl}}/verify/0000000000000000000000000000000000000000000000000000000000000000
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 10 — NOTIFICATION MANAGEMENT (Khalid)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S10.1 — Notification Delivery Stats
+GET {{baseUrl}}/notifications/stats
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S10.2 — List Email Templates (French)
+GET {{baseUrl}}/notification-templates?channel=email&language=fr-MA
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S10.3 — Create Arabic Template
+# @name createTemplate
+POST {{baseUrl}}/notification-templates
+Authorization: Bearer {{khalidToken}}
+Content-Type: application/json
+
+{
+  "code": "certification-granted",
+  "channel": "email",
+  "language": "ar-MA",
+  "subjectTemplate": "مبروك! شهادتك TERROIR رقم {{certificationNumber}} جاهزة",
+  "bodyTemplate": "مرحبًا {{cooperativeName}}،\n\nشهادة SDOQ الخاصة بك تم منحها رسميًا.\n\nرقم الشهادة: {{certificationNumber}}\n\nفريق Terroir.ma",
+  "isActive": true
+}
+
+@templateId = {{createTemplate.response.body.$.id}}
+
+###
+
+### S10.4 — Update Template
+PUT {{baseUrl}}/notification-templates/{{templateId}}
+Authorization: Bearer {{khalidToken}}
+Content-Type: application/json
+
+{
+  "bodyTemplate": "مرحبًا {{cooperativeName}}، تم تحديث محتوى الإشعار.",
+  "isActive": true
+}
+
+###
+
+### S10.5 — Seed Templates from HBS Files
+POST {{baseUrl}}/notification-templates/seed
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S10.6 — Fatima Views Her Notification History
+GET {{baseUrl}}/notifications/history?page=1&limit=10
+Authorization: Bearer {{fatimaToken}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 11 — ADMIN REPORTS & EXPORTS
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S11.1 — Certification Statistics
+GET {{baseUrl}}/certifications/stats?from=2025-01-01&to=2026-12-31
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S11.2 — Analytics by Region and Product Type
+GET {{baseUrl}}/certifications/analytics?from=2025-01-01&to=2026-12-31
+Authorization: Bearer {{omarToken}}
+
+###
+
+### S11.3 — Compliance Report per Cooperative
+GET {{baseUrl}}/certifications/compliance-report?from=2025-01-01
+Authorization: Bearer {{omarToken}}
+
+###
+
+### S11.4 — ONSSA Active Certifications Report
+GET {{baseUrl}}/certifications/onssa-report
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S11.5 — Export Full Certification Registry (JSON for MAPMDREF)
+GET {{baseUrl}}/certifications/export?status=GRANTED
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S11.6 — Export Compliance Report (CSV)
+GET {{baseUrl}}/certifications/compliance-export?from=2025-01-01&to=2026-12-31
+Authorization: Bearer {{omarToken}}
+
+###
+
+### S11.7 — Export Product Registry (CSV)
+GET {{baseUrl}}/products/export?from=2025-01-01
+Authorization: Bearer {{khalidToken}}
+
+###
+
+### S11.8 — QR Scan Statistics per Certification
+GET {{baseUrl}}/certifications/{{certId}}/scan-stats
+Authorization: Bearer {{khalidToken}}
+
+
+### ═══════════════════════════════════════════════════════════════════════════
+### SCENARIO 12 — HEALTH & MONITORING (no auth required)
+### ═══════════════════════════════════════════════════════════════════════════
+
+### S12.1 — Liveness Check
+GET {{baseUrl}}/health
+
+###
+
+### S12.2 — Readiness Check (includes DB)
+GET {{baseUrl}}/ready
+
+###
+
+### S12.3 — Prometheus Metrics (IP-gated in production)
+GET {{baseUrl}}/metrics
+
+###
+
+### OpenAPI / Swagger UI
+GET {{baseUrl}}/api-docs

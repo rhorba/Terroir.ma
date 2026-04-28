@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../entities/product.entity';
+import { ProductType } from '../entities/product-type.entity';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { SearchProductDto } from '../dto/search-product.dto';
 
@@ -83,8 +84,8 @@ export class ProductService {
       .addSelect('p.name', 'name')
       .addSelect('p.productTypeCode', 'productTypeCode')
       .addSelect('p.cooperativeId', 'cooperativeId')
-      .addSelect('p.regionCode', 'regionCode')
-      .addSelect('p.status', 'status')
+      .leftJoin(ProductType, 'pt', 'pt.code = p.productTypeCode')
+      .addSelect('pt.regionCode', 'regionCode')
       .addSelect('p.createdAt', 'registeredAt')
       .where('p.deletedAt IS NULL')
       .orderBy('p.createdAt', 'DESC');
@@ -98,11 +99,10 @@ export class ProductService {
       productTypeCode: string;
       cooperativeId: string;
       regionCode: string | null;
-      status: string | null;
       registeredAt: Date;
     }>();
 
-    const header = 'productId,name,productTypeCode,cooperativeId,regionCode,status,registeredAt';
+    const header = 'productId,name,productTypeCode,cooperativeId,regionCode,registeredAt';
 
     const csvRows = rows.map((r) =>
       [
@@ -111,7 +111,6 @@ export class ProductService {
         r.productTypeCode,
         r.cooperativeId,
         r.regionCode ?? '',
-        r.status ?? '',
         r.registeredAt.toISOString(),
       ].join(','),
     );

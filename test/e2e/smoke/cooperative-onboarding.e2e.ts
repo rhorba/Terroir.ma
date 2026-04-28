@@ -7,19 +7,26 @@
  */
 import * as request from 'supertest';
 import { INestApplication } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { createTestApp, buildMockJwt, bearerHeader } from '../../helpers/app.helper';
 import { buildJwtPayload } from '../../factories/user.factory';
+
+const SMOKE_ICE = '001234567000099';
 
 describe('Cooperative Onboarding Smoke (e2e)', () => {
   let app: INestApplication;
   let superAdminToken: string;
+  let ds: DataSource;
 
   beforeAll(async () => {
     app = await createTestApp();
+    ds = app.get(DataSource);
+    await ds.query(`DELETE FROM cooperative.cooperative WHERE ice = $1`, [SMOKE_ICE]);
     superAdminToken = buildMockJwt(buildJwtPayload('super-admin'));
   });
 
   afterAll(async () => {
+    await ds.query(`DELETE FROM cooperative.cooperative WHERE ice = $1`, [SMOKE_ICE]);
     await app.close();
   });
 

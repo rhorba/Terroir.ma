@@ -124,6 +124,7 @@ describe('ProductService', () => {
     const makeExportQb = (rows: unknown[]) => ({
       select: jest.fn().mockReturnThis(),
       addSelect: jest.fn().mockReturnThis(),
+      leftJoin: jest.fn().mockReturnThis(),
       where: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),

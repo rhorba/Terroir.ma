@@ -1,17 +1,17 @@
 {
-  "timestamp": "2026-04-25T23:59:00Z",
-  "session_id": "session-2026-04-25-P2-S5-security-performance",
+  "timestamp": "2026-04-28T18:00:00Z",
+  "session_id": "session-2026-04-28-manual-test-run",
   "project_phase": "phase-2-observability",
   "current_sprint": {
-    "sprint_number": "P2-S5",
-    "sprint_name": "OWASP ZAP Security Scanning + k6 Performance Testing",
+    "sprint_number": "POST-P2",
+    "sprint_name": "User Manual Test Scenarios — Run & Fix",
     "status": "COMPLETED",
-    "goal": "OWASP ZAP passive scan in CI (High/Critical = build fail), k6 load tests with p95 thresholds (QR < 200ms, list < 500ms)",
-    "story_points_planned": 10,
-    "story_points_completed": 10,
-    "stories": ["US-104", "US-105"],
-    "plan_doc": "docs/plans/2026-04-25-p2-s5-security-performance/plan.md",
-    "progress_doc": "docs/plans/2026-04-25-p2-s5-security-performance/progress.md"
+    "goal": "Run all 12 USER-MANUAL-TEST-SCENARIOS as E2E tests, fix any failures, achieve 100% pass rate",
+    "story_points_planned": 0,
+    "story_points_completed": 0,
+    "stories": [],
+    "plan_doc": null,
+    "progress_doc": "docs/testing/USER-MANUAL-TEST-PROGRESS.md"
   },
   "last_completed_sprints": [
     {
@@ -21,9 +21,7 @@
       "story_points_planned": 11,
       "story_points_completed": 11,
       "velocity_pct": 100,
-      "stories": ["US-091", "US-092", "US-093"],
-      "plan_doc": "docs/plans/2026-04-24-phase2-monitoring/plan.md",
-      "progress_doc": "docs/plans/2026-04-24-phase2-monitoring/progress.md"
+      "stories": ["US-091", "US-092", "US-093"]
     },
     {
       "sprint_number": "P2-S2",
@@ -32,9 +30,7 @@
       "story_points_planned": 13,
       "story_points_completed": 13,
       "velocity_pct": 100,
-      "stories": ["US-094", "US-095", "US-096"],
-      "plan_doc": "docs/plans/2026-04-24-phase2-tracing/plan.md",
-      "progress_doc": "docs/plans/2026-04-24-phase2-tracing/progress.md"
+      "stories": ["US-094", "US-095", "US-096"]
     },
     {
       "sprint_number": "P2-S3",
@@ -43,9 +39,7 @@
       "story_points_planned": 18,
       "story_points_completed": 18,
       "velocity_pct": 100,
-      "stories": ["US-097", "US-098", "US-099"],
-      "plan_doc": "docs/plans/2026-04-24-phase2-schema-registry/plan.md",
-      "progress_doc": "docs/plans/2026-04-24-phase2-schema-registry/progress.md"
+      "stories": ["US-097", "US-098", "US-099"]
     },
     {
       "sprint_number": "P2-S4",
@@ -54,9 +48,7 @@
       "story_points_planned": 23,
       "story_points_completed": 23,
       "velocity_pct": 100,
-      "stories": ["US-100", "US-101", "US-102", "US-103"],
-      "plan_doc": "docs/plans/2026-04-25-p2-s4-consumer-migration-e2e/plan.md",
-      "progress_doc": "docs/plans/2026-04-25-p2-s4-consumer-migration-e2e/progress.md"
+      "stories": ["US-100", "US-101", "US-102", "US-103"]
     },
     {
       "sprint_number": "P2-S5",
@@ -65,9 +57,16 @@
       "story_points_planned": 10,
       "story_points_completed": 10,
       "velocity_pct": 100,
-      "stories": ["US-104", "US-105"],
-      "plan_doc": "docs/plans/2026-04-25-p2-s5-security-performance/plan.md",
-      "progress_doc": "docs/plans/2026-04-25-p2-s5-security-performance/progress.md"
+      "stories": ["US-104", "US-105"]
+    },
+    {
+      "sprint_number": "POST-P2",
+      "sprint_name": "User Manual Test Scenarios — Run & Fix",
+      "status": "COMPLETED",
+      "story_points_planned": 0,
+      "story_points_completed": 0,
+      "velocity_pct": 100,
+      "stories": []
     }
   ],
   "active_feature": null,
@@ -90,7 +89,8 @@
       "tests_passing": true,
       "producer_avro": true,
       "kafka_consumer_active": true,
-      "testValues_json_parse": true
+      "testValues_json_parse": true,
+      "export_product_registry_fix": true
     },
     "certification": {
       "entities": true,
@@ -236,13 +236,31 @@
       "failures": 0,
       "note": "avro-roundtrip.integration.ts requires Docker — not counted until Docker run"
     },
-    "e2e": { "suites": 8, "total": 35, "passing": 35, "failures": 0 },
+    "e2e": {
+      "suites": 18,
+      "total": 174,
+      "passing": 174,
+      "failures": 0,
+      "note": "All 12 USER-MANUAL-TEST-SCENARIOS passing as of 2026-04-28"
+    },
     "playwright_e2e": {
       "files": 10,
       "total_approx": 28,
       "note": "8 role-authenticated spec files + upgraded qr-verify; requires live KC + portal + dev-server"
     },
     "known_warning": "Jest worker teardown warning after OTel install — OTel gRPC exporter background timer; non-blocking"
+  },
+  "manual_test_scenarios_status": {
+    "total_scenarios": 12,
+    "passing": 12,
+    "failing": 0,
+    "progress_doc": "docs/testing/USER-MANUAL-TEST-PROGRESS.md",
+    "http_collection": "test/http/terroir-scenarios.http",
+    "bugs_fixed_this_session": [
+      "product.service.ts exportProductRegistry: p.regionCode + p.status don't exist on Product entity — joined ProductType via leftJoin",
+      "cooperative-onboarding.e2e.ts: no beforeAll/afterAll cleanup — added DELETE WHERE ice=... guards",
+      "scenario-2-cooperative-admin.e2e.ts: no beforeAll cleanup — added DELETE of farm/member/cooperative before seeding"
+    ]
   },
   "frontend_context": {
     "repo_name": "terroir-ma-web",
@@ -263,21 +281,23 @@
   },
   "blockers": [],
   "next_actions": [
-    "Phase 2 is COMPLETE — consider Phase 3 planning: microservice extraction, Kubernetes, contract testing (Pact)",
+    "Phase 2 + manual test scenarios 100% green — consider Phase 3 planning: microservice extraction, Kubernetes, contract testing (Pact)",
     "Run Playwright E2E against live stack: ensure KC + portal running, then pnpm test:e2e",
     "Run avro round-trip integration test: docker compose --profile core up -d && npm run test:integration -- --testPathPattern=avro-roundtrip",
     "Run ZAP scan locally: npm run export:openapi && npm run security:scan",
     "Run k6 smoke locally: npm run perf:smoke"
   ],
   "decisions_made_this_session": [
-    "P2-S5: ZAP passive mode only — zap-api-scan.py with openapi.json as input; no active injection",
-    "P2-S5: 10 suppression rules in rules.tsv for JSON API false positives",
-    "P2-S5: ZAP Docker service uses network_mode: host for Linux CI; Mac/Windows workaround documented",
-    "P2-S5: k6 smoke (1 VU, 1 iter) runs on every push; load tests (50 VU) run weekly only",
-    "P2-S5: QR verify threshold p95 < 200ms is a hard domain SLA — enforced as failing threshold in k6",
-    "P2-S5: k6 installed via apt in CI — avoids Docker-in-Docker complexity",
-    "P2-S5: curl retry loop (30 x 2s) for API readiness in CI — no wait-on dependency needed",
-    "P2-S5: PRODUCT-BACKLOG.md — US-091–103 marked Done; US-104/105 added; Epic 9 total 65→75 SP; Phase 2 complete"
+    "Fixed exportProductRegistry: Product entity has no regionCode/status — joined ProductType for regionCode; dropped status from CSV (no status column on Product)",
+    "Added beforeAll DB cleanup pattern to e2e tests that seed data — guards against --forceExit killing afterAll in previous runs",
+    "Unit test mock for exportProductRegistry updated to include leftJoin: jest.fn().mockReturnThis()"
+  ],
+  "files_modified_this_session": [
+    "src/modules/product/services/product.service.ts",
+    "test/unit/product/product.service.spec.ts",
+    "test/e2e/smoke/cooperative-onboarding.e2e.ts",
+    "test/e2e/scenario-2-cooperative-admin.e2e.ts",
+    "docs/testing/USER-MANUAL-TEST-PROGRESS.md"
   ],
   "velocity_history": {
     "P2-S1": { "planned": 11, "completed": 11, "pct": 100 },
