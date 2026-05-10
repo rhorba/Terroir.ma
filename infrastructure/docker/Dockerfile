@@ -5,7 +5,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Stage 1: Build ──────────────────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:26-alpine AS builder
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ COPY . .
 RUN npm run build
 
 # ── Stage 2: Production Runner ───────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:26-alpine AS runner
 
 # Create non-root system group and user for security
 RUN addgroup -g 1001 -S appgroup && \
